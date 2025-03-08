@@ -27,13 +27,13 @@ class Gameplay extends Phaser.Scene {
     const mainBackgroundLayer = map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0);
     mainBackgroundLayer.setDepth(0);
 
-    const grassLayer = map.createLayer("Grass", [tilesetA, tilesetB], 0, 0);
+    const grassLayer = map.createLayer("Grass", [tilesetA, tilesetB], 0, -32);
     grassLayer.setDepth(1);
 
-    const houseLayer = map.createLayer("House", [tilesetA, tilesetB], 0, 0);
+    const houseLayer = map.createLayer("House", [tilesetA, tilesetB], 0, -32);
     houseLayer.setDepth(2);
 
-    const streetLampLayer = map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, 0);
+    const streetLampLayer = map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, -32);
     streetLampLayer.setDepth(3);
 
     const floorLayer = map.createLayer("Floor", [tilesetA, tilesetB], 0, 0);
