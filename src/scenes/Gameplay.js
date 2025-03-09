@@ -247,9 +247,7 @@ class Gameplay extends Phaser.Scene {
           this.felix.x, this.felix.y,
           gData.sprite.x, gData.sprite.y
         );
-        console.log(
-          `[GlassLog] dist=${dist.toFixed(2)}, repairTimer=${gData.repairTimer.toFixed(2)}`
-        );
+       // console.log(`[GlassLog] dist=${dist.toFixed(2)}, repairTimer=${gData.repairTimer.toFixed(2)}`);
         
         // 若进入修理范围
         if (dist < REPAIR_DISTANCE) {
