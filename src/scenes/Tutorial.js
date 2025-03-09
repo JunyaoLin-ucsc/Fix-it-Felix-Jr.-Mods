@@ -13,8 +13,14 @@ class Tutorial extends Phaser.Scene {
     create() {
       const map = this.make.tilemap({ key: "tutorialMap" });
       const tileset = map.addTilesetImage("tileset", "tilesetImage");
+      // 依层名称加载
       map.createLayer("Background", tileset, 0, 0);
       map.createLayer("Grass", tileset, 0, 0);
+      // ... 其他图层
+      map.createLayer("Trees", tileset, 0, 0);
+      map.createLayer("Street Lamp", tileset, 0, 0);
+      map.createLayer("Moon", tileset, 0, 0);
+      map.createLayer("Stars", tileset, 0, 0);
       // ...
   
       this.add.text(

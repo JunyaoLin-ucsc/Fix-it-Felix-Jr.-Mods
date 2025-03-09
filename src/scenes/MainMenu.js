@@ -18,6 +18,10 @@ class MainMenu extends Phaser.Scene {
       map.createLayer("Background", tileset, 0, 0);
       map.createLayer("Grass", tileset, 0, 0);
       // ... 其他图层
+      map.createLayer("Trees", tileset, 0, 0);
+      map.createLayer("Street Lamp", tileset, 0, 0);
+      map.createLayer("Moon", tileset, 0, 0);
+      map.createLayer("Stars", tileset, 0, 0);
   
       this.add.text(
         map.widthInPixels / 2, 
