@@ -5,18 +5,15 @@ class Gameplay extends Phaser.Scene {
 
   preload() {
     this.load.path = "./assets/";
-
-    // 加载地图 JSON + 两个 tileset
+    // 加载地图 JSON + Tileset
     this.load.tilemapTiledJSON("gameplayMap", "Gameplay.json");
     this.load.image("tilesetImage", "tileset.png");
     this.load.image("tileset2Image", "tileset2.png");
-
-    // 加载角色和物体
+    // 角色/物体
     this.load.image("Felix", "Felix.png");
     this.load.image("Ralph", "Ralph.png");
     this.load.image("stone", "stone.png");
-
-    // 请按实际帧大小调整，此处假设每帧32x32
+    // 玻璃精灵图 0=完好,1=中破,2=重破
     this.load.spritesheet("glassSheet", "Glass-Sheet.png", {
       frameWidth: 32,
       frameHeight: 32
@@ -24,23 +21,22 @@ class Gameplay extends Phaser.Scene {
   }
 
   create() {
-    // ========== 你已有的逻辑 ==========
-
+    // ======== Tilemap & Layers ========
     const map = this.make.tilemap({ key: "gameplayMap" });
     const tilesetA = map.addTilesetImage("tileset", "tilesetImage");
     const tilesetB = map.addTilesetImage("tileset2", "tileset2Image");
 
     const mainBackgroundLayer = map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
-    const grassLayer = map.createLayer("Grass", [tilesetA, tilesetB], 0, -32).setDepth(1);
-    const houseLayer = map.createLayer("House", [tilesetA, tilesetB], 0, -32).setDepth(2);
-    const streetLampLayer = map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, -32).setDepth(3);
+    map.createLayer("Grass", [tilesetA, tilesetB], 0, -32).setDepth(1);
+    map.createLayer("House", [tilesetA, tilesetB], 0, -32).setDepth(2);
+    map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, -32).setDepth(3);
 
     const floorLayer = map.createLayer("Floor", [tilesetA, tilesetB], 0, 0).setDepth(4);
-    const ladderLayer = map.createLayer("Ladder", [tilesetA, tilesetB], 0, 0).setDepth(5);
-    const pillerLayer = map.createLayer("Pillar", [tilesetA, tilesetB], 0, 0).setDepth(6);
-    const wallPaintLayer = map.createLayer("Wall Paint", [tilesetA, tilesetB], 0, 0).setDepth(7);
-    const redBrickLayer = map.createLayer("Red Brick", [tilesetA, tilesetB], 0, 0).setDepth(8);
-    const supportLayer = map.createLayer("Support", [tilesetA, tilesetB], 0, 0).setDepth(9);
+    map.createLayer("Ladder", [tilesetA, tilesetB], 0, 0).setDepth(5);
+    map.createLayer("Pillar", [tilesetA, tilesetB], 0, 0).setDepth(6);
+    map.createLayer("Wall Paint", [tilesetA, tilesetB], 0, 0).setDepth(7);
+    map.createLayer("Red Brick", [tilesetA, tilesetB], 0, 0).setDepth(8);
+    map.createLayer("Support", [tilesetA, tilesetB], 0, 0).setDepth(9);
 
     const floorGrassLayer = map.createLayer("Floor Grass", [tilesetA, tilesetB], 0, 0).setDepth(13);
     const windowLayer = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
@@ -49,22 +45,22 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (windowLayer) windowLayer.setCollisionByProperty({ collides: true });
 
-    // === 创建 Felix ===
+    // ======== Felix ========
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix").setScale(0.1);
 
+    // 调整碰撞盒
     this.time.delayedCall(0, () => {
-      const displayW = this.felix.displayWidth;
-      const displayH = this.felix.displayHeight;
-      const bodyW = displayW * 10;
-      const bodyH = displayH * 10;
+      const dw = this.felix.displayWidth;
+      const dh = this.felix.displayHeight;
+      const bodyW = dw * 10;
+      const bodyH = dh * 10;
       const offsetX = bodyW * 0.08;
       const offsetY = bodyH * 0.02;
       this.felix.body.setSize(bodyW, bodyH);
       this.felix.body.setOffset(offsetX, offsetY);
     });
-    this.felix.setCollideWorldBounds(true);
-    this.felix.setDepth(9999);
+    this.felix.setCollideWorldBounds(true).setDepth(9999);
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -75,39 +71,37 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, windowLayer);
 
-    // === Ralph
+    // ======== Ralph & 石头 ========
     const ralphLayer = map.getObjectLayer("RalphSpawns");
     let ralphX = 400, ralphY = 100;
     if (ralphLayer && ralphLayer.objects.length > 0) {
       let obj = ralphLayer.objects[0];
-      ralphX = obj.x + (obj.width || 0)/2;
-      ralphY = obj.y + (obj.height || 0)/2;
+      ralphX = obj.x + (obj.width||0)/2;
+      ralphY = obj.y + (obj.height||0)/2;
     }
-    this.ralph = this.add.sprite(ralphX, ralphY, "Ralph").setDepth(1000).setScale(0.20);
+    this.ralph = this.add.sprite(ralphX, ralphY, "Ralph").setDepth(1000).setScale(0.2);
 
-    // =========== "RalphMovement" 只存X坐标(保持Y不变) ===========
     this.ralphMovements = [];
     let ralphMoveLayer = map.getObjectLayer("RalphMovement");
     if (ralphMoveLayer) {
       ralphMoveLayer.objects.forEach(o => {
-        let rx = o.x + (o.width || 0)/2;
+        let rx = o.x + (o.width||0)/2;
         this.ralphMovements.push(rx);
       });
     }
 
-    // =========== "StoneDropPosition" => 石头下落点 ===========
     this.stoneDrops = [];
     let stoneDropLayer = map.getObjectLayer("StoneDropPosition");
     if (stoneDropLayer) {
       stoneDropLayer.objects.forEach(o => {
-        let sx = o.x + (o.width || 0)/2;
-        let sy = o.y + (o.height || 0)/2;
-        this.stoneDrops.push({ x: sx, y: sy });
+        let sx = o.x + (o.width||0)/2;
+        let sy = o.y + (o.height||0)/2;
+        this.stoneDrops.push({ x:sx, y:sy });
       });
     }
 
-    // === 投石逻辑
-    this.stones = this.physics.add.group({});
+    // 投石逻辑
+    this.stones = this.physics.add.group();
     this.time.addEvent({
       delay: 2000,
       loop: true,
@@ -139,78 +133,58 @@ class Gameplay extends Phaser.Scene {
       });
     }
 
-    // === 捕获方向键
+    // ======== 输入 & Felix平台跳跃 ========
     this.cursors = this.input.keyboard.createCursorKeys();
-
-    // === 读取“Felix Positions”层 => Felix移动
     this.windowPlatforms = [];
-    const layerObj = map.getObjectLayer("Felix Positions");
+    let layerObj = map.getObjectLayer("Felix Positions");
     if (layerObj) {
       layerObj.objects.forEach(obj => {
-        let px = obj.x + obj.width / 2;
-        let py = obj.y + obj.height / 2;
-        this.windowPlatforms.push({ x: px, y: py });
+        let px = obj.x + obj.width/2;
+        let py = obj.y + obj.height/2;
+        this.windowPlatforms.push({ x:px, y:py });
       });
     }
     this.isWindowJumping = false;
 
-    // =========== 读取 "GlassPosition" => 多个窗口，每窗2块玻璃 ===========
-    // 建立一个 Map: windowId => { windowId, glasses:[], centerX, centerY, repairTimer }
+    // ======== 读取 "GlassPosition"：每扇窗户含多块玻璃 ========
+    // 但这次不会用"窗户中心"做修理检测，而是逐块玻璃
     this.windowsById = {};
     let glassLayer = map.getObjectLayer("GlassPosition");
     if (glassLayer) {
       glassLayer.objects.forEach(obj => {
         let gx = obj.x + obj.width / 2;
         let gy = obj.y + obj.height / 2;
-        // 读取 windowId (假设在 Tiled 中，每个玻璃对象都有 property "windowId")
         let wId = 0;
         if (obj.properties) {
           let prop = obj.properties.find(p => p.name === "windowId");
-          if (prop) {
-            wId = prop.value;
-          }
+          if (prop) wId = prop.value;
         }
         if (!this.windowsById[wId]) {
-          this.windowsById[wId] = {
-            windowId: wId,
-            glasses: [],
-            repairTimer: 0
-          };
+          this.windowsById[wId] = { windowId:wId, glasses:[] };
         }
         let wObj = this.windowsById[wId];
-        let glassSprite = this.add.sprite(gx, gy, "glassSheet");
-        // 让玻璃显示在 windowLayer 上方
-        glassSprite.setDepth(windowLayer.depth + 1);
-        // 随机帧：0完好，1或2破损
-        let rndFrame = Phaser.Math.Between(0, 2);
+
+        let glassSprite = this.add.sprite(gx, gy, "glassSheet").setDepth(windowLayer.depth+1);
+        let rndFrame = Phaser.Math.Between(0,2); // 0=完好 1=中破 2=重破
         glassSprite.setFrame(rndFrame);
-        glassSprite.isBroken = (rndFrame > 0);
-        wObj.glasses.push(glassSprite);
+
+        wObj.glasses.push({
+          sprite: glassSprite,
+          isBroken: (rndFrame>0),
+          repairTimer: 0 // 每块玻璃独立维护修理计时
+        });
       });
-    }
-    // 计算每个窗户的 centerX, centerY（所有玻璃的平均值）
-    for (let wId in this.windowsById) {
-      let wObj = this.windowsById[wId];
-      let sumX = 0, sumY = 0, count = 0;
-      wObj.glasses.forEach(gspr => {
-        sumX += gspr.x;
-        sumY += gspr.y;
-        count++;
-      });
-      wObj.centerX = sumX / count;
-      wObj.centerY = sumY / count;
     }
   }
 
-  // ============== 生成石头 ==============
+  // ========== 投石 ==========
   createStone(x, y) {
     let stone = this.stones.create(x, y, "stone");
-    stone.setScale(0.05);
-    stone.setDepth(9998);
+    stone.setScale(0.05).setDepth(9998);
     stone.setVelocityY(Phaser.Math.Between(100, 200));
   }
 
-  // ============== Ralph移动(左右) ==============
+  // ========== Ralph 随机移动 ==========
   moveRalphRandom() {
     let idx = Phaser.Math.Between(0, this.ralphMovements.length - 1);
     let targetX = this.ralphMovements[idx];
@@ -224,12 +198,11 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // ============== update：Felix移动逻辑 + 检测修理 ==============
+  // ========== 主循环 ==========
   update(time, delta) {
-    if (this.isWindowJumping) {
-      return;
-    }
+    if (this.isWindowJumping) return;
 
+    // 平台跳跃示例（上下左右）
     let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
       let aboveIdx = this.findPlatformAbove(currentIndex);
@@ -253,44 +226,57 @@ class Gameplay extends Phaser.Scene {
       }
     }
 
-    // 检测并修理窗户：如果 Felix 靠近一个窗户且该窗户中任一玻璃破损，则每累计1秒修复一块玻璃
+    // === 玻璃修理（方法B：按“每块玻璃”的距离检测）
     this.checkAndRepairWindows(delta);
   }
 
-  // ============== 检测 & 修理破损窗户 ==============
-  // 新逻辑：若窗户内有损坏玻璃，且 Felix 靠近窗户中心（距离 < REPAIR_DISTANCE），每累计1秒修复一块破损玻璃
+  // ========== 逐块玻璃检测距离 + 修理 ==========
   checkAndRepairWindows(delta) {
-    const REPAIR_DISTANCE = 50;      // Felix 与窗户中心距离 < 50 视为在该窗户上
-    const REPAIR_INTERVAL = 1000;    // 每1秒修复一块玻璃
+    const REPAIR_DISTANCE = 50;   // Felix到玻璃< 50时开始修
+    const REPAIR_INTERVAL = 1000; // 1秒修理1档
 
     for (let wId in this.windowsById) {
       let wObj = this.windowsById[wId];
-      // 筛选出破损玻璃
-      let brokenGlasses = wObj.glasses.filter(gspr => gspr.isBroken);
-      if (brokenGlasses.length === 0) {
-        wObj.repairTimer = 0;
-        continue;
-      }
-      // 计算 Felix 与窗户中心的距离
-      let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, wObj.centerX, wObj.centerY);
-      if (dist < REPAIR_DISTANCE) {
-        wObj.repairTimer += delta;
-        if (wObj.repairTimer >= REPAIR_INTERVAL) {
-          // 修复一块破损玻璃（取第一个破损的）
-          let glassToRepair = wObj.glasses.find(gspr => gspr.isBroken);
-          if (glassToRepair) {
-            glassToRepair.setFrame(0); // 修复为完整玻璃
-            glassToRepair.isBroken = false;
+
+      // 遍历此窗口下的每一块玻璃
+      for (let gData of wObj.glasses) {
+        if (!gData.isBroken) continue; // 已完好则忽略
+
+        // 计算 Felix 与 该块玻璃 的距离
+        let dist = Phaser.Math.Distance.Between(
+          this.felix.x, this.felix.y,
+          gData.sprite.x, gData.sprite.y
+        );
+        console.log(
+          `[GlassLog] dist=${dist.toFixed(2)}, repairTimer=${gData.repairTimer.toFixed(2)}`
+        );
+        
+        // 若进入修理范围
+        if (dist < REPAIR_DISTANCE) {
+          gData.repairTimer += delta;
+          // 若计时超过 REPAIR_INTERVAL => 修理1档
+          if (gData.repairTimer >= REPAIR_INTERVAL) {
+            let currentFrame = gData.sprite.frame.name; // 0/1/2
+            if (currentFrame == 2) {
+              // 重破 => 中破
+              gData.sprite.setFrame(1);
+            } else {
+              // 中破 => 完好
+              gData.sprite.setFrame(0);
+              gData.isBroken = false;
+            }
+            // 用掉这1秒
+            gData.repairTimer -= REPAIR_INTERVAL;
           }
-          wObj.repairTimer -= REPAIR_INTERVAL;
+        } else {
+          // 不在范围，重置此块玻璃的修理计时
+          gData.repairTimer = 0;
         }
-      } else {
-        wObj.repairTimer = 0;
       }
     }
   }
 
-  // ============== Felix的移动/跳跃Tween逻辑 ==============
+  // ========== Felix 窗口平台移动示例 ==========
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
     let targetPos = this.windowPlatforms[targetIndex];
@@ -314,8 +300,8 @@ class Gameplay extends Phaser.Scene {
     this.felix.x = fromPos.x;
     this.felix.y = fromPos.y;
 
-    let midX = (fromPos.x + toPos.x) / 2;
-    let midY = (fromPos.y + toPos.y) / 2 - 50;
+    let midX = (fromPos.x + toPos.x)/2;
+    let midY = (fromPos.y + toPos.y)/2 - 50;
 
     this.tweens.add({
       targets: this.felix,
@@ -332,14 +318,13 @@ class Gameplay extends Phaser.Scene {
           ease: "Quad.easeIn",
           onComplete: () => {
             this.isWindowJumping = false;
-            this.felix.setVelocity(0, 0);
+            this.felix.setVelocity(0,0);
           }
         });
       }
     });
   }
 
-  // ============== 查找Felix相邻平台函数 ==============
   findClosestPlatformIndex(x, y) {
     if (!this.windowPlatforms.length) return null;
     let closest = null;
@@ -353,70 +338,50 @@ class Gameplay extends Phaser.Scene {
     });
     return closest;
   }
-
   findPlatformAbove(idx) {
-    if (idx == null) return null;
+    if (idx==null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate = null;
-    let minDist = Infinity;
-    this.windowPlatforms.forEach((p, i) => {
-      if (p.y < cur.y && Math.abs(p.x - cur.x) < 40) {
-        let dist = cur.y - p.y;
-        if (dist < minDist) {
-          minDist = dist;
-          candidate = i;
-        }
+    let candidate=null, minDist=Infinity;
+    this.windowPlatforms.forEach((p,i) => {
+      if (p.y<cur.y && Math.abs(p.x-cur.x)<40) {
+        let dist = cur.y-p.y;
+        if(dist<minDist){ minDist=dist; candidate=i;}
       }
     });
     return candidate;
   }
-
   findPlatformBelow(idx) {
-    if (idx == null) return null;
+    if (idx==null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate = null;
-    let minDist = Infinity;
-    this.windowPlatforms.forEach((p, i) => {
-      if (p.y > cur.y && Math.abs(p.x - cur.x) < 40) {
-        let dist = p.y - cur.y;
-        if (dist < minDist) {
-          minDist = dist;
-          candidate = i;
-        }
+    let candidate=null, minDist=Infinity;
+    this.windowPlatforms.forEach((p,i) => {
+      if (p.y>cur.y && Math.abs(p.x-cur.x)<40) {
+        let dist = p.y-cur.y;
+        if(dist<minDist){ minDist=dist; candidate=i;}
       }
     });
     return candidate;
   }
-
   findPlatformLeft(idx) {
-    if (idx == null) return null;
+    if (idx==null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate = null;
-    let minDist = Infinity;
-    this.windowPlatforms.forEach((p, i) => {
-      if (p.x < cur.x && Math.abs(p.y - cur.y) < 40) {
-        let dist = cur.x - p.x;
-        if (dist < minDist) {
-          minDist = dist;
-          candidate = i;
-        }
+    let candidate=null, minDist=Infinity;
+    this.windowPlatforms.forEach((p,i) => {
+      if (p.x<cur.x && Math.abs(p.y-cur.y)<40) {
+        let dist = cur.x-p.x;
+        if(dist<minDist){ minDist=dist; candidate=i;}
       }
     });
     return candidate;
   }
-
   findPlatformRight(idx) {
-    if (idx == null) return null;
+    if (idx==null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate = null;
-    let minDist = Infinity;
-    this.windowPlatforms.forEach((p, i) => {
-      if (p.x > cur.x && Math.abs(p.y - cur.y) < 40) {
-        let dist = p.x - cur.x;
-        if (dist < minDist) {
-          minDist = dist;
-          candidate = i;
-        }
+    let candidate=null, minDist=Infinity;
+    this.windowPlatforms.forEach((p,i) => {
+      if (p.x>cur.x && Math.abs(p.y-cur.y)<40) {
+        let dist = p.x-cur.x;
+        if(dist<minDist){ minDist=dist; candidate=i;}
       }
     });
     return candidate;
