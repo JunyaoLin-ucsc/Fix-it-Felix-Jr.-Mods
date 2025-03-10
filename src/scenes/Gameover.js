@@ -1,40 +1,57 @@
 class Gameover extends Phaser.Scene {
-    constructor() {
-      super("Gameover");
-    }
+  constructor() {
+    super("Gameover");
+  }
+
+  preload() {
+    this.load.path = "./assets/";
+    // 加载背景地图（如果需要）
+    this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
+    this.load.image("tilesetImage", "tileset.png");
+    // 加载音效
+    this.load.audio("confirm", "confirm.wav");
+    this.load.audio("selection", "selection.wav");
+  }
+
+  create() {
+    const map = this.make.tilemap({ key: "gameoverMap" });
+    const tileset = map.addTilesetImage("tileset", "tilesetImage");
+    map.createLayer("Background", tileset, 0, 0);
   
-    preload() {
-      this.load.path = "./assets/";
-      // 若想给Game Over也用地图背景
-      this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
-      this.load.image("tilesetImage", "tileset.png");
-    }
+    this.add.text(
+      map.widthInPixels / 2,
+      map.heightInPixels / 2 - 50,
+      "Game Over",
+      { fontSize: "48px", color: "#ff0000", fontFamily: "Arial" }
+    ).setOrigin(0.5);
   
-    create() {
-      const map = this.make.tilemap({ key: "gameoverMap" });
-      const tileset = map.addTilesetImage("tileset", "tilesetImage");
-      map.createLayer("Background", tileset, 0, 0);
+    // 创建音效对象
+    this.confirmSnd = this.sound.add("confirm");
+    this.selectionSnd = this.sound.add("selection");
   
-      this.add.text(
-        map.widthInPixels / 2,
-        map.heightInPixels / 2 - 50,
-        "Game Over",
-        { fontSize: "48px", color: "#ff0000", fontFamily: "Arial" }
-      ).setOrigin(0.5);
+    let restartBtn = this.add.text(
+      map.widthInPixels / 2,
+      map.heightInPixels / 2 + 50,
+      "Restart",
+      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
+    ).setOrigin(0.5)
+     .setInteractive();
   
-      let restartBtn = this.add.text(
-        map.widthInPixels / 2,
-        map.heightInPixels / 2 + 50,
-        "Restart",
-        { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
-      ).setOrigin(0.5)
-       .setInteractive();
+    restartBtn.on("pointerover", () => {
+      if (!this.selectionSnd.isPlaying) {
+        this.selectionSnd.play();
+      }
+    });
   
-      restartBtn.on("pointerdown", () => {
+    restartBtn.on("pointerdown", () => {
+      if (!this.confirmSnd.isPlaying) {
+        this.confirmSnd.play();
+      }
+      this.time.delayedCall(200, () => {
         this.scene.start("MainMenu");
       });
-    }
+    });
   }
-  
-  window.Gameover = Gameover;
-  
+}
+
+window.Gameover = Gameover;

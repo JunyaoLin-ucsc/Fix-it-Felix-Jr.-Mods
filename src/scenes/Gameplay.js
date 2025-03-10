@@ -33,6 +33,8 @@ class Gameplay extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32
     });
+    this.load.audio("movement", "movement.wav");
+    this.load.audio("failure", "failure.wav");
   }
 
   create() {
@@ -56,6 +58,9 @@ class Gameplay extends Phaser.Scene {
     const floorGrassLayer = map.createLayer("Floor Grass", [tilesetA, tilesetB], 0, 0).setDepth(13);
     this.windowLayerRef = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
     const doorLayer = map.createLayer("Door", [tilesetA, tilesetB], 0, 0).setDepth(11);
+
+    this.movementSnd = this.sound.add("movement");
+    this.failureSnd = this.sound.add("failure");
 
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
@@ -124,6 +129,9 @@ class Gameplay extends Phaser.Scene {
     this.stones = this.physics.add.group();
     this.physics.add.overlap(this.felix, this.stones, () => {
       if (!this.levelTransitioning) {
+        if (!this.failureSnd.isPlaying) {
+          this.failureSnd.play();
+        }
         this.scene.start("Gameover");
       }
     });
@@ -378,6 +386,9 @@ class Gameplay extends Phaser.Scene {
 
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
+    if (!this.movementSnd.isPlaying) {
+      this.movementSnd.play();
+    }
     let targetPos = this.windowPlatforms[targetIndex];
     this.tweens.add({
       targets: this.felix,
@@ -394,6 +405,9 @@ class Gameplay extends Phaser.Scene {
 
   doWindowJumpAnimation(fromIndex, toIndex) {
     this.isWindowJumping = true;
+    if (!this.movementSnd.isPlaying) {
+      this.movementSnd.play();
+    }
     let fromPos = this.windowPlatforms[fromIndex];
     let toPos = this.windowPlatforms[toIndex];
     this.felix.setPosition(fromPos.x, fromPos.y);
