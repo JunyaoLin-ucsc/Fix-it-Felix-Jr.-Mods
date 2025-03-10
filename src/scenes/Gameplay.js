@@ -386,9 +386,8 @@ class Gameplay extends Phaser.Scene {
 
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
-    // 每次移动前先停止再播放 movement 音效，确保只触发一次
-    this.movementSnd.stop();
-    this.movementSnd.play();
+    // 使用 restart: true 直接重启 movement 音效
+    this.movementSnd.play({ restart: true });
     
     let targetPos = this.windowPlatforms[targetIndex];
     this.tweens.add({
@@ -400,17 +399,14 @@ class Gameplay extends Phaser.Scene {
       onComplete: () => {
         this.isWindowJumping = false;
         this.felix.setVelocity(0, 0);
-        // 可根据需要在 Tween 完成时停止声音（如果声音较长）
-        // this.movementSnd.stop();
       }
     });
   }
   
   doWindowJumpAnimation(fromIndex, toIndex) {
     this.isWindowJumping = true;
-    // 每次跳跃前重置 movement 音效
-    this.movementSnd.stop();
-    this.movementSnd.play();
+    // 同样重启音效
+    this.movementSnd.play({ restart: true });
     
     let fromPos = this.windowPlatforms[fromIndex];
     let toPos = this.windowPlatforms[toIndex];
@@ -433,14 +429,12 @@ class Gameplay extends Phaser.Scene {
           onComplete: () => {
             this.isWindowJumping = false;
             this.felix.setVelocity(0, 0);
-            // 同样，可视情况选择是否在跳跃完成后停止音效
-            // this.movementSnd.stop();
           }
         });
       }
     });
   }
-
+  
   findClosestPlatformIndex(x, y) {
     if (!this.windowPlatforms.length) return null;
     let closest = null;
