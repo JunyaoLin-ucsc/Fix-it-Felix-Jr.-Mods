@@ -5,7 +5,6 @@ class Gameover extends Phaser.Scene {
 
   preload() {
     this.load.path = "./assets/";
-    // 加载背景地图（如果需要）
     this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
     this.load.image("tilesetImage", "tileset.png");
     // 加载音效
@@ -38,15 +37,17 @@ class Gameover extends Phaser.Scene {
      .setInteractive();
   
     restartBtn.on("pointerover", () => {
-      if (!this.selectionSnd.isPlaying) {
-        this.selectionSnd.play();
+      if (this.selectionSnd.isPlaying) {
+        this.selectionSnd.stop();
       }
+      this.selectionSnd.play();
     });
   
     restartBtn.on("pointerdown", () => {
-      if (!this.confirmSnd.isPlaying) {
-        this.confirmSnd.play();
+      if (this.confirmSnd.isPlaying) {
+        this.confirmSnd.stop();
       }
+      this.confirmSnd.play();
       this.time.delayedCall(200, () => {
         this.scene.start("MainMenu");
       });

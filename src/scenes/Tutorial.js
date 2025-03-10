@@ -49,15 +49,17 @@ class Tutorial extends Phaser.Scene {
      .setInteractive();
 
     playButton.on("pointerover", () => {
-      if (!this.selectionSnd.isPlaying) {
-        this.selectionSnd.play();
+      if (this.selectionSnd.isPlaying) {
+        this.selectionSnd.stop();
       }
+      this.selectionSnd.play();
     });
 
     playButton.on("pointerdown", () => {
-      if (!this.confirmSnd.isPlaying) {
-        this.confirmSnd.play();
+      if (this.confirmSnd.isPlaying) {
+        this.confirmSnd.stop();
       }
+      this.confirmSnd.play();
       this.time.delayedCall(200, () => {
         this.scene.start("Gameplay");
       });

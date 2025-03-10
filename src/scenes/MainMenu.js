@@ -16,7 +16,6 @@ class MainMenu extends Phaser.Scene {
   create() {
     const map = this.make.tilemap({ key: "mainMenuMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
-    // 创建各层
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
@@ -31,7 +30,7 @@ class MainMenu extends Phaser.Scene {
       { fontSize: "48px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5, 0);
 
-    // 添加音效对象
+    // 创建音效对象
     this.confirmSnd = this.sound.add("confirm");
     this.selectionSnd = this.sound.add("selection");
 
@@ -43,19 +42,19 @@ class MainMenu extends Phaser.Scene {
     ).setOrigin(0.5)
      .setInteractive();
 
-    // 鼠标指针悬停时播放 selection 音效（不重叠）
     playButton.on("pointerover", () => {
-      if (!this.selectionSnd.isPlaying) {
-        this.selectionSnd.play();
+      if (this.selectionSnd.isPlaying) {
+        this.selectionSnd.stop();
       }
+      this.selectionSnd.play();
     });
 
-    // 按下时播放 confirm 音效，然后切换场景
     playButton.on("pointerdown", () => {
-      if (!this.confirmSnd.isPlaying) {
-        this.confirmSnd.play();
+      if (this.confirmSnd.isPlaying) {
+        this.confirmSnd.stop();
       }
-      // 延时一点以便让音效播放（可根据需要调整延时）
+      this.confirmSnd.play();
+      // 延时一点播放完音效
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });

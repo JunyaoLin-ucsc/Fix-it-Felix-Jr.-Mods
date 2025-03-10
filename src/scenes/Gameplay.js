@@ -386,9 +386,10 @@ class Gameplay extends Phaser.Scene {
 
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
-    if (!this.movementSnd.isPlaying) {
-      this.movementSnd.play();
+    if (this.movementSnd.isPlaying) {
+      this.movementSnd.stop();
     }
+    this.movementSnd.play();
     let targetPos = this.windowPlatforms[targetIndex];
     this.tweens.add({
       targets: this.felix,
@@ -405,9 +406,10 @@ class Gameplay extends Phaser.Scene {
 
   doWindowJumpAnimation(fromIndex, toIndex) {
     this.isWindowJumping = true;
-    if (!this.movementSnd.isPlaying) {
-      this.movementSnd.play();
+    if (this.movementSnd.isPlaying) {
+      this.movementSnd.stop();
     }
+    this.movementSnd.play();
     let fromPos = this.windowPlatforms[fromIndex];
     let toPos = this.windowPlatforms[toIndex];
     this.felix.setPosition(fromPos.x, fromPos.y);
