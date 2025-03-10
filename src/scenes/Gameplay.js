@@ -243,63 +243,82 @@ class Gameplay extends Phaser.Scene {
   // ========== 关卡切换：offset = stageAreas[currentStage].topY - stageAreas[nextStage].topY ==========
   levelTransition() {
     this.levelTransitioning = true;
-    this.stones.children.each(st => { st.body.enable = false; });
-
-    // 1秒后切换
-    this.time.delayedCall(1000, () => {
-      let nextStage = this.currentStage + 1;
-      if (nextStage > this.maxStage) {
-        console.log("Game Completed!");
-        return;
+  
+    let nextStage = this.currentStage + 1;
+    if (nextStage > this.maxStage) {
+      console.log("All stages done! game finished!");
+      this.levelTransitioning = false;
+      return;
+    }
+  
+    let currentArea = this.stageAreas[this.currentStage];
+    let nextArea = this.stageAreas[nextStage];
+    if (!currentArea || !nextArea) {
+      console.error(`Stage area missing: current=${this.currentStage}, next=${nextStage}`);
+      this.levelTransitioning = false;
+      return;
+    }
+  
+    console.log(`Transition from stage=${this.currentStage} -> ${nextStage}`);
+  
+    // 假设每层高度 750，用于限制摄像机+物理世界
+    let stageHeight = 750;
+    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+  
+    // ============ Felix 随机重生在 FelixStageN 对象层（若存在）===========
+    let felixLayerName = `FelixStage${nextStage}`;
+    let felixLayer = this.map.getObjectLayer(felixLayerName);
+    let newX = this.felix.x;       // 若取不到对象，就用旧X
+    let newY = nextArea.topY + 200; // 若取不到对象，就在 topY+200
+    if (felixLayer && felixLayer.objects.length > 0) {
+      // 随机拿一个对象
+      let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
+      let fObj = felixLayer.objects[randF];
+      newX = fObj.x + (fObj.width || 0) / 2;
+      newY = fObj.y + (fObj.height || 0) / 2;
+      console.log(`Random Felix spawn from layer ${felixLayerName} => (${newX},${newY})`);
+    } else {
+      console.warn(`No layer "${felixLayerName}" or empty. Using fallback => (${newX}, ${newY})`);
+    }
+    // 设置 Felix 坐标
+    this.felix.setPosition(newX, newY);
+  
+    // ============ Ralph 随机重生在 RalphStageN 对象层（若存在）===========
+    // 先停止 Ralph 旧的 tween/移动，避免他继续在上一层乱动
+    this.tweens.killTweensOf(this.ralph);
+  
+    let ralphLayerName = `RalphStage${nextStage}`;
+    let spawnLayer = this.map.getObjectLayer(ralphLayerName);
+    if (spawnLayer && spawnLayer.objects.length > 0) {
+      let randomIndex = Phaser.Math.Between(0, spawnLayer.objects.length - 1);
+      let rObj = spawnLayer.objects[randomIndex];
+      let rx = rObj.x + (rObj.width || 0) / 2;
+      let ry = rObj.y + (rObj.height || 0) / 2;
+      this.ralph.setPosition(rx, ry);
+      console.log(`Move Ralph to stage ${nextStage} => (${rx}, ${ry})`);
+    } else {
+      console.warn(`No layer "${ralphLayerName}" or no objects, keep Ralph old pos.`);
+    }
+  
+    // ============ 清理上一关玻璃 + 加载下一关玻璃 ============
+    for (let key in this.windowsById) {
+      let wObj = this.windowsById[key];
+      if (wObj.stage === this.currentStage) {
+        wObj.glasses.forEach(g => g.sprite.destroy());
+        delete this.windowsById[key];
       }
-
-      let currentArea = this.stageAreas[this.currentStage];
-      let nextArea = this.stageAreas[nextStage];
-      if (!currentArea || !nextArea) {
-        console.error(`Stage area data missing for current=${this.currentStage} or next=${nextStage}`);
-        return;
-      }
-
-      // offset = (StageN topY) - (StageN+1 topY)
-      let offset = currentArea.topY - nextArea.topY + 300;
-      console.log(`Transition from Stage ${this.currentStage} to Stage ${nextStage}. offset=${offset}`);
-
-      // 停止摄像机跟随
-      this.cameras.main.stopFollow();
-
-      let currentCenter = this.cameras.main.midPoint;
-      let targetX = currentCenter.x;
-      let targetY = currentCenter.y - offset;
-      console.log(`Camera pan from y=${currentCenter.y} to y=${targetY}`);
-
-      // 平滑滚动
-      this.cameras.main.pan(targetX, targetY, 2000, "Linear", false, () => {
-        console.log(`Arrived at Stage ${nextStage}. Clearing old windows & loading new.`);
-
-        this.currentStage = nextStage;
-
-        // 清除上一关玻璃
-        for (let key in this.windowsById) {
-          this.windowsById[key].glasses.forEach(g => g.sprite.destroy());
-        }
-        this.windowsById = {};
-
-        // 加载新关卡玻璃
-        this.loadGlassForStage(this.currentStage);
-
-        // 清除石头
-        this.stones.clear(true, true);
-
-        // 恢复摄像机跟随
-        this.cameras.main.startFollow(this.felix, true, 0.25, 0);
-
-        // 启用石头碰撞
-        this.stones.children.each(st => { st.body.enable = true; });
-
-        this.levelTransitioning = false;
-      });
-    });
+    }
+    this.currentStage = nextStage;
+    this.loadGlassForStage(nextStage);
+  
+    // ============ 摄像机再次跟随 Felix ============
+    this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+  
+    this.levelTransitioning = false;
   }
+  
+  
 
   update(time, delta) {
     if (!this.cursors) return;
@@ -331,7 +350,7 @@ class Gameplay extends Phaser.Scene {
 
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 1000;
+    const REPAIR_INTERVAL = 100;
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;

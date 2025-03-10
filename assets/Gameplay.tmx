@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="342" nextobjectid="7169">
+<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="346" nextobjectid="7186">
  <editorsettings>
   <export target="Gameplay.json" format="json"/>
  </editorsettings>
@@ -17128,22 +17128,23 @@
  </objectgroup>
  <objectgroup id="338" name="Stage 2 Space">
   <object id="7157" x="0" y="2768" width="1280" height="800"/>
-  <object id="7164" x="0" y="2768" width="1280" height="1616"/>
  </objectgroup>
  <objectgroup id="339" name="Stage 3 Space">
   <object id="7158" x="0" y="1952" width="1280" height="816"/>
-  <object id="7166" x="0" y="1952" width="1280" height="2432"/>
  </objectgroup>
  <objectgroup id="340" name="Stage 4 Space">
   <object id="7160" x="0" y="1136" width="1280" height="816"/>
-  <object id="7167" x="0" y="1136" width="1280" height="3248"/>
  </objectgroup>
  <objectgroup id="341" name="Stage 5 Space">
   <object id="7162" x="0" y="320" width="1280" height="816"/>
-  <object id="7168" x="0" y="320" width="1280" height="4064"/>
  </objectgroup>
  <objectgroup id="17" name="RalphSpawns">
   <object id="153" x="640" y="3648">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="345" name="RalphSpwans2">
+  <object id="7182" x="640" y="2848">
    <point/>
   </object>
  </objectgroup>
@@ -17341,7 +17342,7 @@
   <object id="162" x="752" y="2848">
    <point/>
   </object>
-  <object id="163" x="640" y="2848">
+  <object id="163" x="640.25" y="2848.13">
    <point/>
   </object>
   <object id="164" x="528" y="2848">
@@ -17393,6 +17394,18 @@
    <point/>
   </object>
   <object id="188" x="416" y="400">
+   <point/>
+  </object>
+  <object id="7173" x="640.458" y="2848.12">
+   <point/>
+  </object>
+  <object id="7174" x="640.667" y="2032">
+   <point/>
+  </object>
+  <object id="7175" x="640.667" y="1215.67">
+   <point/>
+  </object>
+  <object id="7177" x="640.333" y="400">
    <point/>
   </object>
  </objectgroup>

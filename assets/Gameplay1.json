@@ -3750,6 +3750,17 @@
                  "width":1280,
                  "x":0,
                  "y":2768
+                }, 
+                {
+                 "height":1616,
+                 "id":7164,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":1280,
+                 "x":0,
+                 "y":2768
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -3765,6 +3776,17 @@
                 {
                  "height":816,
                  "id":7158,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":1280,
+                 "x":0,
+                 "y":1952
+                }, 
+                {
+                 "height":2432,
+                 "id":7166,
                  "name":"",
                  "rotation":0,
                  "type":"",
@@ -3794,6 +3816,17 @@
                  "width":1280,
                  "x":0,
                  "y":1136
+                }, 
+                {
+                 "height":3248,
+                 "id":7167,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":1280,
+                 "x":0,
+                 "y":1136
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -3809,6 +3842,17 @@
                 {
                  "height":816,
                  "id":7162,
+                 "name":"",
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":1280,
+                 "x":0,
+                 "y":320
+                }, 
+                {
+                 "height":4064,
+                 "id":7168,
                  "name":"",
                  "rotation":0,
                  "type":"",
@@ -3839,29 +3883,6 @@
                  "width":0,
                  "x":640,
                  "y":3648
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":345,
-         "name":"RalphSpwans2",
-         "objects":[
-                {
-                 "height":0,
-                 "id":7182,
-                 "name":"",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":640,
-                 "y":2848
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -4670,8 +4691,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":640.25,
-                 "y":2848.125
+                 "x":640,
+                 "y":2848
                 }, 
                 {
                  "height":0,
@@ -4886,8 +4907,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":640.458333333333,
-                 "y":2848.125
+                 "x":640.333333333333,
+                 "y":2848
                 }, 
                 {
                  "height":0,
@@ -8757,8 +8778,7 @@
          "visible":true,
          "x":0,
          "y":0
-        },
-    
+        }, 
         {
          "draworder":"topdown",
          "id":222,
@@ -8780,7 +8800,8 @@
          "visible":true,
          "x":0,
          "y":0
-        }, 
+        },
+    
         {
          "draworder":"topdown",
          "id":223,
@@ -10518,8 +10539,7 @@
          "visible":true,
          "x":0,
          "y":0
-        },
-    
+        }, 
         {
          "draworder":"topdown",
          "id":302,
@@ -10541,7 +10561,8 @@
          "visible":true,
          "x":0,
          "y":0
-        }, 
+        },
+    
         {
          "draworder":"topdown",
          "id":303,
@@ -11070,8 +11091,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":346,
- "nextobjectid":7186,
+ "nextlayerid":342,
+ "nextobjectid":7178,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",
