@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="22" nextobjectid="341">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="342" nextobjectid="7169">
  <editorsettings>
   <export target="Gameplay.json" format="json"/>
  </editorsettings>
@@ -17123,6 +17123,279 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 </data>
  </layer>
+ <objectgroup id="337" name="Stage 1 Space">
+  <object id="7155" x="0.133333" y="3567.33" width="1280.4" height="816.667"/>
+ </objectgroup>
+ <objectgroup id="338" name="Stage 2 Space">
+  <object id="7157" x="0" y="2768" width="1280" height="800"/>
+  <object id="7164" x="0" y="2768" width="1280" height="1616"/>
+ </objectgroup>
+ <objectgroup id="339" name="Stage 3 Space">
+  <object id="7158" x="0" y="1952" width="1280" height="816"/>
+  <object id="7166" x="0" y="1952" width="1280" height="2432"/>
+ </objectgroup>
+ <objectgroup id="340" name="Stage 4 Space">
+  <object id="7160" x="0" y="1136" width="1280" height="816"/>
+  <object id="7167" x="0" y="1136" width="1280" height="3248"/>
+ </objectgroup>
+ <objectgroup id="341" name="Stage 5 Space">
+  <object id="7162" x="0" y="320" width="1280" height="816"/>
+  <object id="7168" x="0" y="320" width="1280" height="4064"/>
+ </objectgroup>
+ <objectgroup id="17" name="RalphSpawns">
+  <object id="153" x="640" y="3648">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="18" name="RalphMovement">
+  <object id="154" x="864" y="3648">
+   <point/>
+  </object>
+  <object id="155" x="416" y="3648">
+   <point/>
+  </object>
+  <object id="166" x="864" y="2848">
+   <point/>
+  </object>
+  <object id="167" x="416" y="2848">
+   <point/>
+  </object>
+  <object id="168" x="864" y="2032">
+   <point/>
+  </object>
+  <object id="169" x="416" y="2032">
+   <point/>
+  </object>
+  <object id="180" x="864" y="1216">
+   <point/>
+  </object>
+  <object id="181" x="416" y="1216">
+   <point/>
+  </object>
+  <object id="182" x="864" y="400">
+   <point/>
+  </object>
+  <object id="183" x="416" y="400">
+   <point/>
+  </object>
+  <object id="341" x="416" y="400">
+   <point/>
+  </object>
+  <object id="342" x="528" y="400">
+   <point/>
+  </object>
+  <object id="343" x="640" y="400">
+   <point/>
+  </object>
+  <object id="344" x="752" y="400">
+   <point/>
+  </object>
+  <object id="345" x="864" y="400">
+   <point/>
+  </object>
+  <object id="346" x="416" y="1216">
+   <point/>
+  </object>
+  <object id="347" x="528" y="1216">
+   <point/>
+  </object>
+  <object id="348" x="640" y="1216">
+   <point/>
+  </object>
+  <object id="349" x="752" y="1216">
+   <point/>
+  </object>
+  <object id="350" x="864" y="1216">
+   <point/>
+  </object>
+  <object id="351" x="416" y="2032">
+   <point/>
+  </object>
+  <object id="352" x="528" y="2032">
+   <point/>
+  </object>
+  <object id="353" x="640" y="2032">
+   <point/>
+  </object>
+  <object id="354" x="752" y="2032">
+   <point/>
+  </object>
+  <object id="355" x="864" y="2032">
+   <point/>
+  </object>
+  <object id="356" x="416" y="2848">
+   <point/>
+  </object>
+  <object id="357" x="528" y="2848">
+   <point/>
+  </object>
+  <object id="358" x="640" y="2848">
+   <point/>
+  </object>
+  <object id="359" x="752" y="2848">
+   <point/>
+  </object>
+  <object id="360" x="864" y="2848">
+   <point/>
+  </object>
+  <object id="361" x="416" y="3648">
+   <point/>
+  </object>
+  <object id="362" x="528" y="3648">
+   <point/>
+  </object>
+  <object id="363" x="640" y="3648">
+   <point/>
+  </object>
+  <object id="364" x="752" y="3648">
+   <point/>
+  </object>
+  <object id="365" x="864" y="3648">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="332" name="RalphStage2">
+  <object id="7133" x="864" y="2848">
+   <point/>
+  </object>
+  <object id="7134" x="752" y="2848">
+   <point/>
+  </object>
+  <object id="7135" x="640" y="2848">
+   <point/>
+  </object>
+  <object id="7136" x="528" y="2848">
+   <point/>
+  </object>
+  <object id="7137" x="416" y="2848">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="333" name="RalphStage3">
+  <object id="7138" x="864" y="2032">
+   <point/>
+  </object>
+  <object id="7139" x="752" y="2032">
+   <point/>
+  </object>
+  <object id="7140" x="640" y="2032">
+   <point/>
+  </object>
+  <object id="7141" x="528" y="2032">
+   <point/>
+  </object>
+  <object id="7142" x="416" y="2032">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="334" name="RalphStage4">
+  <object id="7143" x="864" y="1216">
+   <point/>
+  </object>
+  <object id="7144" x="752" y="1216">
+   <point/>
+  </object>
+  <object id="7145" x="640" y="1216">
+   <point/>
+  </object>
+  <object id="7147" x="528" y="1216">
+   <point/>
+  </object>
+  <object id="7148" x="416" y="1216">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="335" name="RalphStage5">
+  <object id="7149" x="864" y="400">
+   <point/>
+  </object>
+  <object id="7150" x="752" y="400">
+   <point/>
+  </object>
+  <object id="7151" x="640" y="400">
+   <point/>
+  </object>
+  <object id="7152" x="528" y="400">
+   <point/>
+  </object>
+  <object id="7153" x="416" y="400">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="19" name="StoneDropPosition">
+  <object id="156" x="416" y="3648">
+   <point/>
+  </object>
+  <object id="157" x="528" y="3648">
+   <point/>
+  </object>
+  <object id="158" x="640" y="3648">
+   <point/>
+  </object>
+  <object id="159" x="752" y="3648">
+   <point/>
+  </object>
+  <object id="160" x="864" y="3648">
+   <point/>
+  </object>
+  <object id="162" x="752" y="2848">
+   <point/>
+  </object>
+  <object id="163" x="640" y="2848">
+   <point/>
+  </object>
+  <object id="164" x="528" y="2848">
+   <point/>
+  </object>
+  <object id="165" x="416" y="2848">
+   <point/>
+  </object>
+  <object id="170" x="864" y="2032">
+   <point/>
+  </object>
+  <object id="171" x="752" y="2032">
+   <point/>
+  </object>
+  <object id="172" x="640" y="2032">
+   <point/>
+  </object>
+  <object id="173" x="528" y="2032">
+   <point/>
+  </object>
+  <object id="174" x="416" y="2032">
+   <point/>
+  </object>
+  <object id="175" x="864" y="1216">
+   <point/>
+  </object>
+  <object id="176" x="752" y="1216">
+   <point/>
+  </object>
+  <object id="177" x="640" y="1216">
+   <point/>
+  </object>
+  <object id="178" x="528" y="1216">
+   <point/>
+  </object>
+  <object id="179" x="416" y="1216">
+   <point/>
+  </object>
+  <object id="184" x="864" y="400">
+   <point/>
+  </object>
+  <object id="185" x="752" y="400">
+   <point/>
+  </object>
+  <object id="186" x="640" y="400">
+   <point/>
+  </object>
+  <object id="187" x="528" y="400">
+   <point/>
+  </object>
+  <object id="188" x="416" y="400">
+   <point/>
+  </object>
+ </objectgroup>
  <objectgroup id="15" name="Spawns">
   <object id="2" name="FelixSpawns" x="416" y="4288">
    <point/>
@@ -17355,266 +17628,676 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="17" name="RalphSpawns">
-  <object id="153" x="640" y="3648">
+ <objectgroup id="328" name="FelixStage2">
+  <object id="7113" x="864" y="3488">
+   <point/>
+  </object>
+  <object id="7114" x="752" y="3488">
+   <point/>
+  </object>
+  <object id="7115" x="640" y="3488">
+   <point/>
+  </object>
+  <object id="7116" x="528" y="3488">
+   <point/>
+  </object>
+  <object id="7117" x="416" y="3488">
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="18" name="RalphMovement">
-  <object id="154" x="864" y="3648">
+ <objectgroup id="329" name="FelixStage3">
+  <object id="7118" x="864" y="2672">
    <point/>
   </object>
-  <object id="155" x="416" y="3648">
+  <object id="7119" x="752" y="2672">
    <point/>
   </object>
-  <object id="166" x="864" y="2848">
+  <object id="7120" x="640" y="2672">
    <point/>
   </object>
-  <object id="167" x="416" y="2848">
+  <object id="7121" x="528" y="2672">
    <point/>
   </object>
-  <object id="168" x="864" y="2032">
-   <point/>
-  </object>
-  <object id="169" x="416" y="2032">
-   <point/>
-  </object>
-  <object id="180" x="864" y="1216">
-   <point/>
-  </object>
-  <object id="181" x="416" y="1216">
-   <point/>
-  </object>
-  <object id="182" x="864" y="400">
-   <point/>
-  </object>
-  <object id="183" x="416" y="400">
+  <object id="7122" x="416" y="2672">
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="19" name="StoneDropPosition">
-  <object id="156" x="416" y="3648">
+ <objectgroup id="330" name="FelixStage4">
+  <object id="7123" x="864" y="1856">
    <point/>
   </object>
-  <object id="157" x="528" y="3648">
+  <object id="7124" x="752" y="1856">
    <point/>
   </object>
-  <object id="158" x="640" y="3648">
+  <object id="7125" x="640" y="1856">
    <point/>
   </object>
-  <object id="159" x="752" y="3648">
+  <object id="7126" x="528" y="1856">
    <point/>
   </object>
-  <object id="160" x="864" y="3648">
-   <point/>
-  </object>
-  <object id="161" x="864" y="2848">
-   <point/>
-  </object>
-  <object id="162" x="752" y="2848">
-   <point/>
-  </object>
-  <object id="163" x="640" y="2848">
-   <point/>
-  </object>
-  <object id="164" x="528" y="2848">
-   <point/>
-  </object>
-  <object id="165" x="416" y="2848">
-   <point/>
-  </object>
-  <object id="170" x="864" y="2032">
-   <point/>
-  </object>
-  <object id="171" x="752" y="2032">
-   <point/>
-  </object>
-  <object id="172" x="640" y="2032">
-   <point/>
-  </object>
-  <object id="173" x="528" y="2032">
-   <point/>
-  </object>
-  <object id="174" x="416" y="2032">
-   <point/>
-  </object>
-  <object id="175" x="864" y="1216">
-   <point/>
-  </object>
-  <object id="176" x="752" y="1216">
-   <point/>
-  </object>
-  <object id="177" x="640" y="1216">
-   <point/>
-  </object>
-  <object id="178" x="528" y="1216">
-   <point/>
-  </object>
-  <object id="179" x="416" y="1216">
-   <point/>
-  </object>
-  <object id="184" x="864" y="400">
-   <point/>
-  </object>
-  <object id="185" x="752" y="400">
-   <point/>
-  </object>
-  <object id="186" x="640" y="400">
-   <point/>
-  </object>
-  <object id="187" x="528" y="400">
-   <point/>
-  </object>
-  <object id="188" x="416" y="400">
+  <object id="7127" x="416" y="1856">
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="21" name="GlassPosition">
-  <object id="191" x="624" y="1408" width="32" height="32"/>
-  <object id="192" x="736" y="1408" width="32" height="32"/>
-  <object id="193" x="848" y="1408" width="32" height="32"/>
-  <object id="194" x="848" y="1456" width="32" height="32"/>
-  <object id="195" x="736" y="1456" width="32" height="32"/>
-  <object id="196" x="624" y="1456" width="32" height="32"/>
-  <object id="197" x="512" y="1408" width="32" height="32"/>
-  <object id="198" x="512" y="1456" width="32" height="32"/>
-  <object id="199" x="400" y="1408" width="32" height="32"/>
-  <object id="200" x="400" y="1456" width="32" height="32"/>
-  <object id="201" x="400" y="1600" width="32" height="32"/>
-  <object id="202" x="512" y="1600" width="32" height="32"/>
-  <object id="203" x="624" y="1600" width="32" height="32"/>
-  <object id="204" x="736" y="1600" width="32" height="32"/>
-  <object id="205" x="848" y="1600" width="32" height="32"/>
-  <object id="206" x="848" y="1648" width="32" height="32"/>
-  <object id="207" x="736" y="1648" width="32" height="32"/>
-  <object id="208" x="624" y="1648" width="32" height="32"/>
-  <object id="209" x="512" y="1648" width="32" height="32"/>
-  <object id="210" x="400" y="1648" width="32" height="32"/>
-  <object id="211" x="400" y="1792" width="32" height="32"/>
-  <object id="212" x="512" y="1792" width="32" height="32"/>
-  <object id="213" x="624" y="1792" width="32" height="32"/>
-  <object id="214" x="736" y="1792" width="32" height="32"/>
-  <object id="215" x="848" y="1792" width="32" height="32"/>
-  <object id="216" x="848" y="1840" width="32" height="32"/>
-  <object id="217" x="736" y="1840" width="32" height="32"/>
-  <object id="218" x="624" y="1840" width="32" height="32"/>
-  <object id="219" x="512" y="1840" width="32" height="32"/>
-  <object id="220" x="400" y="1840" width="32" height="32"/>
-  <object id="221" x="400" y="2224" width="32" height="32"/>
-  <object id="222" x="512" y="2224" width="32" height="32"/>
-  <object id="223" x="624" y="2224" width="32" height="32"/>
-  <object id="224" x="736" y="2224" width="32" height="32"/>
-  <object id="225" x="848" y="2224" width="32" height="32"/>
-  <object id="226" x="848" y="2272" width="32" height="32"/>
-  <object id="227" x="736" y="2272" width="32" height="32"/>
-  <object id="228" x="624" y="2272" width="32" height="32"/>
-  <object id="231" x="512" y="2272" width="32" height="32"/>
-  <object id="232" x="400" y="2272" width="32" height="32"/>
-  <object id="233" x="400" y="2416" width="32" height="32"/>
-  <object id="234" x="512" y="2416" width="32" height="32"/>
-  <object id="235" x="624" y="2416" width="32" height="32"/>
-  <object id="236" x="736" y="2416" width="32" height="32"/>
-  <object id="237" x="848" y="2416" width="32" height="32"/>
-  <object id="238" x="848" y="2464" width="32" height="32"/>
-  <object id="239" x="736" y="2464" width="32" height="32"/>
-  <object id="240" x="624" y="2464" width="32" height="32"/>
-  <object id="241" x="512" y="2464" width="32" height="32"/>
-  <object id="242" x="400" y="2464" width="32" height="32"/>
-  <object id="243" x="848" y="2608" width="32" height="32"/>
-  <object id="244" x="736" y="2608" width="32" height="32"/>
-  <object id="245" x="624" y="2608" width="32" height="32"/>
-  <object id="246" x="512" y="2608" width="32" height="32"/>
-  <object id="247" x="400" y="2608" width="32" height="32"/>
-  <object id="248" x="400" y="2656" width="32" height="32"/>
-  <object id="249" x="512" y="2656" width="32" height="32"/>
-  <object id="250" x="624" y="2656" width="32" height="32"/>
-  <object id="251" x="736" y="2656" width="32" height="32"/>
-  <object id="252" x="848" y="2656" width="32" height="32"/>
-  <object id="253" x="400" y="592" width="32" height="32"/>
-  <object id="254" x="512" y="592" width="32" height="32"/>
-  <object id="255" x="624" y="592" width="32" height="32"/>
-  <object id="256" x="736" y="592" width="32" height="32"/>
-  <object id="257" x="848" y="592" width="32" height="32"/>
-  <object id="258" x="848" y="640" width="32" height="32"/>
-  <object id="259" x="736" y="640" width="32" height="32"/>
-  <object id="260" x="624" y="640" width="32" height="32"/>
-  <object id="261" x="512" y="640" width="32" height="32"/>
-  <object id="262" x="400" y="640" width="32" height="32"/>
-  <object id="263" x="400" y="784" width="32" height="32"/>
-  <object id="264" x="512" y="784" width="32" height="32"/>
-  <object id="265" x="624" y="784" width="32" height="32"/>
-  <object id="266" x="736" y="784" width="32" height="32"/>
-  <object id="267" x="848" y="784" width="32" height="32"/>
-  <object id="268" x="400" y="832" width="32" height="32"/>
-  <object id="269" x="512" y="832" width="32" height="32"/>
-  <object id="270" x="624" y="832" width="32" height="32"/>
-  <object id="271" x="736" y="832" width="32" height="32"/>
-  <object id="272" x="848" y="832" width="32" height="32"/>
-  <object id="273" x="400" y="976" width="32" height="32"/>
-  <object id="274" x="512" y="976" width="32" height="32"/>
-  <object id="275" x="624" y="976" width="32" height="32"/>
-  <object id="276" x="736" y="976" width="32" height="32"/>
-  <object id="277" x="848" y="976" width="32" height="32"/>
-  <object id="278" x="848" y="1024" width="32" height="32"/>
-  <object id="279" x="736" y="1024" width="32" height="32"/>
-  <object id="280" x="624" y="1024" width="32" height="32"/>
-  <object id="281" x="512" y="1024" width="32" height="32"/>
-  <object id="282" x="400" y="1024" width="32" height="32"/>
-  <object id="283" x="400" y="3040" width="32" height="32"/>
-  <object id="284" x="512" y="3040" width="32" height="32"/>
-  <object id="285" x="624" y="3040" width="32" height="32"/>
-  <object id="288" x="736" y="3040" width="32" height="32"/>
-  <object id="289" x="848" y="3040" width="32" height="32"/>
-  <object id="290" x="848" y="3088" width="32" height="32"/>
-  <object id="291" x="736" y="3088" width="32" height="32"/>
-  <object id="292" x="624" y="3088" width="32" height="32"/>
-  <object id="293" x="512" y="3088" width="32" height="32"/>
-  <object id="294" x="400" y="3088" width="32" height="32"/>
-  <object id="295" x="400" y="3232" width="32" height="32"/>
-  <object id="296" x="512" y="3232" width="32" height="32"/>
-  <object id="297" x="624" y="3232" width="32" height="32"/>
-  <object id="298" x="736" y="3232" width="32" height="32"/>
-  <object id="299" x="848" y="3232" width="32" height="32"/>
-  <object id="300" x="848" y="3280" width="32" height="32"/>
-  <object id="301" x="736" y="3280" width="32" height="32"/>
-  <object id="302" x="624" y="3280" width="32" height="32"/>
-  <object id="303" x="512" y="3280" width="32" height="32"/>
-  <object id="304" x="400" y="3280" width="32" height="32"/>
-  <object id="305" x="400" y="3424" width="32" height="32"/>
-  <object id="306" x="512" y="3424" width="32" height="32"/>
-  <object id="307" x="624" y="3424" width="32" height="32"/>
-  <object id="308" x="736" y="3424" width="32" height="32"/>
-  <object id="309" x="848" y="3424" width="32" height="32"/>
-  <object id="310" x="400" y="3472" width="32" height="32"/>
-  <object id="311" x="512" y="3472" width="32" height="32"/>
-  <object id="312" x="624" y="3472" width="32" height="32"/>
-  <object id="313" x="736" y="3472" width="32" height="32"/>
-  <object id="314" x="848" y="3472" width="32" height="32"/>
-  <object id="315" x="400" y="3840" width="32" height="32"/>
-  <object id="316" x="400" y="3888" width="32" height="32"/>
-  <object id="317" x="512" y="3840" width="32" height="32"/>
-  <object id="318" x="624" y="3840" width="32" height="32"/>
-  <object id="319" x="736" y="3840" width="32" height="32"/>
-  <object id="320" x="848" y="3840" width="32" height="32"/>
-  <object id="321" x="848" y="3888" width="32" height="32"/>
-  <object id="322" x="736" y="3888" width="32" height="32"/>
-  <object id="323" x="624" y="3888" width="32" height="32"/>
-  <object id="324" x="512" y="3888" width="32" height="32"/>
-  <object id="325" x="400" y="4032" width="32" height="32"/>
-  <object id="326" x="512" y="4032" width="32" height="32"/>
-  <object id="327" x="512" y="4080" width="32" height="32"/>
-  <object id="328" x="400" y="4080" width="32" height="32"/>
-  <object id="329" x="736" y="4032" width="32" height="32"/>
-  <object id="330" x="848" y="4032" width="32" height="32"/>
-  <object id="331" x="848" y="4080" width="32" height="32"/>
-  <object id="332" x="736" y="4080" width="32" height="32"/>
-  <object id="333" x="848" y="4224" width="32" height="32"/>
-  <object id="334" x="736" y="4224" width="32" height="32"/>
-  <object id="335" x="736" y="4272" width="32" height="32"/>
-  <object id="336" x="848" y="4272" width="32" height="32"/>
-  <object id="337" x="512" y="4224" width="32" height="32"/>
-  <object id="338" x="512" y="4272" width="32" height="32"/>
-  <object id="339" x="400" y="4224" width="32" height="32"/>
-  <object id="340" x="400" y="4272" width="32" height="32"/>
+ <objectgroup id="331" name="FelixStage5">
+  <object id="7128" x="864" y="1040">
+   <point/>
+  </object>
+  <object id="7129" x="752" y="1040">
+   <point/>
+  </object>
+  <object id="7130" x="640" y="1040">
+   <point/>
+  </object>
+  <object id="7131" x="528" y="1040">
+   <point/>
+  </object>
+  <object id="7132" x="416" y="1040">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="22" name="Stage 1 Glass">
+  <object id="366" x="400" y="3840" width="32" height="32"/>
+  <object id="367" x="512" y="3840" width="32" height="32"/>
+  <object id="368" x="624" y="3840" width="32" height="32"/>
+  <object id="369" x="736" y="3840" width="32" height="32"/>
+  <object id="370" x="848" y="3840" width="32" height="32"/>
+  <object id="371" x="400" y="3888" width="32" height="32"/>
+  <object id="372" x="512" y="3888" width="32" height="32"/>
+  <object id="373" x="624" y="3888" width="32" height="32"/>
+  <object id="374" x="736" y="3888" width="32" height="32"/>
+  <object id="375" x="848" y="3888" width="32" height="32"/>
+  <object id="376" x="736" y="4032" width="32" height="32"/>
+  <object id="377" x="848" y="4032" width="32" height="32"/>
+  <object id="378" x="848" y="4080" width="32" height="32"/>
+  <object id="379" x="736" y="4080" width="32" height="32"/>
+  <object id="380" x="512" y="4032" width="32" height="32"/>
+  <object id="381" x="512" y="4080" width="32" height="32"/>
+  <object id="382" x="400" y="4032" width="32" height="32"/>
+  <object id="383" x="400" y="4080" width="32" height="32"/>
+  <object id="384" x="400" y="4224" width="32" height="32"/>
+  <object id="385" x="512" y="4224" width="32" height="32"/>
+  <object id="386" x="736" y="4224" width="32" height="32"/>
+  <object id="387" x="848" y="4224" width="32" height="32"/>
+  <object id="388" x="848" y="4272" width="32" height="32"/>
+  <object id="389" x="736" y="4272" width="32" height="32"/>
+  <object id="390" x="512" y="4272" width="32" height="32"/>
+  <object id="391" x="400" y="4272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="23" name="Stage 2 Glass">
+  <object id="392" x="400" y="3040" width="32" height="32"/>
+  <object id="393" x="512" y="3040" width="32" height="32"/>
+  <object id="394" x="624" y="3040" width="32" height="32"/>
+  <object id="395" x="736" y="3040" width="32" height="32"/>
+  <object id="396" x="848" y="3040" width="32" height="32"/>
+  <object id="397" x="400" y="3088" width="32" height="32"/>
+  <object id="398" x="512" y="3088" width="32" height="32"/>
+  <object id="399" x="624" y="3088" width="32" height="32"/>
+  <object id="400" x="736" y="3088" width="32" height="32"/>
+  <object id="401" x="848" y="3088" width="32" height="32"/>
+  <object id="402" x="400" y="3232" width="32" height="32"/>
+  <object id="403" x="512" y="3232" width="32" height="32"/>
+  <object id="404" x="624" y="3232" width="32" height="32"/>
+  <object id="405" x="736" y="3232" width="32" height="32"/>
+  <object id="406" x="848" y="3232" width="32" height="32"/>
+  <object id="407" x="400" y="3280" width="32" height="32"/>
+  <object id="408" x="512" y="3280" width="32" height="32"/>
+  <object id="409" x="624" y="3280" width="32" height="32"/>
+  <object id="410" x="736" y="3280" width="32" height="32"/>
+  <object id="411" x="848" y="3280" width="32" height="32"/>
+  <object id="412" x="400" y="3424" width="32" height="32"/>
+  <object id="413" x="512" y="3424" width="32" height="32"/>
+  <object id="414" x="624" y="3424" width="32" height="32"/>
+  <object id="415" x="736" y="3424" width="32" height="32"/>
+  <object id="416" x="848" y="3424" width="32" height="32"/>
+  <object id="417" x="400" y="3472" width="32" height="32"/>
+  <object id="418" x="512" y="3472" width="32" height="32"/>
+  <object id="419" x="624" y="3472" width="32" height="32"/>
+  <object id="420" x="736" y="3472" width="32" height="32"/>
+  <object id="421" x="848" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="24" name="Stage 3 Glass">
+  <object id="422" x="400" y="2224" width="32" height="32"/>
+  <object id="423" x="512" y="2224" width="32" height="32"/>
+  <object id="424" x="624" y="2224" width="32" height="32"/>
+  <object id="425" x="736" y="2224" width="32" height="32"/>
+  <object id="426" x="848" y="2224" width="32" height="32"/>
+  <object id="427" x="400" y="2272" width="32" height="32"/>
+  <object id="428" x="512" y="2272" width="32" height="32"/>
+  <object id="429" x="624" y="2272" width="32" height="32"/>
+  <object id="430" x="736" y="2272" width="32" height="32"/>
+  <object id="431" x="848" y="2272" width="32" height="32"/>
+  <object id="432" x="400" y="2416" width="32" height="32"/>
+  <object id="433" x="512" y="2416" width="32" height="32"/>
+  <object id="434" x="624" y="2416" width="32" height="32"/>
+  <object id="435" x="736" y="2416" width="32" height="32"/>
+  <object id="436" x="848" y="2416" width="32" height="32"/>
+  <object id="438" x="400" y="2464" width="32" height="32"/>
+  <object id="439" x="512" y="2464" width="32" height="32"/>
+  <object id="440" x="624" y="2464" width="32" height="32"/>
+  <object id="441" x="736" y="2464" width="32" height="32"/>
+  <object id="442" x="848" y="2464" width="32" height="32"/>
+  <object id="443" x="400" y="2608" width="32" height="32"/>
+  <object id="444" x="512" y="2608" width="32" height="32"/>
+  <object id="445" x="624" y="2608" width="32" height="32"/>
+  <object id="446" x="736" y="2608" width="32" height="32"/>
+  <object id="447" x="848" y="2608" width="32" height="32"/>
+  <object id="448" x="400" y="2656" width="32" height="32"/>
+  <object id="449" x="512" y="2656" width="32" height="32"/>
+  <object id="450" x="624" y="2656" width="32" height="32"/>
+  <object id="451" x="736" y="2656" width="32" height="32"/>
+  <object id="452" x="848" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="26" name="Stage 4 Glass">
+  <object id="453" x="400" y="1408" width="32" height="32"/>
+  <object id="454" x="512" y="1408" width="32" height="32"/>
+  <object id="455" x="624" y="1408" width="32" height="32"/>
+  <object id="456" x="736" y="1408" width="32" height="32"/>
+  <object id="457" x="848" y="1408" width="32" height="32"/>
+  <object id="458" x="400" y="1456" width="32" height="32"/>
+  <object id="459" x="512" y="1456" width="32" height="32"/>
+  <object id="460" x="624" y="1456" width="32" height="32"/>
+  <object id="461" x="736" y="1456" width="32" height="32"/>
+  <object id="462" x="848" y="1456" width="32" height="32"/>
+  <object id="463" x="400" y="1600" width="32" height="32"/>
+  <object id="464" x="512" y="1600" width="32" height="32"/>
+  <object id="465" x="624" y="1600" width="32" height="32"/>
+  <object id="466" x="736" y="1600" width="32" height="32"/>
+  <object id="467" x="848" y="1600" width="32" height="32"/>
+  <object id="468" x="400" y="1648" width="32" height="32"/>
+  <object id="469" x="512" y="1648" width="32" height="32"/>
+  <object id="470" x="624" y="1648" width="32" height="32"/>
+  <object id="471" x="736" y="1648" width="32" height="32"/>
+  <object id="472" x="848" y="1648" width="32" height="32"/>
+  <object id="473" x="400" y="1792" width="32" height="32"/>
+  <object id="474" x="512" y="1792" width="32" height="32"/>
+  <object id="475" x="624" y="1792" width="32" height="32"/>
+  <object id="476" x="736" y="1792" width="32" height="32"/>
+  <object id="477" x="848" y="1792" width="32" height="32"/>
+  <object id="478" x="400" y="1840" width="32" height="32"/>
+  <object id="479" x="512" y="1840" width="32" height="32"/>
+  <object id="480" x="624" y="1840" width="32" height="32"/>
+  <object id="481" x="736" y="1840" width="32" height="32"/>
+  <object id="482" x="848" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="27" name="Stage 5 Glass">
+  <object id="483" x="400" y="592" width="32" height="32"/>
+  <object id="484" x="512" y="592" width="32" height="32"/>
+  <object id="485" x="624" y="592" width="32" height="32"/>
+  <object id="486" x="736" y="592" width="32" height="32"/>
+  <object id="487" x="848" y="592" width="32" height="32"/>
+  <object id="488" x="400" y="640" width="32" height="32"/>
+  <object id="489" x="512" y="640" width="32" height="32"/>
+  <object id="490" x="624" y="640" width="32" height="32"/>
+  <object id="491" x="736" y="640" width="32" height="32"/>
+  <object id="492" x="848" y="640" width="32" height="32"/>
+  <object id="493" x="400" y="784" width="32" height="32"/>
+  <object id="494" x="512" y="784" width="32" height="32"/>
+  <object id="495" x="624" y="784" width="32" height="32"/>
+  <object id="496" x="736" y="784" width="32" height="32"/>
+  <object id="497" x="848" y="784" width="32" height="32"/>
+  <object id="498" x="400" y="832" width="32" height="32"/>
+  <object id="499" x="512" y="832" width="32" height="32"/>
+  <object id="500" x="624" y="832" width="32" height="32"/>
+  <object id="501" x="736" y="832" width="32" height="32"/>
+  <object id="502" x="848" y="832" width="32" height="32"/>
+  <object id="503" x="400" y="976" width="32" height="32"/>
+  <object id="504" x="512" y="976" width="32" height="32"/>
+  <object id="505" x="624" y="976" width="32" height="32"/>
+  <object id="507" x="736" y="976" width="32" height="32"/>
+  <object id="508" x="848" y="976" width="32" height="32"/>
+  <object id="509" x="400" y="1024" width="32" height="32"/>
+  <object id="510" x="512" y="1024" width="32" height="32"/>
+  <object id="511" x="624" y="1024" width="32" height="32"/>
+  <object id="512" x="736" y="1024" width="32" height="32"/>
+  <object id="513" x="848" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="28" name="FelixFinal">
+  <object id="514" x="624" y="144">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="29" name="RalphFinal">
+  <object id="515" x="784" y="80">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="180" name="Glass 1">
+  <object id="6966" x="400" y="4272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="182" name="Glass 2">
+  <object id="6968" x="400" y="4224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="183" name="Glass 3">
+  <object id="6969" x="512" y="4272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="184" name="Glass 4">
+  <object id="6970" x="512" y="4224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="185" name="Glass 5">
+  <object id="7163" x="736" y="4272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="186" name="Glass 6">
+  <object id="6972" x="736" y="4224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="187" name="Glass 7">
+  <object id="6973" x="848" y="4272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="188" name="Glass 8">
+  <object id="6974" x="848" y="4224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="189" name="Glass 9">
+  <object id="6975" x="400" y="4080" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="190" name="Glass 10">
+  <object id="6976" x="400" y="4032" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="191" name="Glass 11">
+  <object id="6977" x="512" y="4080" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="192" name="Glass 12">
+  <object id="6978" x="512" y="4032" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="193" name="Glass 13">
+  <object id="6979" x="736" y="4080" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="194" name="Glass 14">
+  <object id="6980" x="736" y="4032" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="195" name="Glass 15">
+  <object id="6981" x="848" y="4080" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="196" name="Glass 16">
+  <object id="6982" x="848" y="4032" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="197" name="Glass 17">
+  <object id="6983" x="400" y="3888" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="198" name="Glass 18">
+  <object id="6984" x="400" y="3840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="199" name="Glass 19">
+  <object id="6985" x="512" y="3888" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="200" name="Glass 20">
+  <object id="6986" x="512" y="3840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="201" name="Glass 21">
+  <object id="6987" x="624" y="3888" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="202" name="Glass 22">
+  <object id="6988" x="624" y="3840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="203" name="Glass 23">
+  <object id="6989" x="736" y="3888" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="204" name="Glass 24">
+  <object id="6990" x="736" y="3840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="205" name="Glass 25">
+  <object id="6991" x="848" y="3888" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="206" name="Glass 26">
+  <object id="6992" x="848" y="3840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="207" name="Glass 27">
+  <object id="6993" x="400" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="208" name="Glass 28">
+  <object id="6994" x="400" y="3424" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="209" name="Glass 29">
+  <object id="6995" x="512" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="210" name="Glass 30">
+  <object id="6996" x="512" y="3424" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="211" name="Glass 31">
+  <object id="6997" x="624" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="212" name="Glass 32">
+  <object id="6998" x="624" y="3424" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="213" name="Glass 33">
+  <object id="6999" x="736" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="214" name="Glass 34">
+  <object id="7000" x="736" y="3424" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="215" name="Glass 35">
+  <object id="7001" x="848" y="3472" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="216" name="Glass 36">
+  <object id="7002" x="848" y="3424" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="217" name="Glass 37">
+  <object id="7003" x="400" y="3280" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="218" name="Glass 38">
+  <object id="7004" x="400" y="3232" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="219" name="Glass 39">
+  <object id="7005" x="512" y="3280" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="220" name="Glass 40">
+  <object id="7006" x="512" y="3232" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="221" name="Glass 41">
+  <object id="7007" x="624" y="3280" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="222" name="Glass 42">
+  <object id="7008" x="624" y="3232" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="223" name="Glass 43">
+  <object id="7009" x="736" y="3280" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="224" name="Glass 44">
+  <object id="7010" x="736" y="3232" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="225" name="Glass 45">
+  <object id="7011" x="848" y="3280" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="226" name="Glass 46">
+  <object id="7012" x="848" y="3232" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="227" name="Glass 47">
+  <object id="7013" x="400" y="3088" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="228" name="Glass 48">
+  <object id="7014" x="400" y="3040" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="229" name="Glass 49">
+  <object id="7015" x="512" y="3088" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="230" name="Glass 50">
+  <object id="7016" x="512" y="3040" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="231" name="Glass 51">
+  <object id="7017" x="624" y="3088" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="232" name="Glass 52">
+  <object id="7018" x="624" y="3040" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="233" name="Glass 53">
+  <object id="7019" x="736" y="3088" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="234" name="Glass 54">
+  <object id="7020" x="736" y="3040" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="235" name="Glass 55">
+  <object id="7021" x="848" y="3088" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="236" name="Glass 56">
+  <object id="7022" x="848" y="3040" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="237" name="Glass 57">
+  <object id="7023" x="400" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="238" name="Glass 58">
+  <object id="7024" x="400" y="2608" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="239" name="Glass 59">
+  <object id="7025" x="512" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="240" name="Glass 60">
+  <object id="7026" x="512" y="2608" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="241" name="Glass 61">
+  <object id="7027" x="624" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="242" name="Glass 62">
+  <object id="7028" x="624" y="2608" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="243" name="Glass 63">
+  <object id="7029" x="736" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="244" name="Glass 64">
+  <object id="7030" x="736" y="2608" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="245" name="Glass 65">
+  <object id="7031" x="848" y="2656" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="246" name="Glass 66">
+  <object id="7032" x="848" y="2608" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="247" name="Glass 67">
+  <object id="7033" x="400" y="2464" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="248" name="Glass 68">
+  <object id="7034" x="400" y="2416" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="249" name="Glass 69">
+  <object id="7035" x="512" y="2464" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="250" name="Glass 70">
+  <object id="7036" x="512" y="2416" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="251" name="Glass 71">
+  <object id="7037" x="624" y="2464" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="252" name="Glass 72">
+  <object id="7038" x="624" y="2416" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="253" name="Glass 73">
+  <object id="7039" x="736" y="2464" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="254" name="Glass 74">
+  <object id="7040" x="736" y="2416" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="255" name="Glass 75">
+  <object id="7041" x="848" y="2464" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="256" name="Glass 76">
+  <object id="7042" x="848" y="2416" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="257" name="Glass 77">
+  <object id="7043" x="400" y="2272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="258" name="Glass 78">
+  <object id="7044" x="400" y="2224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="259" name="Glass 79">
+  <object id="7045" x="512" y="2272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="260" name="Glass 80">
+  <object id="7046" x="512" y="2224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="261" name="Glass 81">
+  <object id="7047" x="624" y="2272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="262" name="Glass 82">
+  <object id="7048" x="624" y="2224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="263" name="Glass 83">
+  <object id="7049" x="736" y="2272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="264" name="Glass 84">
+  <object id="7050" x="736" y="2224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="265" name="Glass 85">
+  <object id="7051" x="848" y="2272" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="266" name="Glass 86">
+  <object id="7052" x="848" y="2224" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="267" name="Glass 87">
+  <object id="7053" x="400" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="268" name="Glass 88">
+  <object id="7054" x="400" y="1792" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="269" name="Glass 89">
+  <object id="7055" x="512" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="270" name="Glass 90">
+  <object id="7056" x="512" y="1792" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="271" name="Glass 91">
+  <object id="7057" x="624" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="272" name="Glass 92">
+  <object id="7058" x="624" y="1792" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="273" name="Glass 93">
+  <object id="7059" x="736" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="274" name="Glass 94">
+  <object id="7060" x="736" y="1792" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="275" name="Glass 95">
+  <object id="7061" x="848" y="1840" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="276" name="Glass 96">
+  <object id="7062" x="848" y="1792" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="277" name="Glass 97">
+  <object id="7063" x="400" y="1648" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="278" name="Glass 98">
+  <object id="7064" x="400" y="1600" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="279" name="Glass 99">
+  <object id="7065" x="512" y="1648" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="280" name="Glass 100">
+  <object id="7066" x="512" y="1600" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="281" name="Glass 101">
+  <object id="7067" x="624" y="1648" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="282" name="Glass 102">
+  <object id="7068" x="624" y="1600" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="283" name="Glass 103">
+  <object id="7069" x="736" y="1648" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="284" name="Glass 104">
+  <object id="7070" x="736" y="1600" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="285" name="Glass 105">
+  <object id="7071" x="848" y="1648" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="286" name="Glass 106">
+  <object id="7072" x="848" y="1600" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="287" name="Glass 107">
+  <object id="7073" x="400" y="1456" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="288" name="Glass 108">
+  <object id="7074" x="400" y="1408" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="289" name="Glass 109">
+  <object id="7075" x="512" y="1456" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="290" name="Glass 110">
+  <object id="7076" x="512" y="1408" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="291" name="Glass 111">
+  <object id="7077" x="624" y="1456" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="292" name="Glass 112">
+  <object id="7078" x="624" y="1408" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="293" name="Glass 113">
+  <object id="7079" x="736" y="1456" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="294" name="Glass 114">
+  <object id="7080" x="736" y="1408" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="295" name="Glass 115">
+  <object id="7081" x="848" y="1456" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="296" name="Glass 116">
+  <object id="7082" x="848" y="1408" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="297" name="Glass 117">
+  <object id="7083" x="400" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="298" name="Glass 118">
+  <object id="7084" x="400" y="976" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="299" name="Glass 119">
+  <object id="7085" x="512" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="300" name="Glass 120">
+  <object id="7086" x="512" y="976" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="301" name="Glass 121">
+  <object id="7087" x="624" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="302" name="Glass 122">
+  <object id="7088" x="624" y="976" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="303" name="Glass 123">
+  <object id="7089" x="736" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="304" name="Glass 124">
+  <object id="7090" x="736" y="976" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="305" name="Glass 125">
+  <object id="7091" x="848" y="1024" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="306" name="Glass 126">
+  <object id="7092" x="848" y="976" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="307" name="Glass 127">
+  <object id="7093" x="400" y="832" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="308" name="Glass 128">
+  <object id="7094" x="400" y="784" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="309" name="Glass 129">
+  <object id="7095" x="512" y="832" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="310" name="Glass 130">
+  <object id="7096" x="512" y="784" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="311" name="Glass 131">
+  <object id="7097" x="624" y="832" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="312" name="Glass 132">
+  <object id="7098" x="624" y="784" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="313" name="Glass 133">
+  <object id="7099" x="736" y="832" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="314" name="Glass 134">
+  <object id="7100" x="736" y="784" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="315" name="Glass 135">
+  <object id="7101" x="848" y="832" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="316" name="Glass 136">
+  <object id="7102" x="848" y="784" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="317" name="Glass 137">
+  <object id="7103" x="400" y="640" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="318" name="Glass 138">
+  <object id="7104" x="400" y="592" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="319" name="Glass 139">
+  <object id="7105" x="512" y="640" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="320" name="Glass 140">
+  <object id="7106" x="512" y="592" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="321" name="Glass 141">
+  <object id="7107" x="624" y="640" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="322" name="Glass 142">
+  <object id="7108" x="624" y="592" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="323" name="Glass 143">
+  <object id="7109" x="736" y="640" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="324" name="Glass 144">
+  <object id="7110" x="736" y="592" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="325" name="Glass 145">
+  <object id="7111" x="848" y="640" width="32" height="32"/>
+ </objectgroup>
+ <objectgroup id="326" name="Glass 146">
+  <object id="7112" x="848" y="592" width="32" height="32"/>
  </objectgroup>
 </map>

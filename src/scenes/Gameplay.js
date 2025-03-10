@@ -3,17 +3,32 @@ class Gameplay extends Phaser.Scene {
     super("Gameplay");
   }
 
+  init() {
+    this.currentStage = 1;
+    this.maxStage = 5;
+    this.levelTransitioning = false;
+    this.windowsById = {};
+
+    this.stageRanges = {
+      1: { start: 1, end: 26 },
+      2: { start: 27, end: 56 },
+      3: { start: 57, end: 86 },
+      4: { start: 87, end: 116 },
+      5: { start: 117, end: 146 }
+    };
+
+    // 读取 Tiled 中 "Stage X Space" 对象层信息
+    this.stageAreas = {};
+  }
+
   preload() {
     this.load.path = "./assets/";
-    // 加载地图 JSON + Tileset
     this.load.tilemapTiledJSON("gameplayMap", "Gameplay.json");
     this.load.image("tilesetImage", "tileset.png");
     this.load.image("tileset2Image", "tileset2.png");
-    // 角色/物体
     this.load.image("Felix", "Felix.png");
     this.load.image("Ralph", "Ralph.png");
     this.load.image("stone", "stone.png");
-    // 玻璃精灵图 0=完好,1=中破,2=重破
     this.load.spritesheet("glassSheet", "Glass-Sheet.png", {
       frameWidth: 32,
       frameHeight: 32
@@ -21,12 +36,12 @@ class Gameplay extends Phaser.Scene {
   }
 
   create() {
-    // ======== Tilemap & Layers ========
     const map = this.make.tilemap({ key: "gameplayMap" });
+    this.map = map;
     const tilesetA = map.addTilesetImage("tileset", "tilesetImage");
     const tilesetB = map.addTilesetImage("tileset2", "tileset2Image");
 
-    const mainBackgroundLayer = map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
+    map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
     map.createLayer("Grass", [tilesetA, tilesetB], 0, -32).setDepth(1);
     map.createLayer("House", [tilesetA, tilesetB], 0, -32).setDepth(2);
     map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, -32).setDepth(3);
@@ -39,45 +54,51 @@ class Gameplay extends Phaser.Scene {
     map.createLayer("Support", [tilesetA, tilesetB], 0, 0).setDepth(9);
 
     const floorGrassLayer = map.createLayer("Floor Grass", [tilesetA, tilesetB], 0, 0).setDepth(13);
-    const windowLayer = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
+    this.windowLayerRef = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
     const doorLayer = map.createLayer("Door", [tilesetA, tilesetB], 0, 0).setDepth(11);
 
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
-    if (windowLayer) windowLayer.setCollisionByProperty({ collides: true });
+    if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
-    // ======== Felix ========
+    // 读取 Stage X Space: topY = obj.y
+    for (let s = 1; s <= this.maxStage; s++) {
+      let layerName = "Stage " + s + " Space";
+      let spaceLayer = map.getObjectLayer(layerName);
+      if (spaceLayer && spaceLayer.objects.length > 0) {
+        let obj = spaceLayer.objects[0];
+        let topY = obj.y;
+        this.stageAreas[s] = { topY };
+        console.log(`Stage ${s}: topY=${topY}`);
+      } else {
+        console.warn(`Stage ${s} Space layer missing or empty.`);
+      }
+    }
+
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix").setScale(0.1);
+    this.felix.setCollideWorldBounds(true).setDepth(9999);
 
-    // 调整碰撞盒
     this.time.delayedCall(0, () => {
       const dw = this.felix.displayWidth;
       const dh = this.felix.displayHeight;
-      const bodyW = dw * 10;
-      const bodyH = dh * 10;
-      const offsetX = bodyW * 0.08;
-      const offsetY = bodyH * 0.02;
-      this.felix.body.setSize(bodyW, bodyH);
-      this.felix.body.setOffset(offsetX, offsetY);
+      this.felix.body.setSize(dw * 10, dh * 10);
+      this.felix.body.setOffset(dw, dh * 0.02);
     });
-    this.felix.setCollideWorldBounds(true).setDepth(9999);
+    this.physics.add.collider(this.felix, floorLayer);
+    this.physics.add.collider(this.felix, doorLayer);
+    this.physics.add.collider(this.felix, floorGrassLayer);
+    this.physics.add.collider(this.felix, this.windowLayerRef);
 
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.startFollow(this.felix, true, 0.25, 0);
 
-    this.physics.add.collider(this.felix, floorLayer);
-    this.physics.add.collider(this.felix, doorLayer);
-    this.physics.add.collider(this.felix, floorGrassLayer);
-    this.physics.add.collider(this.felix, windowLayer);
-
-    // ======== Ralph & 石头 ========
     const ralphLayer = map.getObjectLayer("RalphSpawns");
     let ralphX = 400, ralphY = 100;
     if (ralphLayer && ralphLayer.objects.length > 0) {
       let obj = ralphLayer.objects[0];
-      ralphX = obj.x + (obj.width||0)/2;
-      ralphY = obj.y + (obj.height||0)/2;
+      ralphX = obj.x + (obj.width || 0) / 2;
+      ralphY = obj.y + (obj.height || 0) / 2;
     }
     this.ralph = this.add.sprite(ralphX, ralphY, "Ralph").setDepth(1000).setScale(0.2);
 
@@ -85,7 +106,7 @@ class Gameplay extends Phaser.Scene {
     let ralphMoveLayer = map.getObjectLayer("RalphMovement");
     if (ralphMoveLayer) {
       ralphMoveLayer.objects.forEach(o => {
-        let rx = o.x + (o.width||0)/2;
+        let rx = o.x + (o.width || 0) / 2;
         this.ralphMovements.push(rx);
       });
     }
@@ -94,98 +115,107 @@ class Gameplay extends Phaser.Scene {
     let stoneDropLayer = map.getObjectLayer("StoneDropPosition");
     if (stoneDropLayer) {
       stoneDropLayer.objects.forEach(o => {
-        let sx = o.x + (o.width||0)/2;
-        let sy = o.y + (o.height||0)/2;
-        this.stoneDrops.push({ x:sx, y:sy });
+        let sx = o.x + (o.width || 0) / 2;
+        let sy = o.y + (o.height || 0) / 2;
+        this.stoneDrops.push({ x: sx, y: sy });
       });
     }
 
-    // 投石逻辑
     this.stones = this.physics.add.group();
+    this.physics.add.overlap(this.felix, this.stones, () => {
+      if (!this.levelTransitioning) {
+        this.scene.start("Gameover");
+      }
+    });
     this.time.addEvent({
       delay: 2000,
       loop: true,
-      callback: () => {
-        let closeDrops = this.stoneDrops.filter(pos => {
-          return (Math.abs(pos.x - this.ralph.x) < 5 && Math.abs(pos.y - this.ralph.y) < 5);
-        });
-        if (closeDrops.length > 0) {
-          let idx = Phaser.Math.Between(0, closeDrops.length - 1);
-          let pos = closeDrops[idx];
-          this.createStone(pos.x, pos.y);
-        } else {
-          let stoneX = this.ralph.x + Phaser.Math.Between(-30, 30);
-          let stoneY = this.ralph.y + 20;
-          this.createStone(stoneX, stoneY);
-        }
-      }
-    });
-    this.physics.add.overlap(this.felix, this.stones, () => {
-      this.scene.start("Gameover");
+      callback: this.throwStones,
+      callbackScope: this
     });
 
-    if (this.ralphMovements.length > 0) {
-      this.time.addEvent({
-        delay: 3000,
-        loop: true,
-        callback: this.moveRalphRandom,
-        callbackScope: this
-      });
-    }
-
-    // ======== 输入 & Felix平台跳跃 ========
     this.cursors = this.input.keyboard.createCursorKeys();
     this.windowPlatforms = [];
     let layerObj = map.getObjectLayer("Felix Positions");
     if (layerObj) {
       layerObj.objects.forEach(obj => {
-        let px = obj.x + obj.width/2;
-        let py = obj.y + obj.height/2;
-        this.windowPlatforms.push({ x:px, y:py });
+        let px = obj.x + obj.width / 2;
+        let py = obj.y + obj.height / 2;
+        this.windowPlatforms.push({ x: px, y: py });
       });
     }
     this.isWindowJumping = false;
 
-    // ======== 读取 "GlassPosition"：每扇窗户含多块玻璃 ========
-    // 但这次不会用"窗户中心"做修理检测，而是逐块玻璃
-    this.windowsById = {};
-    let glassLayer = map.getObjectLayer("GlassPosition");
-    if (glassLayer) {
-      glassLayer.objects.forEach(obj => {
-        let gx = obj.x + obj.width / 2;
-        let gy = obj.y + obj.height / 2;
-        let wId = 0;
-        if (obj.properties) {
-          let prop = obj.properties.find(p => p.name === "windowId");
-          if (prop) wId = prop.value;
-        }
-        if (!this.windowsById[wId]) {
-          this.windowsById[wId] = { windowId:wId, glasses:[] };
-        }
-        let wObj = this.windowsById[wId];
+    this.loadGlassForStage(this.currentStage);
+    this.levelTransitioning = false;
+  }
 
-        let glassSprite = this.add.sprite(gx, gy, "glassSheet").setDepth(windowLayer.depth+1);
-        let rndFrame = Phaser.Math.Between(0,2); // 0=完好 1=中破 2=重破
-        glassSprite.setFrame(rndFrame);
-
-        wObj.glasses.push({
-          sprite: glassSprite,
-          isBroken: (rndFrame>0),
-          repairTimer: 0 // 每块玻璃独立维护修理计时
-        });
-      });
+  loadGlassForStage(stage) {
+    let range = this.stageRanges[stage];
+    if (!range) return;
+    for (let num = range.start; num <= range.end; num += 2) {
+      let windowId = Math.floor((num - range.start) / 2) + 1;
+      let key = `${stage}_${windowId}`;
+      let lowerLayer = this.map.getObjectLayer("Glass " + num);
+      let upperLayer = this.map.getObjectLayer("Glass " + (num + 1));
+      if (!lowerLayer || lowerLayer.objects.length === 0) {
+        console.warn(`Glass ${num} layer missing or empty.`);
+        continue;
+      }
+      if (!upperLayer || upperLayer.objects.length === 0) {
+        console.warn(`Glass ${num + 1} layer missing or empty.`);
+        continue;
+      }
+      let objLower = lowerLayer.objects[0];
+      let objUpper = upperLayer.objects[0];
+      let gxLower = objLower.x + objLower.width / 2;
+      let gyLower = objLower.y + objLower.height / 2;
+      let gxUpper = objUpper.x + objUpper.width / 2;
+      let gyUpper = objUpper.y + objUpper.height / 2;
+      let lowerSprite = this.add.sprite(gxLower, gyLower, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
+      let upperSprite = this.add.sprite(gxUpper, gyUpper, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
+      lowerSprite.setFrame(Phaser.Math.Between(1, 2));
+      upperSprite.setFrame(Phaser.Math.Between(1, 2));
+      this.windowsById[key] = {
+        stage: stage,
+        glasses: [
+          { sprite: lowerSprite, isBroken: true, repairTimer: 0 },
+          { sprite: upperSprite, isBroken: true, repairTimer: 0 }
+        ]
+      };
     }
   }
 
-  // ========== 投石 ==========
-  createStone(x, y) {
-    let stone = this.stones.create(x, y, "stone");
-    stone.setScale(0.05).setDepth(9998);
-    stone.setVelocityY(Phaser.Math.Between(100, 200));
+  throwStones() {
+    let closeDrops = this.stoneDrops.filter(pos => {
+      return (Math.abs(pos.x - this.ralph.x) < 5 && Math.abs(pos.y - this.ralph.y) < 5);
+    });
+    let pos;
+    if (closeDrops.length > 0) {
+      let idx = Phaser.Math.Between(0, closeDrops.length - 1);
+      pos = closeDrops[idx];
+    } else {
+      pos = { x: this.ralph.x + Phaser.Math.Between(-30, 30), y: this.ralph.y + 20 };
+    }
+    const stoneVelocity = 150;
+    for (let i = 0; i < 3; i++) {
+      this.time.delayedCall(i * 200, () => {
+        this.createStone(pos.x, pos.y, stoneVelocity);
+      });
+    }
+    this.time.delayedCall(3 * 200 + 500, () => {
+      this.moveRalphRandom();
+    });
   }
 
-  // ========== Ralph 随机移动 ==========
+  createStone(x, y, velocity = 150) {
+    let stone = this.stones.create(x, y, "stone");
+    stone.setScale(0.05).setDepth(9998);
+    stone.setVelocityY(velocity);
+  }
+
   moveRalphRandom() {
+    if (!this.ralphMovements.length) return;
     let idx = Phaser.Math.Between(0, this.ralphMovements.length - 1);
     let targetX = this.ralphMovements[idx];
     let currentY = this.ralph.y;
@@ -198,83 +228,135 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // ========== 主循环 ==========
-  update(time, delta) {
-    if (this.isWindowJumping) return;
-
-    // 平台跳跃示例（上下左右）
-    let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
-    if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
-      let aboveIdx = this.findPlatformAbove(currentIndex);
-      if (aboveIdx !== null) {
-        this.doWindowMoveTween(aboveIdx);
-      }
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
-      let belowIdx = this.findPlatformBelow(currentIndex);
-      if (belowIdx !== null) {
-        this.doWindowMoveTween(belowIdx);
-      }
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
-      let leftIdx = this.findPlatformLeft(currentIndex);
-      if (leftIdx !== null) {
-        this.doWindowJumpAnimation(currentIndex, leftIdx);
-      }
-    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
-      let rightIdx = this.findPlatformRight(currentIndex);
-      if (rightIdx !== null) {
-        this.doWindowJumpAnimation(currentIndex, rightIdx);
-      }
-    }
-
-    // === 玻璃修理（方法B：按“每块玻璃”的距离检测）
-    this.checkAndRepairWindows(delta);
-  }
-
-  // ========== 逐块玻璃检测距离 + 修理 ==========
-  checkAndRepairWindows(delta) {
-    const REPAIR_DISTANCE = 50;   // Felix到玻璃< 50时开始修
-    const REPAIR_INTERVAL = 1000; // 1秒修理1档
-
-    for (let wId in this.windowsById) {
-      let wObj = this.windowsById[wId];
-
-      // 遍历此窗口下的每一块玻璃
-      for (let gData of wObj.glasses) {
-        if (!gData.isBroken) continue; // 已完好则忽略
-
-        // 计算 Felix 与 该块玻璃 的距离
-        let dist = Phaser.Math.Distance.Between(
-          this.felix.x, this.felix.y,
-          gData.sprite.x, gData.sprite.y
-        );
-       // console.log(`[GlassLog] dist=${dist.toFixed(2)}, repairTimer=${gData.repairTimer.toFixed(2)}`);
-        
-        // 若进入修理范围
-        if (dist < REPAIR_DISTANCE) {
-          gData.repairTimer += delta;
-          // 若计时超过 REPAIR_INTERVAL => 修理1档
-          if (gData.repairTimer >= REPAIR_INTERVAL) {
-            let currentFrame = gData.sprite.frame.name; // 0/1/2
-            if (currentFrame == 2) {
-              // 重破 => 中破
-              gData.sprite.setFrame(1);
-            } else {
-              // 中破 => 完好
-              gData.sprite.setFrame(0);
-              gData.isBroken = false;
-            }
-            // 用掉这1秒
-            gData.repairTimer -= REPAIR_INTERVAL;
-          }
-        } else {
-          // 不在范围，重置此块玻璃的修理计时
-          gData.repairTimer = 0;
+  allWindowsRepairedForStage() {
+    for (let key in this.windowsById) {
+      let wObj = this.windowsById[key];
+      if (wObj.stage === this.currentStage) {
+        for (let g of wObj.glasses) {
+          if (g.isBroken) return false;
         }
       }
     }
+    return true;
   }
 
-  // ========== Felix 窗口平台移动示例 ==========
+  // ========== 关卡切换：offset = stageAreas[currentStage].topY - stageAreas[nextStage].topY ==========
+  levelTransition() {
+    this.levelTransitioning = true;
+    this.stones.children.each(st => { st.body.enable = false; });
+
+    // 1秒后切换
+    this.time.delayedCall(1000, () => {
+      let nextStage = this.currentStage + 1;
+      if (nextStage > this.maxStage) {
+        console.log("Game Completed!");
+        return;
+      }
+
+      let currentArea = this.stageAreas[this.currentStage];
+      let nextArea = this.stageAreas[nextStage];
+      if (!currentArea || !nextArea) {
+        console.error(`Stage area data missing for current=${this.currentStage} or next=${nextStage}`);
+        return;
+      }
+
+      // offset = (StageN topY) - (StageN+1 topY)
+      let offset = currentArea.topY - nextArea.topY + 300;
+      console.log(`Transition from Stage ${this.currentStage} to Stage ${nextStage}. offset=${offset}`);
+
+      // 停止摄像机跟随
+      this.cameras.main.stopFollow();
+
+      let currentCenter = this.cameras.main.midPoint;
+      let targetX = currentCenter.x;
+      let targetY = currentCenter.y - offset;
+      console.log(`Camera pan from y=${currentCenter.y} to y=${targetY}`);
+
+      // 平滑滚动
+      this.cameras.main.pan(targetX, targetY, 2000, "Linear", false, () => {
+        console.log(`Arrived at Stage ${nextStage}. Clearing old windows & loading new.`);
+
+        this.currentStage = nextStage;
+
+        // 清除上一关玻璃
+        for (let key in this.windowsById) {
+          this.windowsById[key].glasses.forEach(g => g.sprite.destroy());
+        }
+        this.windowsById = {};
+
+        // 加载新关卡玻璃
+        this.loadGlassForStage(this.currentStage);
+
+        // 清除石头
+        this.stones.clear(true, true);
+
+        // 恢复摄像机跟随
+        this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+
+        // 启用石头碰撞
+        this.stones.children.each(st => { st.body.enable = true; });
+
+        this.levelTransitioning = false;
+      });
+    });
+  }
+
+  update(time, delta) {
+    if (!this.cursors) return;
+    if (this.levelTransitioning || this.isWindowJumping) return;
+
+    this.checkAndRepairWindows(delta);
+
+    if (this.allWindowsRepairedForStage()) {
+      console.log(`All windows in Stage ${this.currentStage} repaired. Trigger levelTransition().`);
+      this.levelTransition();
+      return;
+    }
+
+    let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+      let aboveIdx = this.findPlatformAbove(currentIndex);
+      if (aboveIdx !== null) this.doWindowMoveTween(aboveIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+      let belowIdx = this.findPlatformBelow(currentIndex);
+      if (belowIdx !== null) this.doWindowMoveTween(belowIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+      let leftIdx = this.findPlatformLeft(currentIndex);
+      if (leftIdx !== null) this.doWindowJumpAnimation(currentIndex, leftIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+      let rightIdx = this.findPlatformRight(currentIndex);
+      if (rightIdx !== null) this.doWindowJumpAnimation(currentIndex, rightIdx);
+    }
+  }
+
+  checkAndRepairWindows(delta) {
+    const REPAIR_DISTANCE = 50;
+    const REPAIR_INTERVAL = 1000;
+    for (let key in this.windowsById) {
+      let wObj = this.windowsById[key];
+      if (wObj.stage !== this.currentStage) continue;
+      wObj.glasses.forEach(g => {
+        if (!g.isBroken) return;
+        let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, g.sprite.x, g.sprite.y);
+        if (dist < REPAIR_DISTANCE) {
+          g.repairTimer += delta;
+          if (g.repairTimer >= REPAIR_INTERVAL) {
+            let currentFrame = parseInt(g.sprite.frame.name, 10);
+            if (currentFrame === 2) {
+              g.sprite.setFrame(1);
+            } else {
+              g.sprite.setFrame(0);
+              g.isBroken = false;
+            }
+            g.repairTimer = 0;
+          }
+        } else {
+          g.repairTimer = 0;
+        }
+      });
+    }
+  }
+
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
     let targetPos = this.windowPlatforms[targetIndex];
@@ -295,12 +377,9 @@ class Gameplay extends Phaser.Scene {
     this.isWindowJumping = true;
     let fromPos = this.windowPlatforms[fromIndex];
     let toPos = this.windowPlatforms[toIndex];
-    this.felix.x = fromPos.x;
-    this.felix.y = fromPos.y;
-
-    let midX = (fromPos.x + toPos.x)/2;
-    let midY = (fromPos.y + toPos.y)/2 - 50;
-
+    this.felix.setPosition(fromPos.x, fromPos.y);
+    let midX = (fromPos.x + toPos.x) / 2;
+    let midY = (fromPos.y + toPos.y) / 2 - 50;
     this.tweens.add({
       targets: this.felix,
       x: midX,
@@ -316,7 +395,7 @@ class Gameplay extends Phaser.Scene {
           ease: "Quad.easeIn",
           onComplete: () => {
             this.isWindowJumping = false;
-            this.felix.setVelocity(0,0);
+            this.felix.setVelocity(0, 0);
           }
         });
       }
@@ -336,50 +415,70 @@ class Gameplay extends Phaser.Scene {
     });
     return closest;
   }
+
   findPlatformAbove(idx) {
-    if (idx==null) return null;
+    if (idx == null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate=null, minDist=Infinity;
-    this.windowPlatforms.forEach((p,i) => {
-      if (p.y<cur.y && Math.abs(p.x-cur.x)<40) {
-        let dist = cur.y-p.y;
-        if(dist<minDist){ minDist=dist; candidate=i;}
+    let candidate = null;
+    let minDist = Infinity;
+    this.windowPlatforms.forEach((p, i) => {
+      if (p.y < cur.y && Math.abs(p.x - cur.x) < 40) {
+        let dist = cur.y - p.y;
+        if (dist < minDist) {
+          minDist = dist;
+          candidate = i;
+        }
       }
     });
     return candidate;
   }
+
   findPlatformBelow(idx) {
-    if (idx==null) return null;
+    if (idx == null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate=null, minDist=Infinity;
-    this.windowPlatforms.forEach((p,i) => {
-      if (p.y>cur.y && Math.abs(p.x-cur.x)<40) {
-        let dist = p.y-cur.y;
-        if(dist<minDist){ minDist=dist; candidate=i;}
+    let candidate = null;
+    let minDist = Infinity;
+    this.windowPlatforms.forEach((p, i) => {
+      if (p.y > cur.y && Math.abs(p.x - cur.x) < 40) {
+        let dist = p.y - cur.y;
+        if (dist < minDist) {
+          minDist = dist;
+          candidate = i;
+        }
       }
     });
     return candidate;
   }
+
   findPlatformLeft(idx) {
-    if (idx==null) return null;
+    if (idx == null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate=null, minDist=Infinity;
-    this.windowPlatforms.forEach((p,i) => {
-      if (p.x<cur.x && Math.abs(p.y-cur.y)<40) {
-        let dist = cur.x-p.x;
-        if(dist<minDist){ minDist=dist; candidate=i;}
+    let candidate = null;
+    let minDist = Infinity;
+    this.windowPlatforms.forEach((p, i) => {
+      if (p.x < cur.x && Math.abs(p.y - cur.y) < 40) {
+        let dist = cur.x - p.x;
+        if (dist < minDist) {
+          minDist = dist;
+          candidate = i;
+        }
       }
     });
     return candidate;
   }
+
   findPlatformRight(idx) {
-    if (idx==null) return null;
+    if (idx == null) return null;
     let cur = this.windowPlatforms[idx];
-    let candidate=null, minDist=Infinity;
-    this.windowPlatforms.forEach((p,i) => {
-      if (p.x>cur.x && Math.abs(p.y-cur.y)<40) {
-        let dist = p.x-cur.x;
-        if(dist<minDist){ minDist=dist; candidate=i;}
+    let candidate = null;
+    let minDist = Infinity;
+    this.windowPlatforms.forEach((p, i) => {
+      if (p.x > cur.x && Math.abs(p.y - cur.y) < 40) {
+        let dist = p.x - cur.x;
+        if (dist < minDist) {
+          minDist = dist;
+          candidate = i;
+        }
       }
     });
     return candidate;
