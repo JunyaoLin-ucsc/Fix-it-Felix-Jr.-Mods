@@ -195,24 +195,36 @@ class Gameplay extends Phaser.Scene {
   }
 
   throwStones() {
-    let closeDrops = this.stoneDrops.filter(pos => {
-      return (Math.abs(pos.x - this.ralph.x) < 5 && Math.abs(pos.y - this.ralph.y) < 5);
-    });
-    let pos;
-    if (closeDrops.length > 0) {
-      let idx = Phaser.Math.Between(0, closeDrops.length - 1);
-      pos = closeDrops[idx];
-    } else {
-      pos = { x: this.ralph.x + Phaser.Math.Between(-30, 30), y: this.ralph.y + 20 };
-    }
+    // 随机选择一个石头投放点
+    let randomIndex = Phaser.Math.Between(0, this.stoneDrops.length - 1);
+    let pos = this.stoneDrops[randomIndex];
+  
     const stoneVelocity = 150;
+    // 扔 3 块石头，每块间隔 200ms
     for (let i = 0; i < 3; i++) {
       this.time.delayedCall(i * 200, () => {
         this.createStone(pos.x, pos.y, stoneVelocity);
       });
     }
+    
+    // 在石头投掷完成后，让 Ralph 移动到一个新的随机石头投放点（避免重复选择）
     this.time.delayedCall(3 * 200 + 500, () => {
-      this.moveRalphRandom();
+      let newIndex = randomIndex;
+      if (this.stoneDrops.length > 1) {
+        // 如果有多个投放点，则确保选到的不是上次的那个
+        do {
+          newIndex = Phaser.Math.Between(0, this.stoneDrops.length - 1);
+        } while (newIndex === randomIndex);
+      }
+      let newPos = this.stoneDrops[newIndex];
+      // 使用 Tween 平滑移动 Ralph 到新的投放点
+      this.tweens.add({
+        targets: this.ralph,
+        x: newPos.x,
+        y: newPos.y,
+        duration: 500,
+        ease: "Linear"
+      });
     });
   }
 
