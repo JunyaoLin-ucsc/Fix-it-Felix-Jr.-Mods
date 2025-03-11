@@ -183,18 +183,23 @@ class Gameplay extends Phaser.Scene {
       let gyUpper = objUpper.y + objUpper.height / 2;
       let lowerSprite = this.add.sprite(gxLower, gyLower, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
       let upperSprite = this.add.sprite(gxUpper, gyUpper, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
-      lowerSprite.setFrame(Phaser.Math.Between(1, 2));
-      upperSprite.setFrame(Phaser.Math.Between(1, 2));
+      
+      // 随机赋值帧 0、1、2，其中 0 表示完好，其它为破损
+      let frameLower = Phaser.Math.Between(0, 2);
+      let frameUpper = Phaser.Math.Between(0, 2);
+      lowerSprite.setFrame(frameLower);
+      upperSprite.setFrame(frameUpper);
+      
       this.windowsById[key] = {
         stage: stage,
         glasses: [
-          { sprite: lowerSprite, isBroken: true, repairTimer: 0 },
-          { sprite: upperSprite, isBroken: true, repairTimer: 0 }
+          { sprite: lowerSprite, isBroken: (frameLower !== 0), repairTimer: 0 },
+          { sprite: upperSprite, isBroken: (frameUpper !== 0), repairTimer: 0 }
         ]
       };
     }
   }
-
+  
   throwStones() {
     // 找到所有与 Ralph 足够接近的投石点
     let closeDrops = this.stoneDrops.filter(pos => {
@@ -391,7 +396,7 @@ class Gameplay extends Phaser.Scene {
 
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 100;
+    const REPAIR_INTERVAL = 1000; // 单位毫秒
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
@@ -401,6 +406,7 @@ class Gameplay extends Phaser.Scene {
         if (dist < REPAIR_DISTANCE) {
           g.repairTimer += delta;
           if (g.repairTimer >= REPAIR_INTERVAL) {
+            // 若当前玻璃为“重破”状态 (2) 则先变成中破 (1)；否则直接修复成完好 (0)
             let currentFrame = parseInt(g.sprite.frame.name, 10);
             if (currentFrame === 2) {
               g.sprite.setFrame(1);
@@ -415,7 +421,7 @@ class Gameplay extends Phaser.Scene {
         }
       });
     }
-  }
+  }  
 
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
