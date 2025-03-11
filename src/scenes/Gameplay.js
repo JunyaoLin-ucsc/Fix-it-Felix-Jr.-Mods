@@ -8,6 +8,7 @@ class Gameplay extends Phaser.Scene {
     this.maxStage = 5;
     this.levelTransitioning = false;
     this.windowsById = {};
+    this.lastStoneDropIndex = null;
 
     this.stageRanges = {
       1: { start: 1, end: 26 },
@@ -195,22 +196,43 @@ class Gameplay extends Phaser.Scene {
   }
 
   throwStones() {
+    // 找到所有与 Ralph 足够接近的投石点
     let closeDrops = this.stoneDrops.filter(pos => {
       return (Math.abs(pos.x - this.ralph.x) < 5 && Math.abs(pos.y - this.ralph.y) < 5);
     });
+  
+    // 如果确实存在 closeDrops，就从中随机选一个且尽量避免连续两次选到同一个索引
     let pos;
     if (closeDrops.length > 0) {
-      let idx = Phaser.Math.Between(0, closeDrops.length - 1);
+      let idx, tries = 0;
+      do {
+        idx = Phaser.Math.Between(0, closeDrops.length - 1);
+        tries++;
+      } while (idx === this.lastStoneDropIndex && closeDrops.length > 1 && tries < 10);
+  
+      this.lastStoneDropIndex = idx;
       pos = closeDrops[idx];
+  
     } else {
-      pos = { x: this.ralph.x + Phaser.Math.Between(-30, 30), y: this.ralph.y + 20 };
+      // 如果没有任何 closeDrops，则退化为贴图完全重合 + 随机偏移
+      pos = { 
+        x: this.ralph.x + Phaser.Math.Between(-30, 30), 
+        y: this.ralph.y + 20 
+      };
     }
+  
+    // 石头与 Ralph 精灵重合，让视觉上看是 Ralph 扔下来的
+    // (若你想 100% 重合，可直接 pos = { x: this.ralph.x, y: this.ralph.y } )
+    // 这里保持与上面pos一致
     const stoneVelocity = 150;
     for (let i = 0; i < 3; i++) {
       this.time.delayedCall(i * 200, () => {
+        // 使用 Ralph 当前坐标, 保证石头与 Ralph 重合
         this.createStone(pos.x, pos.y, stoneVelocity);
       });
     }
+  
+    // 扔完石头后，再移动 Ralph
     this.time.delayedCall(3 * 200 + 500, () => {
       this.moveRalphRandom();
     });
@@ -223,25 +245,23 @@ class Gameplay extends Phaser.Scene {
   }
 
   moveRalphRandom() {
-    // 若没有 RalphMovement 数据则不动
+    // 如果没有 RalphMovement 数据就不动
     if (!this.ralphMovements.length) return;
   
-    // 随机选择一个X坐标（Ralph只左右移动，保持同一个stage的y不变）
+    // 随机选一个X坐标，让 Ralph 只左右移动
     let idx = Phaser.Math.Between(0, this.ralphMovements.length - 1);
     let targetX = this.ralphMovements[idx];
-    
-    // 平滑移动 Ralph
-    this.tweens.killTweensOf(this.ralph); // 先清除旧Tween，避免干扰
+    let currentY = this.ralph.y; // 不改 y
+  
+    // 平滑移动到 targetX
+    this.tweens.killTweensOf(this.ralph); 
     this.tweens.add({
       targets: this.ralph,
       x: targetX,
-      y: this.ralph.y,  // 保持 y 不变
+      y: currentY,
       duration: 500,
       ease: "Linear",
-      onComplete: () => {
-        // 移动完成后，投石
-        this.throwStones();
-      }
+      // 移动结束后会在 throwStones() 中重新调用 moveRalphRandom() 形成循环
     });
   }
 
