@@ -66,18 +66,23 @@ class Gameplay extends Phaser.Scene {
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
     // 读取 Stage X Space: topY = obj.y
+// 读取 "Stage X Space" 对象层，并存储 topY 和 height
     for (let s = 1; s <= this.maxStage; s++) {
       let layerName = "Stage " + s + " Space";
       let spaceLayer = map.getObjectLayer(layerName);
       if (spaceLayer && spaceLayer.objects.length > 0) {
         let obj = spaceLayer.objects[0];
         let topY = obj.y;
-        this.stageAreas[s] = { topY };
-        console.log(`Stage ${s}: topY=${topY}`);
+        let height = obj.height;  // 存储高度
+        let centerX = obj.x + obj.width / 2;
+        let centerY = obj.y + obj.height / 2;
+        this.stageAreas[s] = { topY, height, centerX, centerY };
+        console.log(`Stage ${s}: topY=${topY}, height=${height}`);
       } else {
         console.warn(`Stage ${s} Space layer missing or empty.`);
       }
     }
+
 
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix").setScale(0.1);
@@ -195,9 +200,20 @@ class Gameplay extends Phaser.Scene {
   }
 
   throwStones() {
-    // 随机选择一个石头投放点
-    let randomIndex = Phaser.Math.Between(0, this.stoneDrops.length - 1);
-    let pos = this.stoneDrops[randomIndex];
+    // 过滤出当前关卡区域内的投石点
+    let currentArea = this.stageAreas[this.currentStage];
+    let validDrops = this.stoneDrops.filter(pos => {
+      return (pos.y >= currentArea.topY && pos.y <= (currentArea.topY + currentArea.height));
+    });
+    
+    // 如果当前关卡区域内没有投石点，退化为从全部中选取（尽量避免这种情况）
+    if (validDrops.length === 0) {
+      validDrops = this.stoneDrops;
+    }
+  
+    // 随机选择一个投石点
+    let randomIndex = Phaser.Math.Between(0, validDrops.length - 1);
+    let pos = validDrops[randomIndex];
   
     const stoneVelocity = 150;
     // 扔 3 块石头，每块间隔 200ms
@@ -207,17 +223,14 @@ class Gameplay extends Phaser.Scene {
       });
     }
     
-    // 在石头投掷完成后，让 Ralph 移动到一个新的随机石头投放点（避免重复选择）
+    // 在石头投掷完成后，让 Ralph 在当前关卡的 RalphMovement 中随机移动，
+    // 并确保他停留在当前关卡的石头投放点区域
     this.time.delayedCall(3 * 200 + 500, () => {
-      let newIndex = randomIndex;
-      if (this.stoneDrops.length > 1) {
-        // 如果有多个投放点，则确保选到的不是上次的那个
-        do {
-          newIndex = Phaser.Math.Between(0, this.stoneDrops.length - 1);
-        } while (newIndex === randomIndex);
-      }
-      let newPos = this.stoneDrops[newIndex];
-      // 使用 Tween 平滑移动 Ralph 到新的投放点
+      // 这里我们也可以尝试过滤 RalphMovement（如果你在 Tiled 里也为 RalphMovement 分关）
+      // 例如：let validMoves = this.ralphMovements.filter(x => { ... });
+      // 这里暂时直接随机选择
+      let newIndex = Phaser.Math.Between(0, validDrops.length - 1);
+      let newPos = validDrops[newIndex];
       this.tweens.add({
         targets: this.ralph,
         x: newPos.x,
@@ -227,6 +240,7 @@ class Gameplay extends Phaser.Scene {
       });
     });
   }
+  
 
   createStone(x, y, velocity = 150) {
     let stone = this.stones.create(x, y, "stone");
