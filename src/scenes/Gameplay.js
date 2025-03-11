@@ -396,7 +396,7 @@ class Gameplay extends Phaser.Scene {
 
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 1000; // 单位毫秒
+    const REPAIR_INTERVAL = 1000; // 毫秒
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
@@ -406,14 +406,9 @@ class Gameplay extends Phaser.Scene {
         if (dist < REPAIR_DISTANCE) {
           g.repairTimer += delta;
           if (g.repairTimer >= REPAIR_INTERVAL) {
-            // 若当前玻璃为“重破”状态 (2) 则先变成中破 (1)；否则直接修复成完好 (0)
-            let currentFrame = parseInt(g.sprite.frame.name, 10);
-            if (currentFrame === 2) {
-              g.sprite.setFrame(1);
-            } else {
-              g.sprite.setFrame(0);
-              g.isBroken = false;
-            }
+            // 直接将玻璃修复到完好状态（frame 0）
+            g.sprite.setFrame(0);
+            g.isBroken = false;
             g.repairTimer = 0;
           }
         } else {
@@ -421,7 +416,8 @@ class Gameplay extends Phaser.Scene {
         }
       });
     }
-  }  
+  }
+   
 
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
