@@ -277,7 +277,6 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-  // ========== 关卡切换：offset = stageAreas[currentStage].topY - stageAreas[nextStage].topY ==========
   levelTransition() {
     this.levelTransitioning = true;
   
@@ -298,64 +297,69 @@ class Gameplay extends Phaser.Scene {
   
     console.log(`Transition from stage=${this.currentStage} -> ${nextStage}`);
   
-    // 假设每层高度 750，用于限制摄像机+物理世界
+    // 设置下一关的物理世界与摄像机边界（假设关卡高度为750）
     let stageHeight = 750;
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
   
-    // ============ Felix 随机重生在 FelixStageN 对象层（若存在）===========
-    let felixLayerName = `FelixStage${nextStage}`;
-    let felixLayer = this.map.getObjectLayer(felixLayerName);
-    let newX = this.felix.x;       // 若取不到对象，就用旧X
-    let newY = nextArea.topY + 200; // 若取不到对象，就在 topY+200
-    if (felixLayer && felixLayer.objects.length > 0) {
-      // 随机拿一个对象
-      let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
-      let fObj = felixLayer.objects[randF];
-      newX = fObj.x + (fObj.width || 0) / 2;
-      newY = fObj.y + (fObj.height || 0) / 2;
-      console.log(`Random Felix spawn from layer ${felixLayerName} => (${newX},${newY})`);
-    } else {
-      console.warn(`No layer "${felixLayerName}" or empty. Using fallback => (${newX}, ${newY})`);
-    }
-    // 设置 Felix 坐标
-    this.felix.setPosition(newX, newY);
+    // 计算目标摄像机中心，使得摄像机上边缘 = nextArea.topY
+    // camera.top = camera.centerY - (gameHeight / 2)  =>  camera.centerY = nextArea.topY + (gameHeight / 2)
+    let newCameraCenterY = nextArea.topY + this.cameras.main.height / 2;
+    let currentCenter = this.cameras.main.midPoint;
+    console.log(`Camera pan from y=${currentCenter.y} to y=${newCameraCenterY}`);
   
-    // ============ Ralph 随机重生在 RalphStageN 对象层（若存在）===========
-    // 先停止 Ralph 旧的 tween/移动，避免他继续在上一层乱动
-    this.tweens.killTweensOf(this.ralph);
+    // 停止摄像机跟随后平滑滚动
+    this.cameras.main.stopFollow();
+    this.cameras.main.pan(currentCenter.x, newCameraCenterY, 2000, "Linear", false, () => {
+      // 滚动结束后，重新定位 Felix 与 Ralph
   
-    let ralphLayerName = `RalphStage${nextStage}`;
-    let spawnLayer = this.map.getObjectLayer(ralphLayerName);
-    if (spawnLayer && spawnLayer.objects.length > 0) {
-      let randomIndex = Phaser.Math.Between(0, spawnLayer.objects.length - 1);
-      let rObj = spawnLayer.objects[randomIndex];
-      let rx = rObj.x + (rObj.width || 0) / 2;
-      let ry = rObj.y + (rObj.height || 0) / 2;
-      this.ralph.setPosition(rx, ry);
-      console.log(`Move Ralph to stage ${nextStage} => (${rx}, ${ry})`);
-    } else {
-      console.warn(`No layer "${ralphLayerName}" or no objects, keep Ralph old pos.`);
-    }
-  
-    // ============ 清理上一关玻璃 + 加载下一关玻璃 ============
-    for (let key in this.windowsById) {
-      let wObj = this.windowsById[key];
-      if (wObj.stage === this.currentStage) {
-        wObj.glasses.forEach(g => g.sprite.destroy());
-        delete this.windowsById[key];
+      // Felix：尝试从 "FelixStageN" 对象层中随机取一个，否则 fallback 到 nextArea.topY+200
+      let felixLayerName = `FelixStage${nextStage}`;
+      let felixLayer = this.map.getObjectLayer(felixLayerName);
+      let newX = this.felix.x;
+      let newY = nextArea.topY + 200;
+      if (felixLayer && felixLayer.objects.length > 0) {
+        let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
+        let fObj = felixLayer.objects[randF];
+        newX = fObj.x + (fObj.width || 0) / 2;
+        newY = fObj.y + (fObj.height || 0) / 2;
+        console.log(`Random Felix spawn from layer ${felixLayerName} => (${newX}, ${newY})`);
+      } else {
+        console.warn(`No layer "${felixLayerName}" or empty. Using fallback => (${newX}, ${newY})`);
       }
-    }
-    this.currentStage = nextStage;
-    this.loadGlassForStage(nextStage);
+      this.felix.setPosition(newX, newY);
   
-    // ============ 摄像机再次跟随 Felix ============
-    this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+      // Ralph：同样从 "RalphStageN" 对象层随机取一个点
+      this.tweens.killTweensOf(this.ralph);
+      let ralphLayerName = `RalphStage${nextStage}`;
+      let spawnLayer = this.map.getObjectLayer(ralphLayerName);
+      if (spawnLayer && spawnLayer.objects.length > 0) {
+        let randomIndex = Phaser.Math.Between(0, spawnLayer.objects.length - 1);
+        let rObj = spawnLayer.objects[randomIndex];
+        let rx = rObj.x + (rObj.width || 0) / 2;
+        let ry = rObj.y + (rObj.height || 0) / 2;
+        this.ralph.setPosition(rx, ry);
+        console.log(`Move Ralph to stage ${nextStage} => (${rx}, ${ry})`);
+      } else {
+        console.warn(`No layer "${ralphLayerName}" or no objects, keep Ralph old pos.`);
+      }
   
-    this.levelTransitioning = false;
+      // 清理上一关的玻璃并加载下一关的玻璃
+      for (let key in this.windowsById) {
+        let wObj = this.windowsById[key];
+        if (wObj.stage === this.currentStage) {
+          wObj.glasses.forEach(g => g.sprite.destroy());
+          delete this.windowsById[key];
+        }
+      }
+      this.currentStage = nextStage;
+      this.loadGlassForStage(nextStage);
+  
+      // 重新启动摄像机跟随
+      this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+      this.levelTransitioning = false;
+    });
   }
-  
-  
 
   update(time, delta) {
     if (!this.cursors) return;
