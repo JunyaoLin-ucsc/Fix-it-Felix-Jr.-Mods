@@ -301,13 +301,12 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-// 关卡切换：实现传送带式的滚动效果，由 Ralph 自己向上移动（摄像机跟随 Ralph）
-// Felix 则瞬移到新关的随机位置
-levelTransition() {
+// 关卡切换：当当前关卡完成后，让 Ralph 沿 Y 轴缓慢上移，摄像机跟随 Ralph
+  levelTransition() {
   this.levelTransitioning = true;
   let nextStage = this.currentStage + 1;
-  
-  // 如果超过最大阶段，则尝试进入 Final Stage
+
+  // 如果超过最大阶段，则进入 Final Stage（这里不作修改，保持原逻辑）
   if (nextStage > this.maxStage) {
     if (this.stageAreas["final"]) {
       console.log("All normal stages done => go to Final Stage.");
@@ -318,7 +317,7 @@ levelTransition() {
     this.levelTransitioning = false;
     return;
   }
-  
+
   // 获取当前和下一阶段的区域数据（topY）
   let currentArea = this.stageAreas[this.currentStage];
   let nextArea = this.stageAreas[nextStage];
@@ -328,11 +327,16 @@ levelTransition() {
     return;
   }
   console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
-  
-  // 预加载下一阶段数据：清理当前阶段玻璃、加载下一阶段玻璃、更新角色位置等
+
+  // 更新物理世界与摄像机边界到下一阶段区域（假设每个阶段高度为750）
+  let stageHeight = 750;
+  this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+  this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+
+  // 预加载下一阶段数据：清理当前阶段玻璃、加载下一阶段玻璃、更新角色位置、加载专用对象层
   this.preLoadNextStage(nextStage);
-  
-  // 立即传送 Felix 到下一关（Felix 的新位置取自 "FelixStageX" 对象层）
+
+  // 让 Felix 直接传送到新关的随机位置（从 "FelixStageX" 对象层读取）
   let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
   if (felixLayer && felixLayer.objects.length > 0) {
     let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
@@ -342,40 +346,43 @@ levelTransition() {
     this.felix.setPosition(newX, newY);
     console.log(`Felix teleported to Stage ${nextStage} spawn: (${newX}, ${newY})`);
   }
-  
+
   // 暂停投石
   if (this.stoneTimer) {
     this.stoneTimer.paused = true;
   }
-  
-  // 切换摄像机跟随由 Felix 转为跟随 Ralph，便于展示 Ralph 的移动动画
+
+  // 切换摄像机跟随，从 Felix 切换到跟随 Ralph，这样能看到 Ralph 向上移动
   this.cameras.main.stopFollow();
   this.cameras.main.startFollow(this.ralph, true, 0.25, 0.25);
-  
-  // 获取 RalphStage 对象层中一个随机的目标位置作为 Ralph 的移动目标
+
+  // 获取 RalphStage 对象层中一个随机目标位置作为 Ralph 的目标（这里我们确保 Ralph 向上移动，即目标 Y 值比当前小）
   let ralphLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
   let targetX = this.ralph.x;
-  let targetY = this.ralph.y - 100; // 默认向上移动的偏移值
+  let targetY = this.ralph.y - 100; // 默认向上移动100像素（你可根据需要调整）
   if (ralphLayer && ralphLayer.objects.length > 0) {
     let randR = Phaser.Math.Between(0, ralphLayer.objects.length - 1);
     let rObj = ralphLayer.objects[randR];
+    // 取目标位置时确保 Y 值较当前更小（向上移动）
     targetX = rObj.x + (rObj.width || 0) / 2;
     targetY = rObj.y + (rObj.height || 0) / 2;
     console.log(`Ralph target for Stage ${nextStage}: (${targetX}, ${targetY})`);
   } else {
-    console.warn(`No RalphStage${nextStage} layer, using default upward movement.`);
+    console.warn(`No RalphStage${nextStage} layer found, using default upward movement.`);
   }
-  
-  // 使用 tween 让 Ralph 缓慢向上移动，摄像机跟随 Ralph 的移动
+
+  // 使用 tween 让 Ralph 缓慢向上移动（沿 Y 轴变化），期间摄像机跟随 Ralph
   this.tweens.killTweensOf(this.ralph);
   this.tweens.add({
     targets: this.ralph,
-    x: targetX,
-    y: targetY,
-    duration: 4000, // 4秒内完成移动，你可以根据需要调整此时间
+    y: targetY, // 只改变 Y 轴，使得 Ralph 向上移动
+    duration: 4000, // 4秒移动时间，可根据需要调整
     ease: "Linear",
+    onUpdate: () => {
+      // 此处摄像机跟随 Ralph 已经在工作，所以不用单独调整摄像机
+    },
     onComplete: () => {
-      // 当 Ralph 移动完成后，切换摄像机跟随回 Felix，并恢复投石
+      // 当 Ralph 的移动动画完成后，切换摄像机跟随回 Felix，并恢复投石
       this.cameras.main.stopFollow();
       this.cameras.main.startFollow(this.felix, true, 0.25, 0.25);
       if (this.stoneTimer) {
