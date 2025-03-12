@@ -112,11 +112,13 @@ class Gameplay extends Phaser.Scene {
     // 设置相机与物理边界，并将相机初始 scroll 到 Stage 1 区域
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
     let stage1Area = this.stageAreas[1];
     if (stage1Area) {
       let stageHeight = 750;
       this.physics.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
       this.cameras.main.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
+      // 直接把相机 scroll 到 Stage1 的顶部
       this.cameras.main.setScroll(0, stage1Area.topY);
     }
 
@@ -325,6 +327,7 @@ class Gameplay extends Phaser.Scene {
       return;
     }
     console.log(`Stage ${this.currentStage} repaired => go to Stage ${nextStage}.`);
+
     let stageHeight = 750;
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
@@ -338,11 +341,14 @@ class Gameplay extends Phaser.Scene {
       this.stoneTimer.paused = true;
     }
     this.tweens.killTweensOf(this.ralph);
+
     // 预加载下一阶段（清理当前阶段玻璃、加载新阶段玻璃、更新 Felix 与 Ralph 位置、加载新阶段专用对象层）
     this.preLoadNextStage(nextStage);
 
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 1000000000, "Linear", false, () => {
+    // ★★ 将 duration 设为 8000ms（8秒）做示例，可自行调整
+    this.cameras.main.pan(currentCenter.x, newCenterY, 8000, "Linear", false, () => {
+      // 滚动完成后恢复投石与跟随
       if (this.stoneTimer) {
         this.stoneTimer.paused = false;
       }
@@ -418,7 +424,8 @@ class Gameplay extends Phaser.Scene {
     let currentCenter = this.cameras.main.midPoint;
 
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 4000, "Linear", false, () => {
+    // 同样设置一个8秒滚动时间为例
+    this.cameras.main.pan(currentCenter.x, newCenterY, 8000, "Linear", false, () => {
       console.log("Reached final stage area.");
       this.inFinalStage = true;
       if (this.stoneTimer) {
@@ -426,6 +433,7 @@ class Gameplay extends Phaser.Scene {
         this.stoneTimer = null;
       }
       this.tweens.killTweensOf(this.ralph);
+
       // 将 Felix 移至 "FelixFinal" 图层（若存在）
       let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
       if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
@@ -435,6 +443,7 @@ class Gameplay extends Phaser.Scene {
         this.felix.setPosition(fx, fy);
         console.log(`Felix => final: (${fx}, ${fy})`);
       }
+
       // 将 Ralph 移至 "RalphFinal" 图层（若存在）
       let ralphFinalLayer = this.map.getObjectLayer("RalphFinal");
       if (ralphFinalLayer && ralphFinalLayer.objects.length > 0) {
@@ -444,6 +453,7 @@ class Gameplay extends Phaser.Scene {
         this.ralph.setPosition(rx, ry);
         console.log(`Ralph => final: (${rx}, ${ry})`);
       }
+
       // 3秒后跳转到 Gameover
       this.time.delayedCall(3000, () => {
         this.scene.start("Gameover");
