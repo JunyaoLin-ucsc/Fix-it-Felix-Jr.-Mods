@@ -4242,7 +4242,7 @@
         {
          "draworder":"topdown",
          "id":354,
-         "name":"Final Space",
+         "name":"Final Stage Space",
          "objects":[
                 {
                  "height":832,
@@ -11107,7 +11107,7 @@
          "y":0
         }],
  "nextlayerid":355,
- "nextobjectid":7270,
+ "nextobjectid":7272,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",

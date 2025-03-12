@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="306" tilewidth="16" tileheight="16" infinite="0" nextlayerid="355" nextobjectid="7270">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="306" tilewidth="16" tileheight="16" infinite="0" nextlayerid="355" nextobjectid="7272">
  <editorsettings>
   <export target="Gameplay.json" format="json"/>
  </editorsettings>
@@ -17554,7 +17554,7 @@
  <objectgroup id="341" name="Stage 5 Space">
   <object id="7162" x="0" y="832" width="1280" height="816"/>
  </objectgroup>
- <objectgroup id="354" name="Final Space">
+ <objectgroup id="354" name="Final Stage Space">
   <object id="7267" x="0" y="0" width="1280" height="832"/>
  </objectgroup>
  <objectgroup id="17" name="RalphSpawns">
