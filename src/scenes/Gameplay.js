@@ -107,9 +107,19 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, this.windowLayerRef);
 
-    // 不让摄像机一直跟随，后面在关卡切换时再 pan
+    // 设置相机
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    // 在这里强制相机初始位置到 stage1
+    let stage1Area = this.stageAreas[1];
+    if (stage1Area) {
+      let stageHeight = 750;
+      this.physics.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
+      this.cameras.main.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
+      // 让相机滚动到 stage1 顶部
+      this.cameras.main.setScroll(0, stage1Area.topY);
+    }
 
     // 创建 Ralph
     const ralphLayer = map.getObjectLayer("RalphSpawns");
@@ -182,6 +192,7 @@ class Gameplay extends Phaser.Scene {
   loadGlassForStage(stage) {
     let range = this.stageRanges[stage];
     if (!range) return;
+    let allZero = true; // 用于检测是否全部随机成0
     for (let num = range.start; num <= range.end; num += 2) {
       let windowId = Math.floor((num - range.start) / 2) + 1;
       let key = `${stage}_${windowId}`;
@@ -204,16 +215,24 @@ class Gameplay extends Phaser.Scene {
       let lowerSprite = this.add.sprite(gxLower, gyLower, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
       let upperSprite = this.add.sprite(gxUpper, gyUpper, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
 
+      // Stage 1 随机 [0..2], 其余 [1..2]
+      let frameLower, frameUpper;
       if (stage === 1) {
-        lowerSprite.setFrame(Phaser.Math.Between(0, 2));
-        upperSprite.setFrame(Phaser.Math.Between(0, 2));
+        frameLower = Phaser.Math.Between(0, 2);
+        frameUpper = Phaser.Math.Between(0, 2);
       } else {
-        // Stage2+ 强制破损
-        lowerSprite.setFrame(Phaser.Math.Between(1, 2));
-        upperSprite.setFrame(Phaser.Math.Between(1, 2));
+        frameLower = Phaser.Math.Between(1, 2);
+        frameUpper = Phaser.Math.Between(1, 2);
       }
-      let lowerBroken = (parseInt(lowerSprite.frame.name, 10) !== 0);
-      let upperBroken = (parseInt(upperSprite.frame.name, 10) !== 0);
+      lowerSprite.setFrame(frameLower);
+      upperSprite.setFrame(frameUpper);
+
+      if (frameLower !== 0 || frameUpper !== 0) {
+        allZero = false; // 只要有一块不是0，就说明不是全部完好
+      }
+
+      let lowerBroken = (frameLower !== 0);
+      let upperBroken = (frameUpper !== 0);
       this.windowsById[key] = {
         stage: stage,
         glasses: [
@@ -221,6 +240,21 @@ class Gameplay extends Phaser.Scene {
           { sprite: upperSprite, isBroken: upperBroken, repairTimer: 0 }
         ]
       };
+    }
+
+    // 如果 stage=1 且全都是0，则强行把最后一扇或随机一扇改为破损 => 确保至少有1扇需要修
+    if (stage === 1 && allZero) {
+      let keys = Object.keys(this.windowsById).filter(k => k.startsWith("1_"));
+      if (keys.length > 0) {
+        // 随机挑一个key
+        let forcedKey = keys[Phaser.Math.Between(0, keys.length - 1)];
+        let wObj = this.windowsById[forcedKey];
+        // 强行把下玻璃或者上玻璃设为破损2
+        let forcedGlass = wObj.glasses[0]; // 下玻璃
+        forcedGlass.sprite.setFrame(2);
+        forcedGlass.isBroken = true;
+        console.log(`Stage1 had all 0 => forced ${forcedKey} lower glass to frame=2`);
+      }
     }
   }
 
