@@ -111,13 +111,13 @@ class Gameplay extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // 在这里强制相机初始位置到 stage1
+    // ★ 在这里将相机初始scroll到 stage1 的区域
     let stage1Area = this.stageAreas[1];
     if (stage1Area) {
       let stageHeight = 750;
       this.physics.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
       this.cameras.main.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
-      // 让相机滚动到 stage1 顶部
+      // 相机立即滚动到 Stage1 顶部
       this.cameras.main.setScroll(0, stage1Area.topY);
     }
 
@@ -221,8 +221,9 @@ class Gameplay extends Phaser.Scene {
         frameLower = Phaser.Math.Between(0, 2);
         frameUpper = Phaser.Math.Between(0, 2);
       } else {
-        frameLower = Phaser.Math.Between(1, 2);
-        frameUpper = Phaser.Math.Between(1, 2);
+        // Stage2+ 强制破损
+        frameLower = Phaser.Math.Between(0, 2);
+        frameUpper = Phaser.Math.Between(0, 2);
       }
       lowerSprite.setFrame(frameLower);
       upperSprite.setFrame(frameUpper);
@@ -242,14 +243,12 @@ class Gameplay extends Phaser.Scene {
       };
     }
 
-    // 如果 stage=1 且全都是0，则强行把最后一扇或随机一扇改为破损 => 确保至少有1扇需要修
+    // 如果 stage=1 且全都是0，则强行把最后一扇或随机一扇改为破损2
     if (stage === 1 && allZero) {
       let keys = Object.keys(this.windowsById).filter(k => k.startsWith("1_"));
       if (keys.length > 0) {
-        // 随机挑一个key
         let forcedKey = keys[Phaser.Math.Between(0, keys.length - 1)];
         let wObj = this.windowsById[forcedKey];
-        // 强行把下玻璃或者上玻璃设为破损2
         let forcedGlass = wObj.glasses[0]; // 下玻璃
         forcedGlass.sprite.setFrame(2);
         forcedGlass.isBroken = true;
@@ -381,7 +380,29 @@ class Gameplay extends Phaser.Scene {
 
     this.cameras.main.stopFollow();
     this.cameras.main.pan(currentCenter.x, newCenterY, 2000, "Linear", false, () => {
-      console.log("Reached final stage area. You can place Felix & Ralph or show ending.");
+      console.log("Reached final stage area. Place Felix & Ralph at final positions or show ending.");
+
+      // 如果 Tiled 中有 "FelixFinal" 图层，就把 Felix 放到那里
+      let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
+      if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
+        let obj = felixFinalLayer.objects[0];
+        let fx = obj.x + (obj.width || 0)/2;
+        let fy = obj.y + (obj.height || 0)/2;
+        this.felix.setPosition(fx, fy);
+        console.log(`Felix => final: (${fx}, ${fy})`);
+      }
+
+      // 同理，如果有 "RalphFinal" 图层，就把 Ralph 放到那里
+      let ralphFinalLayer = this.map.getObjectLayer("RalphFinal");
+      if (ralphFinalLayer && ralphFinalLayer.objects.length > 0) {
+        let obj = ralphFinalLayer.objects[0];
+        let rx = obj.x + (obj.width || 0)/2;
+        let ry = obj.y + (obj.height || 0)/2;
+        this.ralph.setPosition(rx, ry);
+        console.log(`Ralph => final: (${rx}, ${ry})`);
+      }
+
+      // 这里可以播放通关动画、显示结束UI等等
     });
   }
 
@@ -627,4 +648,4 @@ class Gameplay extends Phaser.Scene {
   }
 }
 
-window.Gameplay = Gameplay;
+window.Gameplay = Gameplay; 
