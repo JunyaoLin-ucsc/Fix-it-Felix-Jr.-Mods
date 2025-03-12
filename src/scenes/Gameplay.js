@@ -301,148 +301,144 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-// 关卡切换：当当前关卡完成后，让 Ralph 沿 Y 轴缓慢上移，摄像机跟随 Ralph
-// 关卡切换：当当前关卡完成后，让摄像机跟随 Ralph，Ralph 向上移动展示动画
-levelTransition() {
-  this.levelTransitioning = true;
-  let nextStage = this.currentStage + 1;
-
-  // 如果超过最大阶段，则进入 Final Stage（保持原逻辑）
-  if (nextStage > this.maxStage) {
-    if (this.stageAreas["final"]) {
-      console.log("All normal stages done => go to Final Stage.");
-      this.transitionToFinalStage();
-    } else {
-      console.log("All normal stages done, no Final Stage Space found. Stop transition.");
-    }
-    this.levelTransitioning = false;
-    return;
-  }
-
-  // 获取当前和下一阶段的区域数据（topY）
-  let currentArea = this.stageAreas[this.currentStage];
-  let nextArea = this.stageAreas[nextStage];
-  if (!currentArea || !nextArea) {
-    console.error(`Stage area missing: current=${this.currentStage}, next=${nextStage}`);
-    this.levelTransitioning = false;
-    return;
-  }
-  console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
-
-  // 更新物理世界和摄像机边界到下一阶段区域（假设每个阶段高度为750）
-  let stageHeight = 750;
-  this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-  this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-
-  // 预加载下一阶段数据（清理当前阶段玻璃、加载下一阶段玻璃、更新角色位置、加载新阶段专用对象层）
-  this.preLoadNextStage(nextStage);
-
-  // 让 Felix 直接传送到新关的随机位置（从 "FelixStageX" 对象层读取）
-  let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
-  if (felixLayer && felixLayer.objects.length > 0) {
-    let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
-    let fObj = felixLayer.objects[randF];
-    let newX = fObj.x + (fObj.width || 0) / 2;
-    let newY = fObj.y + (fObj.height || 0) / 2;
-    this.felix.setPosition(newX, newY);
-    console.log(`Felix teleported to Stage ${nextStage} spawn: (${newX}, ${newY})`);
-  }
-
-  // 暂停投石计时器
-  if (this.stoneTimer) {
-    this.stoneTimer.paused = true;
-  }
-
-  // 切换摄像机跟随到 Ralph（这样你可以看到 Ralph 向上移动的过程）
-  this.cameras.main.stopFollow();
-  this.cameras.main.startFollow(this.ralph, true, 0.25, 0.25);
-
-  // 获取 RalphStage 对象层中一个随机目标位置作为 Ralph 的目标
-  let ralphLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
-  let targetX = this.ralph.x;
-  let targetY = this.ralph.y - 100; // 默认向上移动100像素
-  if (ralphLayer && ralphLayer.objects.length > 0) {
-    let randR = Phaser.Math.Between(0, ralphLayer.objects.length - 1);
-    let rObj = ralphLayer.objects[randR];
-    // 确保目标 Y 值比当前更小（向上移动）
-    targetX = rObj.x + (rObj.width || 0) / 2;
-    targetY = rObj.y + (rObj.height || 0) / 2;
-    console.log(`Ralph target for Stage ${nextStage}: (${targetX}, ${targetY})`);
-  } else {
-    console.warn(`No RalphStage${nextStage} layer found, using default upward movement.`);
-  }
-
-  // 使用 tween 让 Ralph 沿 Y 轴缓慢向上移动，期间摄像机跟随 Ralph
-  this.tweens.killTweensOf(this.ralph);
-  this.tweens.add({
-    targets: this.ralph,
-    y: targetY, // 仅改变 Y 值，让 Ralph 向上移动
-    duration: 2000, // 这里设置为2000ms（2秒）; 可根据需要调整
-    ease: "Linear",
-    onComplete: () => {
-      // 当 Ralph 移动结束后，将摄像机跟随切换回 Felix，并恢复投石
-      this.cameras.main.stopFollow();
-      this.cameras.main.startFollow(this.felix, true, 0.25, 0.25);
-      if (this.stoneTimer) {
-        this.stoneTimer.paused = false;
+  // 关卡切换：当当前关卡完成后，让 Ralph 沿 Y 轴缓慢上移，摄像机跟随 Ralph
+  levelTransition() {
+    this.levelTransitioning = true;
+    let nextStage = this.currentStage + 1;
+    
+    // 如果超过最大阶段，则进入 Final Stage
+    if (nextStage > this.maxStage) {
+      if (this.stageAreas["final"]) {
+        console.log("All normal stages done => go to Final Stage.");
+        this.transitionToFinalStage();
+      } else {
+        console.log("All normal stages done, no Final Stage Space found. Stop transition.");
       }
       this.levelTransitioning = false;
+      return;
     }
-  });
-}
-
-
-// 预加载下一阶段数据，不进行摄像机滚动，由 levelTransition 调用
-preLoadNextStage(nextStage) {
-  // 清理当前阶段玻璃
-  for (let key in this.windowsById) {
-    let wObj = this.windowsById[key];
-    if (wObj.stage === this.currentStage) {
-      wObj.glasses.forEach(g => g.sprite.destroy());
-      delete this.windowsById[key];
+    
+    // 获取当前和下一阶段的区域数据
+    let currentArea = this.stageAreas[this.currentStage];
+    let nextArea = this.stageAreas[nextStage];
+    if (!currentArea || !nextArea) {
+      console.error(`Stage area missing: current=${this.currentStage}, next=${nextStage}`);
+      this.levelTransitioning = false;
+      return;
     }
+    console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
+    
+    // 更新物理世界与摄像机边界到下一阶段区域（假设每个阶段高度为750）
+    let stageHeight = 750;
+    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    
+    // 预加载下一阶段数据
+    this.preLoadNextStage(nextStage);
+    
+    // 让 Felix 瞬移到新关随机出生点（从 "FelixStageX" 对象层读取）
+    let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
+    if (felixLayer && felixLayer.objects.length > 0) {
+      let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
+      let fObj = felixLayer.objects[randF];
+      let newX = fObj.x + (fObj.width || 0) / 2;
+      let newY = fObj.y + (fObj.height || 0) / 2;
+      this.felix.setPosition(newX, newY);
+      console.log(`Felix teleported to Stage ${nextStage} spawn: (${newX}, ${newY})`);
+    }
+    
+    // 暂停投石计时器
+    if (this.stoneTimer) {
+      this.stoneTimer.paused = true;
+    }
+    
+    // 切换摄像机跟随到 Ralph，便于看到 Ralph 向上移动的动画
+    this.cameras.main.stopFollow();
+    this.cameras.main.startFollow(this.ralph, true, 0.25, 0.25);
+    
+    // 获取 RalphStage 对象层中一个随机目标位置作为 Ralph 的目标（确保目标比当前 Y 小，即向上移动）
+    let ralphLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
+    let targetX = this.ralph.x;
+    let targetY = this.ralph.y - 100; // 默认向上移动 100 像素
+    if (ralphLayer && ralphLayer.objects.length > 0) {
+      let randR = Phaser.Math.Between(0, ralphLayer.objects.length - 1);
+      let rObj = ralphLayer.objects[randR];
+      targetX = rObj.x + (rObj.width || 0) / 2;
+      targetY = rObj.y + (rObj.height || 0) / 2;
+      console.log(`Ralph target for Stage ${nextStage}: (${targetX}, ${targetY})`);
+    } else {
+      console.warn(`No RalphStage${nextStage} layer found, using default upward movement.`);
+    }
+    
+    // 使用 tween 让 Ralph 沿 Y 轴缓慢向上移动（显示移动动画）
+    this.tweens.killTweensOf(this.ralph);
+    this.tweens.add({
+      targets: this.ralph,
+      y: targetY,
+      duration: 2000, // 2秒内移动完成，你可调整此值
+      ease: "Linear",
+      onComplete: () => {
+        // 移动结束后，将摄像机跟随切换回 Felix，并恢复投石计时器
+        this.cameras.main.stopFollow();
+        this.cameras.main.startFollow(this.felix, true, 0.25, 0.25);
+        if (this.stoneTimer) {
+          this.stoneTimer.paused = false;
+        }
+        this.levelTransitioning = false;
+      }
+    });
   }
-  // 更新当前阶段并加载下一阶段玻璃
-  this.currentStage = nextStage;
-  this.loadGlassForStage(nextStage);
-  
-  // 更新 Felix 位置（读取 "FelixStageX" 对象层）
-  let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
-  let nextArea = this.stageAreas[nextStage];
-  let newX = this.felix.x;
-  let newY = nextArea ? nextArea.topY + 200 : this.felix.y;
-  if (felixLayer && felixLayer.objects.length > 0) {
-    let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
-    let fObj = felixLayer.objects[randF];
-    newX = fObj.x + (fObj.width || 0) / 2;
-    newY = fObj.y + (fObj.height || 0) / 2;
-    console.log(`Felix => stage${nextStage}: (${newX}, ${newY})`);
-  }
-  this.felix.setPosition(newX, newY);
-  
-  // 更新 Ralph 位置（读取 "RalphStageX" 对象层）
-  let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
-  if (rLayer && rLayer.objects.length > 0) {
-    let rIndex = Phaser.Math.Between(0, rLayer.objects.length - 1);
-    let rObj = rLayer.objects[rIndex];
-    let rx = rObj.x + (rObj.width || 0) / 2;
-    let ry = rObj.y + (rObj.height || 0) / 2;
-    this.ralph.setPosition(rx, ry);
-    console.log(`Ralph => stage${nextStage}: (${rx}, ${ry})`);
-  } else {
-    console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
-  }
-  
-  // 加载新阶段专用对象层数据
-  this.loadStageObjectLayers(nextStage);
-  
-  // 更新物理世界与摄像机边界
-  let stageHeight = 750;
-  this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-  this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-}
 
-  
+  // 预加载下一阶段数据（不进行摄像机滚动，由 levelTransition 调用）
+  preLoadNextStage(nextStage) {
+    // 清理当前阶段玻璃
+    for (let key in this.windowsById) {
+      let wObj = this.windowsById[key];
+      if (wObj.stage === this.currentStage) {
+        wObj.glasses.forEach(g => g.sprite.destroy());
+        delete this.windowsById[key];
+      }
+    }
+    // 更新当前阶段并加载下一阶段玻璃
+    this.currentStage = nextStage;
+    this.loadGlassForStage(nextStage);
+    
+    // 更新 Felix 位置（读取 "FelixStageX" 对象层）
+    let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
+    let nextArea = this.stageAreas[nextStage];
+    let newX = this.felix.x;
+    let newY = nextArea ? nextArea.topY + 200 : this.felix.y;
+    if (felixLayer && felixLayer.objects.length > 0) {
+      let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
+      let fObj = felixLayer.objects[randF];
+      newX = fObj.x + (fObj.width || 0) / 2;
+      newY = fObj.y + (fObj.height || 0) / 2;
+      console.log(`Felix => stage${nextStage}: (${newX}, ${newY})`);
+    }
+    this.felix.setPosition(newX, newY);
+    
+    // 更新 Ralph 位置（读取 "RalphStageX" 对象层）
+    let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
+    if (rLayer && rLayer.objects.length > 0) {
+      let rIndex = Phaser.Math.Between(0, rLayer.objects.length - 1);
+      let rObj = rLayer.objects[rIndex];
+      let rx = rObj.x + (rObj.width || 0) / 2;
+      let ry = rObj.y + (rObj.height || 0) / 2;
+      this.ralph.setPosition(rx, ry);
+      console.log(`Ralph => stage${nextStage}: (${rx}, ${ry})`);
+    } else {
+      console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
+    }
+    
+    // 加载新阶段专用对象层数据
+    this.loadStageObjectLayers(nextStage);
+    
+    // 更新物理世界与摄像机边界
+    let stageHeight = 750;
+    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+  }
+
   // 切换到 Final Stage：停止 Ralph 的动作，滚动至 Final Stage Space 后3秒跳转到 Gameover
   transitionToFinalStage() {
     let finalData = this.stageAreas["final"];
@@ -456,8 +452,7 @@ preLoadNextStage(nextStage) {
     this.physics.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     
-    let targetScrollY = finalTopY; // 这里滚动到 Final Stage Space 的顶部
-    // 暂停投石和 Ralph 动作
+    let targetScrollY = finalTopY;
     if (this.stoneTimer) {
       this.stoneTimer.remove();
       this.stoneTimer = null;
@@ -465,7 +460,7 @@ preLoadNextStage(nextStage) {
     this.tweens.killTweensOf(this.ralph);
     this.cameras.main.stopFollow();
     
-    // 使用 tween counter 平滑更新相机 scrollY到 Final Stage（这里设为8秒）
+    // 使用 tween counter 平滑更新相机 scrollY 到 Final Stage（8秒）
     this.tweens.addCounter({
       from: this.cameras.main.scrollY,
       to: targetScrollY,
@@ -496,7 +491,7 @@ preLoadNextStage(nextStage) {
           this.ralph.setPosition(rx, ry);
           console.log(`Ralph => final: (${rx}, ${ry})`);
         }
-        // 滚动到 Final Stage 后，等待3秒再进入 Gameover
+        // 3秒后跳转到 Gameover
         this.time.delayedCall(3000, () => {
           this.scene.start("Gameover");
         });
