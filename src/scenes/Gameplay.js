@@ -343,7 +343,7 @@ class Gameplay extends Phaser.Scene {
 
     // 相机慢速滚动（4000 毫秒）
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 4000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 10000, "Linear", false, () => {
       if (this.stoneTimer) {
         this.stoneTimer.paused = false;
       }
