@@ -356,7 +356,7 @@ class Gameplay extends Phaser.Scene {
     this.tweens.addCounter({
       from: this.cameras.main.scrollY,
       to: targetScrollY,
-      duration: 8000, // 20秒滚动时间，可根据需要调整
+      duration: 4000, // 20秒滚动时间，可根据需要调整
       ease: 'Linear',
       onUpdate: (tween) => {
         let value = tween.getValue();
@@ -441,7 +441,7 @@ class Gameplay extends Phaser.Scene {
 
     this.cameras.main.stopFollow();
     // 同样设置一个8秒滚动时间为例
-    this.cameras.main.pan(currentCenter.x, newCenterY, 20000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 4000, "Linear", false, () => {
       console.log("Reached final stage area.");
       this.inFinalStage = true;
       if (this.stoneTimer) {
