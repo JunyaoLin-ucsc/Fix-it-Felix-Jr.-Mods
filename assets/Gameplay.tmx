@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.10.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="346" nextobjectid="7186">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="274" tilewidth="16" tileheight="16" infinite="0" nextlayerid="354" nextobjectid="7267">
  <editorsettings>
   <export target="Gameplay.json" format="json"/>
  </editorsettings>
@@ -17143,118 +17143,6 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="345" name="RalphSpwans2">
-  <object id="7182" x="640" y="2848">
-   <point/>
-  </object>
- </objectgroup>
- <objectgroup id="18" name="RalphMovement">
-  <object id="154" x="864" y="3648">
-   <point/>
-  </object>
-  <object id="155" x="416" y="3648">
-   <point/>
-  </object>
-  <object id="166" x="864" y="2848">
-   <point/>
-  </object>
-  <object id="167" x="416" y="2848">
-   <point/>
-  </object>
-  <object id="168" x="864" y="2032">
-   <point/>
-  </object>
-  <object id="169" x="416" y="2032">
-   <point/>
-  </object>
-  <object id="180" x="864" y="1216">
-   <point/>
-  </object>
-  <object id="181" x="416" y="1216">
-   <point/>
-  </object>
-  <object id="182" x="864" y="400">
-   <point/>
-  </object>
-  <object id="183" x="416" y="400">
-   <point/>
-  </object>
-  <object id="341" x="416" y="400">
-   <point/>
-  </object>
-  <object id="342" x="528" y="400">
-   <point/>
-  </object>
-  <object id="343" x="640" y="400">
-   <point/>
-  </object>
-  <object id="344" x="752" y="400">
-   <point/>
-  </object>
-  <object id="345" x="864" y="400">
-   <point/>
-  </object>
-  <object id="346" x="416" y="1216">
-   <point/>
-  </object>
-  <object id="347" x="528" y="1216">
-   <point/>
-  </object>
-  <object id="348" x="640" y="1216">
-   <point/>
-  </object>
-  <object id="349" x="752" y="1216">
-   <point/>
-  </object>
-  <object id="350" x="864" y="1216">
-   <point/>
-  </object>
-  <object id="351" x="416" y="2032">
-   <point/>
-  </object>
-  <object id="352" x="528" y="2032">
-   <point/>
-  </object>
-  <object id="353" x="640" y="2032">
-   <point/>
-  </object>
-  <object id="354" x="752" y="2032">
-   <point/>
-  </object>
-  <object id="355" x="864" y="2032">
-   <point/>
-  </object>
-  <object id="356" x="416" y="2848">
-   <point/>
-  </object>
-  <object id="357" x="528" y="2848">
-   <point/>
-  </object>
-  <object id="358" x="640" y="2848">
-   <point/>
-  </object>
-  <object id="359" x="752" y="2848">
-   <point/>
-  </object>
-  <object id="360" x="864" y="2848">
-   <point/>
-  </object>
-  <object id="361" x="416" y="3648">
-   <point/>
-  </object>
-  <object id="362" x="528" y="3648">
-   <point/>
-  </object>
-  <object id="363" x="640" y="3648">
-   <point/>
-  </object>
-  <object id="364" x="752" y="3648">
-   <point/>
-  </object>
-  <object id="365" x="864" y="3648">
-   <point/>
-  </object>
- </objectgroup>
  <objectgroup id="332" name="RalphStage2">
   <object id="7133" x="864" y="2848">
    <point/>
@@ -17323,7 +17211,7 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="19" name="StoneDropPosition">
+ <objectgroup id="19" name="StoneDropPosition 1">
   <object id="156" x="416" y="3648">
    <point/>
   </object>
@@ -17339,73 +17227,72 @@
   <object id="160" x="864" y="3648">
    <point/>
   </object>
-  <object id="162" x="752" y="2848">
+ </objectgroup>
+ <objectgroup id="350" name="StoneDropPosition 2">
+  <object id="7247" x="416" y="2848">
    <point/>
   </object>
-  <object id="163" x="640.25" y="2848.13">
+  <object id="7248" x="528" y="2848">
    <point/>
   </object>
-  <object id="164" x="528" y="2848">
+  <object id="7249" x="640" y="2848">
    <point/>
   </object>
-  <object id="165" x="416" y="2848">
+  <object id="7250" x="752" y="2848">
    <point/>
   </object>
-  <object id="170" x="864" y="2032">
+  <object id="7251" x="864" y="2848">
    <point/>
   </object>
-  <object id="171" x="752" y="2032">
+ </objectgroup>
+ <objectgroup id="351" name="StoneDropPosition 3">
+  <object id="7252" x="416" y="2032">
    <point/>
   </object>
-  <object id="172" x="640" y="2032">
+  <object id="7253" x="528" y="2032">
    <point/>
   </object>
-  <object id="173" x="528" y="2032">
+  <object id="7254" x="640" y="2032">
    <point/>
   </object>
-  <object id="174" x="416" y="2032">
+  <object id="7255" x="752" y="2032">
    <point/>
   </object>
-  <object id="175" x="864" y="1216">
+  <object id="7256" x="864" y="2032">
    <point/>
   </object>
-  <object id="176" x="752" y="1216">
+ </objectgroup>
+ <objectgroup id="352" name="StoneDropPosition 4">
+  <object id="7257" x="416" y="1216">
    <point/>
   </object>
-  <object id="177" x="640" y="1216">
+  <object id="7258" x="528" y="1216">
    <point/>
   </object>
-  <object id="178" x="528" y="1216">
+  <object id="7259" x="640" y="1216">
    <point/>
   </object>
-  <object id="179" x="416" y="1216">
+  <object id="7260" x="752" y="1216">
    <point/>
   </object>
-  <object id="184" x="864" y="400">
+  <object id="7261" x="864" y="1216">
    <point/>
   </object>
-  <object id="185" x="752" y="400">
+ </objectgroup>
+ <objectgroup id="353" name="StoneDropPosition 5">
+  <object id="7262" x="416" y="400">
    <point/>
   </object>
-  <object id="186" x="640" y="400">
+  <object id="7263" x="528" y="400">
    <point/>
   </object>
-  <object id="187" x="528" y="400">
+  <object id="7264" x="640" y="400">
    <point/>
   </object>
-  <object id="188" x="416" y="400">
+  <object id="7265" x="752" y="400">
    <point/>
   </object>
-  <object id="7173" x="640.458" y="2848.12">
-   <point/>
-  </object>
-  <object id="7174" x="640.667" y="2032">
-   <point/>
-  </object>
-  <object id="7175" x="640.667" y="1215.67">
-   <point/>
-  </object>
-  <object id="7177" x="640.333" y="400">
+  <object id="7266" x="864" y="400">
    <point/>
   </object>
  </objectgroup>
@@ -17414,7 +17301,7 @@
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="16" name="Felix Positions">
+ <objectgroup id="16" name="Felix Positions 1">
   <object id="74" x="416" y="4288">
    <point/>
   </object>
@@ -17457,187 +17344,195 @@
   <object id="88" x="864" y="3904">
    <point/>
   </object>
-  <object id="89" x="864" y="3488">
+  <object id="7186" x="640" y="4320">
    <point/>
   </object>
-  <object id="90" x="752" y="3488">
+ </objectgroup>
+ <objectgroup id="346" name="Felix Positions 2">
+  <object id="7187" x="416" y="3488">
    <point/>
   </object>
-  <object id="91" x="640" y="3488">
+  <object id="7188" x="528" y="3488">
    <point/>
   </object>
-  <object id="92" x="528" y="3488">
+  <object id="7189" x="640" y="3488">
    <point/>
   </object>
-  <object id="93" x="416" y="3488">
+  <object id="7190" x="752" y="3488">
    <point/>
   </object>
-  <object id="94" x="416" y="3296">
+  <object id="7191" x="864" y="3488">
    <point/>
   </object>
-  <object id="95" x="528" y="3296">
+  <object id="7192" x="416" y="3296">
    <point/>
   </object>
-  <object id="96" x="640" y="3296">
+  <object id="7193" x="528" y="3296">
    <point/>
   </object>
-  <object id="97" x="752" y="3296">
+  <object id="7194" x="640" y="3296">
    <point/>
   </object>
-  <object id="99" x="864" y="3296">
+  <object id="7195" x="752" y="3296">
    <point/>
   </object>
-  <object id="100" x="864" y="3104">
+  <object id="7196" x="864" y="3296">
    <point/>
   </object>
-  <object id="101" x="752" y="3104">
+  <object id="7197" x="416" y="3104">
    <point/>
   </object>
-  <object id="102" x="640" y="3104">
+  <object id="7198" x="528" y="3104">
    <point/>
   </object>
-  <object id="103" x="528" y="3104">
+  <object id="7199" x="640" y="3104">
    <point/>
   </object>
-  <object id="104" x="416" y="3104">
+  <object id="7200" x="752" y="3104">
    <point/>
   </object>
-  <object id="105" x="416" y="2672">
+  <object id="7201" x="864" y="3104">
    <point/>
   </object>
-  <object id="106" x="528" y="2672">
+ </objectgroup>
+ <objectgroup id="347" name="Felix Positions 3">
+  <object id="7202" x="416" y="2672">
    <point/>
   </object>
-  <object id="107" x="640" y="2672">
+  <object id="7203" x="528" y="2672">
    <point/>
   </object>
-  <object id="108" x="752" y="2672">
+  <object id="7204" x="640" y="2672">
    <point/>
   </object>
-  <object id="109" x="864" y="2672">
+  <object id="7205" x="752" y="2672">
    <point/>
   </object>
-  <object id="110" x="864" y="2480">
+  <object id="7206" x="864" y="2672">
    <point/>
   </object>
-  <object id="111" x="752" y="2480">
+  <object id="7207" x="864" y="2480">
    <point/>
   </object>
-  <object id="112" x="640" y="2480">
+  <object id="7208" x="752" y="2480">
    <point/>
   </object>
-  <object id="113" x="528" y="2480">
+  <object id="7209" x="640" y="2480">
    <point/>
   </object>
-  <object id="114" x="416" y="2480">
+  <object id="7210" x="528" y="2480">
    <point/>
   </object>
-  <object id="115" x="416" y="2288">
+  <object id="7211" x="416" y="2480">
    <point/>
   </object>
-  <object id="116" x="528" y="2288">
+  <object id="7212" x="416" y="2288">
    <point/>
   </object>
-  <object id="117" x="640" y="2288">
+  <object id="7213" x="528" y="2288">
    <point/>
   </object>
-  <object id="118" x="752" y="2288">
+  <object id="7214" x="640" y="2288">
    <point/>
   </object>
-  <object id="119" x="864" y="2288">
+  <object id="7215" x="752" y="2288">
    <point/>
   </object>
-  <object id="120" x="864" y="1856">
+  <object id="7216" x="864" y="2288">
    <point/>
   </object>
-  <object id="121" x="752" y="1856">
+ </objectgroup>
+ <objectgroup id="348" name="Felix Positions 4">
+  <object id="7217" x="416" y="1856">
    <point/>
   </object>
-  <object id="122" x="640" y="1856">
+  <object id="7218" x="528" y="1856">
    <point/>
   </object>
-  <object id="123" x="528" y="1856">
+  <object id="7219" x="640" y="1856">
    <point/>
   </object>
-  <object id="124" x="416" y="1856">
+  <object id="7220" x="752" y="1856">
    <point/>
   </object>
-  <object id="125" x="416" y="1664">
+  <object id="7221" x="864" y="1856">
    <point/>
   </object>
-  <object id="126" x="528" y="1664">
+  <object id="7222" x="416" y="1664">
    <point/>
   </object>
-  <object id="127" x="640" y="1664">
+  <object id="7223" x="528" y="1664">
    <point/>
   </object>
-  <object id="128" x="752" y="1664">
+  <object id="7224" x="640" y="1664">
    <point/>
   </object>
-  <object id="129" x="864" y="1664">
+  <object id="7225" x="752" y="1664">
    <point/>
   </object>
-  <object id="130" x="864" y="1472">
+  <object id="7226" x="864" y="1664">
    <point/>
   </object>
-  <object id="131" x="752" y="1472">
+  <object id="7227" x="416" y="1472">
    <point/>
   </object>
-  <object id="132" x="640" y="1472">
+  <object id="7228" x="528" y="1472">
    <point/>
   </object>
-  <object id="133" x="528" y="1472">
+  <object id="7229" x="640" y="1472">
    <point/>
   </object>
-  <object id="134" x="416" y="1472">
+  <object id="7230" x="752" y="1472">
    <point/>
   </object>
-  <object id="135" x="416" y="1040">
+  <object id="7231" x="864" y="1472">
    <point/>
   </object>
-  <object id="136" x="528" y="1040">
+ </objectgroup>
+ <objectgroup id="349" name="Felix Positions 5">
+  <object id="7232" x="416" y="1040">
    <point/>
   </object>
-  <object id="137" x="640" y="1040">
+  <object id="7233" x="528" y="1040">
    <point/>
   </object>
-  <object id="138" x="752" y="1040">
+  <object id="7234" x="640" y="1040">
    <point/>
   </object>
-  <object id="139" x="864" y="1040">
+  <object id="7235" x="752" y="1040">
    <point/>
   </object>
-  <object id="140" x="864" y="848">
+  <object id="7236" x="864" y="1040">
    <point/>
   </object>
-  <object id="141" x="752" y="848">
+  <object id="7237" x="864" y="848">
    <point/>
   </object>
-  <object id="142" x="640" y="848">
+  <object id="7238" x="752" y="848">
    <point/>
   </object>
-  <object id="143" x="528" y="848">
+  <object id="7239" x="640" y="848">
    <point/>
   </object>
-  <object id="144" x="416" y="848">
+  <object id="7240" x="528" y="848">
    <point/>
   </object>
-  <object id="145" x="416" y="656">
+  <object id="7241" x="416" y="848">
    <point/>
   </object>
-  <object id="146" x="528" y="656">
+  <object id="7242" x="416" y="656">
    <point/>
   </object>
-  <object id="147" x="640" y="656">
+  <object id="7243" x="528" y="656">
    <point/>
   </object>
-  <object id="148" x="752" y="656">
+  <object id="7244" x="640" y="656">
    <point/>
   </object>
-  <object id="149" x="864" y="656">
+  <object id="7245" x="752" y="656">
    <point/>
   </object>
-  <object id="150" x="640" y="4304">
+  <object id="7246" x="864" y="656">
    <point/>
   </object>
  </objectgroup>
