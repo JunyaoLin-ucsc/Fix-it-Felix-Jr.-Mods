@@ -341,9 +341,8 @@ class Gameplay extends Phaser.Scene {
     // 预加载下一阶段（清理当前阶段玻璃、加载新阶段玻璃、更新 Felix 与 Ralph 位置、加载新阶段专用对象层）
     this.preLoadNextStage(nextStage);
 
-    // 相机慢速滚动（4000 毫秒）
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 10000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 100000, "Linear", false, () => {
       if (this.stoneTimer) {
         this.stoneTimer.paused = false;
       }
