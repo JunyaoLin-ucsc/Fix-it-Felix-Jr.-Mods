@@ -347,7 +347,7 @@ class Gameplay extends Phaser.Scene {
 
     this.cameras.main.stopFollow();
     // ★★ 将 duration 设为 8000ms（8秒）做示例，可自行调整
-    this.cameras.main.pan(currentCenter.x, newCenterY, 8000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 20000, "Linear", false, () => {
       // 滚动完成后恢复投石与跟随
       if (this.stoneTimer) {
         this.stoneTimer.paused = false;
@@ -425,7 +425,7 @@ class Gameplay extends Phaser.Scene {
 
     this.cameras.main.stopFollow();
     // 同样设置一个8秒滚动时间为例
-    this.cameras.main.pan(currentCenter.x, newCenterY, 8000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 20000, "Linear", false, () => {
       console.log("Reached final stage area.");
       this.inFinalStage = true;
       if (this.stoneTimer) {
@@ -649,5 +649,3 @@ class Gameplay extends Phaser.Scene {
 }
 
 window.Gameplay = Gameplay;
-
-
