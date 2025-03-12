@@ -321,7 +321,7 @@ class Gameplay extends Phaser.Scene {
       return;
     }
     
-    // 读取当前和下一阶段的区域数据（topY）
+    // 获取当前和下一阶段的区域数据（topY）
     let currentArea = this.stageAreas[this.currentStage];
     let nextArea = this.stageAreas[nextStage];
     if (!currentArea || !nextArea) {
@@ -336,29 +336,31 @@ class Gameplay extends Phaser.Scene {
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     
-    // 计算目标相机中心 Y 值
-    let newCenterY = nextArea.topY + this.cameras.main.height / 2;
-    let currentCenter = this.cameras.main.midPoint;
-    console.log(`Camera pan from y=${currentCenter.y} to y=${newCenterY}`);
+    // 计算目标相机 scrollY 值。这里我们令相机滚动到下一阶段区域的顶端（你也可以加上偏移量）
+    let targetScrollY = nextArea.topY;
+    console.log(`Target camera scrollY: ${targetScrollY}`);
     
-    // 暂停投石并停止 Ralph 的 tween
+    // 暂停投石定时器和 Ralph 的 tween（防止在过渡过程中发生动作）
     if (this.stoneTimer) {
       this.stoneTimer.paused = true;
     }
     this.tweens.killTweensOf(this.ralph);
     
-    // 预加载下一阶段数据：清理当前阶段玻璃、加载下一阶段玻璃、更新 Felix 与 Ralph 位置、加载专用对象层
+    // 预加载下一阶段数据（清理当前阶段玻璃、加载下一阶段玻璃、更新 Felix 与 Ralph 位置、加载新阶段专用对象层）
     this.preLoadNextStage(nextStage);
     
-    // 停止相机跟随 Felix，然后对相机 scrollY 做 tween 实现缓慢滚动（例如20秒）
+    // 停止相机跟随 Felix
     this.cameras.main.stopFollow();
-    this.tweens.add({
-      targets: this.cameras.main,
-      scrollY: newCenterY,
-      duration: 600000, // 20秒滚动时间，可根据需要调整
+    
+    // 使用 tween counter 平滑更新相机 scrollY
+    this.tweens.addCounter({
+      from: this.cameras.main.scrollY,
+      to: targetScrollY,
+      duration: 8000, // 20秒滚动时间，可根据需要调整
       ease: 'Linear',
-      onUpdate: () => {
-        // 可在此处加入调试信息，如 console.log(this.cameras.main.scrollY);
+      onUpdate: (tween) => {
+        let value = tween.getValue();
+        this.cameras.main.setScroll(0, value);
       },
       onComplete: () => {
         // 滚动完成后恢复投石和相机跟随
@@ -370,7 +372,7 @@ class Gameplay extends Phaser.Scene {
       }
     });
   }
-  
+   
   // 预加载下一阶段数据，不做相机 pan（由 levelTransition 调用）
   preLoadNextStage(nextStage) {
     // 清理当前阶段玻璃
