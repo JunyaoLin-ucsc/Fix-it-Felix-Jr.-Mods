@@ -338,38 +338,28 @@ class Gameplay extends Phaser.Scene {
     
     // 计算目标相机中心 Y 值
     let newCenterY = nextArea.topY + this.cameras.main.height / 2;
-    let currentCenter = this.cameras.main.midPoint;
-    console.log(`Camera pan from y=${currentCenter.y} to y=${newCenterY}`);
     
-    // 暂停投石并停止 Ralph 的 tween
+    // 暂停投石定时器和 Ralph 的 tween
     if (this.stoneTimer) {
       this.stoneTimer.paused = true;
     }
     this.tweens.killTweensOf(this.ralph);
     
-    // 预加载下一阶段数据：清理当前阶段玻璃、加载下一阶段玻璃、更新 Felix 与 Ralph 位置、加载专用对象层
+    // 预加载下一阶段数据（清理当前阶段玻璃、加载下一阶段玻璃、更新 Felix 与 Ralph 位置、加载新阶段专用对象层）
     this.preLoadNextStage(nextStage);
     
-    // 停止相机跟随 Felix，然后对相机 scrollY 做 tween 实现缓慢滚动（例如20秒）
+    // 停止相机跟随 Felix，然后使用 cameras.main.pan() 实现缓慢滚动
     this.cameras.main.stopFollow();
-    this.tweens.add({
-      targets: this.cameras.main,
-      scrollY: newCenterY,
-      duration: 20000, // 20秒滚动时间，可根据需要调整
-      ease: 'Linear',
-      onUpdate: () => {
-        // 可在此处加入调试信息，如 console.log(this.cameras.main.scrollY);
-      },
-      onComplete: () => {
-        // 滚动完成后恢复投石和相机跟随
-        if (this.stoneTimer) {
-          this.stoneTimer.paused = false;
-        }
-        this.cameras.main.startFollow(this.felix, true, 0.25, 0);
-        this.levelTransitioning = false;
+    this.cameras.main.pan(this.cameras.main.midPoint.x, newCenterY, 8000, "Linear", false, () => {
+      // 滚动完成后恢复投石定时器和相机跟随
+      if (this.stoneTimer) {
+        this.stoneTimer.paused = false;
       }
+      this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+      this.levelTransitioning = false;
     });
   }
+  
   
 
   // 预加载下一阶段数据，不做相机 pan（由 levelTransition 调用）
