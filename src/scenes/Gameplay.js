@@ -3,6 +3,7 @@
 class Gameplay extends Phaser.Scene {
   constructor() {
     super("Gameplay");
+    this.ralphMovements = [];
   }
 
   init() {
@@ -279,14 +280,13 @@ class Gameplay extends Phaser.Scene {
 
   // Ralph 在当前 Stage 内随机左右移动
   moveRalphRandom() {
-    // 这里仅仅演示 => 全局 ralphMovements
-    // 若要限制在当前 Stage，可再做判断
-    if (!this.ralphMovements.length) return;
-
+    // 如果 ralphMovements 为空或没定义，直接 return
+    if (!this.ralphMovements || this.ralphMovements.length === 0) return;
+  
     let idx = Phaser.Math.Between(0, this.ralphMovements.length - 1);
     let targetX = this.ralphMovements[idx];
     let currentY = this.ralph.y;
-
+  
     this.tweens.killTweensOf(this.ralph);
     this.tweens.add({
       targets: this.ralph,
@@ -296,6 +296,7 @@ class Gameplay extends Phaser.Scene {
       ease: "Linear"
     });
   }
+  
 
   // 判断当前关卡的玻璃是否全部修好
   allWindowsRepairedForStage() {
