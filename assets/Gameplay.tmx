@@ -18180,12 +18180,12 @@
   <object id="513" x="848" y="1536" width="32" height="32"/>
  </objectgroup>
  <objectgroup id="28" name="FelixFinal">
-  <object id="514" x="624" y="656">
+  <object id="514" x="624" y="640">
    <point/>
   </object>
  </objectgroup>
  <objectgroup id="29" name="RalphFinal">
-  <object id="515" x="784" y="592">
+  <object id="515" x="784" y="544">
    <point/>
   </object>
  </objectgroup>

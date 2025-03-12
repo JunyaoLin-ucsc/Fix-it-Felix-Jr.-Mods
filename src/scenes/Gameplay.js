@@ -21,6 +21,9 @@ class Gameplay extends Phaser.Scene {
 
     // 记录每个 Stage 的 topY，用于相机滚动
     this.stageAreas = {};
+    
+    // ★★ 新增：标记是否处于最终阶段
+    this.inFinalStage = false;
   }
 
   preload() {
@@ -144,8 +147,9 @@ class Gameplay extends Phaser.Scene {
         this.scene.start("Gameover");
       }
     });
-    // 定时投石
-    this.time.addEvent({
+    
+    // ★★ 新增：把投石的定时器保存到 this.stoneTimer，方便后续清除
+    this.stoneTimer = this.time.addEvent({
       delay: 2000,
       loop: true,
       callback: this.throwStones,
@@ -188,11 +192,11 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 加载指定Stage的玻璃数据：Stage 1随机[0,1,2], Stage2+强制[1,2]
+  // 加载指定Stage的玻璃数据
   loadGlassForStage(stage) {
     let range = this.stageRanges[stage];
     if (!range) return;
-    let allZero = true; // 用于检测是否全部随机成0
+    let allZero = true;
     for (let num = range.start; num <= range.end; num += 2) {
       let windowId = Math.floor((num - range.start) / 2) + 1;
       let key = `${stage}_${windowId}`;
@@ -215,13 +219,12 @@ class Gameplay extends Phaser.Scene {
       let lowerSprite = this.add.sprite(gxLower, gyLower, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
       let upperSprite = this.add.sprite(gxUpper, gyUpper, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
 
-      // Stage 1 随机 [0..2], 其余 [1..2]
+      // Stage 1 随机 [0..2], 其余 [1..2]，这里你可按需修改
       let frameLower, frameUpper;
       if (stage === 1) {
         frameLower = Phaser.Math.Between(0, 2);
         frameUpper = Phaser.Math.Between(0, 2);
       } else {
-        // Stage2+ 强制破损
         frameLower = Phaser.Math.Between(0, 2);
         frameUpper = Phaser.Math.Between(0, 2);
       }
@@ -229,7 +232,7 @@ class Gameplay extends Phaser.Scene {
       upperSprite.setFrame(frameUpper);
 
       if (frameLower !== 0 || frameUpper !== 0) {
-        allZero = false; // 只要有一块不是0，就说明不是全部完好
+        allZero = false;
       }
 
       let lowerBroken = (frameLower !== 0);
@@ -243,13 +246,13 @@ class Gameplay extends Phaser.Scene {
       };
     }
 
-    // 如果 stage=1 且全都是0，则强行把最后一扇或随机一扇改为破损2
+    // 如果 stage=1 且全都是0，则强行把一扇改为破损
     if (stage === 1 && allZero) {
       let keys = Object.keys(this.windowsById).filter(k => k.startsWith("1_"));
       if (keys.length > 0) {
         let forcedKey = keys[Phaser.Math.Between(0, keys.length - 1)];
         let wObj = this.windowsById[forcedKey];
-        let forcedGlass = wObj.glasses[0]; // 下玻璃
+        let forcedGlass = wObj.glasses[0];
         forcedGlass.sprite.setFrame(2);
         forcedGlass.isBroken = true;
         console.log(`Stage1 had all 0 => forced ${forcedKey} lower glass to frame=2`);
@@ -259,15 +262,16 @@ class Gameplay extends Phaser.Scene {
 
   // 投石：从 Ralph 的位置产生石头，然后 Ralph 移动到本Stage某个石头点
   throwStones() {
+    // ★★ 如果已在最终阶段，就不再投石
+    if (this.inFinalStage) return;
+
     const pos = { x: this.ralph.x, y: this.ralph.y };
     const stoneVelocity = 150;
-    // 连续扔3块
     for (let i = 0; i < 3; i++) {
       this.time.delayedCall(i * 200, () => {
         this.createStone(pos.x, pos.y, stoneVelocity);
       });
     }
-    // 扔完后移动
     this.time.delayedCall(3 * 200 + 500, () => {
       this.moveRalphRandom();
     });
@@ -281,6 +285,9 @@ class Gameplay extends Phaser.Scene {
 
   // Ralph 在当前stage的stoneDrops之间移动
   moveRalphRandom() {
+    // ★★ 如果已在最终阶段，就不再移动
+    if (this.inFinalStage) return;
+
     if (!this.stoneDrops.length) return;
     let idx, tries = 0;
     do {
@@ -314,12 +321,11 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-  // 关卡切换：使用 camera.pan() 实现滚动；完成后加载下个关卡数据
+  // 关卡切换
   levelTransition() {
     this.levelTransitioning = true;
 
     let nextStage = this.currentStage + 1;
-    // 若超过 maxStage，则检查是否有 Final Stage
     if (nextStage > this.maxStage) {
       // 如果存在 "Final Stage Space"
       if (this.stageAreas["final"]) {
@@ -341,20 +347,16 @@ class Gameplay extends Phaser.Scene {
     }
 
     console.log(`Stage ${this.currentStage} repaired => go to Stage ${nextStage}.`);
-    // 设置相机与物理边界
     let stageHeight = 750;
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
 
-    // 计算滚动目标
     let newCenterY = nextArea.topY + this.cameras.main.height / 2;
     let currentCenter = this.cameras.main.midPoint;
     console.log(`Camera pan from y=${currentCenter.y} to y=${newCenterY}`);
 
-    // 停止跟随，执行 pan
     this.cameras.main.stopFollow();
     this.cameras.main.pan(currentCenter.x, newCenterY, 2000, "Linear", false, () => {
-      // pan 完成后，Felix & Ralph 换到新关卡位置
       this.switchToStage(nextStage);
       this.levelTransitioning = false;
     });
@@ -370,7 +372,6 @@ class Gameplay extends Phaser.Scene {
     let finalTopY = finalData.topY;
     console.log(`Camera pan to final stage topY=${finalTopY}`);
 
-    // 设置边界
     let stageHeight = 750;
     this.physics.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
@@ -381,6 +382,16 @@ class Gameplay extends Phaser.Scene {
     this.cameras.main.stopFollow();
     this.cameras.main.pan(currentCenter.x, newCenterY, 2000, "Linear", false, () => {
       console.log("Reached final stage area. Place Felix & Ralph at final positions or show ending.");
+
+      // ★★ 标记已经处于 Final Stage，停止投石 & 移动
+      this.inFinalStage = true;
+      // ★★ 并移除投石的定时器
+      if (this.stoneTimer) {
+        this.stoneTimer.remove();
+        this.stoneTimer = null;
+      }
+      // ★★ 停止任何 Ralph 的 tween
+      this.tweens.killTweensOf(this.ralph);
 
       // 如果 Tiled 中有 "FelixFinal" 图层，就把 Felix 放到那里
       let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
@@ -402,7 +413,10 @@ class Gameplay extends Phaser.Scene {
         console.log(`Ralph => final: (${rx}, ${ry})`);
       }
 
-      // 这里可以播放通关动画、显示结束UI等等
+      // ★★ 3秒后跳转到Gameover
+      this.time.delayedCall(3000, () => {
+        this.scene.start("Gameover");
+      });
     });
   }
 
@@ -648,4 +662,4 @@ class Gameplay extends Phaser.Scene {
   }
 }
 
-window.Gameplay = Gameplay; 
+window.Gameplay = Gameplay;
