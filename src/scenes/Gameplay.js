@@ -353,7 +353,7 @@ class Gameplay extends Phaser.Scene {
     this.tweens.addCounter({
       from: this.cameras.main.scrollY,
       to: targetScrollY,
-      duration: 2000,
+      duration: 500,
       ease: 'Linear',
       onUpdate: (tween) => {
         let value = tween.getValue();
