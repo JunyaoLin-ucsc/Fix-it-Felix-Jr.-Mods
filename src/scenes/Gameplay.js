@@ -355,7 +355,7 @@ class Gameplay extends Phaser.Scene {
     this.tweens.add({
       targets: this.cameras.main,
       scrollY: newCenterY,
-      duration: 20000, // 20秒滚动时间，可根据需要调整
+      duration: 600000, // 20秒滚动时间，可根据需要调整
       ease: 'Linear',
       onUpdate: () => {
         // 可在此处加入调试信息，如 console.log(this.cameras.main.scrollY);
@@ -371,7 +371,6 @@ class Gameplay extends Phaser.Scene {
     });
   }
   
-
   // 预加载下一阶段数据，不做相机 pan（由 levelTransition 调用）
   preLoadNextStage(nextStage) {
     // 清理当前阶段玻璃
