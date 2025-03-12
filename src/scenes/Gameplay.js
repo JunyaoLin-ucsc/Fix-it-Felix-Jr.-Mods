@@ -342,7 +342,7 @@ class Gameplay extends Phaser.Scene {
     this.preLoadNextStage(nextStage);
 
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 1000000000, "Linear", false, () => {
+    this.cameras.main.pan(currentCenter.x, newCenterY, 2000, "Linear", false, () => {
       if (this.stoneTimer) {
         this.stoneTimer.paused = false;
       }
