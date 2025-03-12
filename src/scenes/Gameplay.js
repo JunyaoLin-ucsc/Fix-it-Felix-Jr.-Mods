@@ -318,7 +318,7 @@ class Gameplay extends Phaser.Scene {
       return;
     }
     
-    // 获取当前和下一阶段区域数据
+    // 获取当前和下一阶段的区域数据
     let currentArea = this.stageAreas[this.currentStage];
     let nextArea = this.stageAreas[nextStage];
     if (!currentArea || !nextArea) {
@@ -328,47 +328,38 @@ class Gameplay extends Phaser.Scene {
     }
     console.log(`Stage ${this.currentStage} repaired => go to Stage ${nextStage}.`);
     
+    // 更新物理世界与相机边界到下一阶段区域（假设每个阶段高度为750）
     let stageHeight = 750;
-    // 更新物理与摄像机边界到下一阶段区域
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     
-    // 设定目标 scrollY 值：滚动到下一阶段区域的顶端
-    let targetScrollY = nextArea.topY;
-    console.log(`Target camera scrollY: ${targetScrollY}`);
+    // 计算目标摄像机中心位置（这里滚动到下一阶段区域的顶端，可以加上偏移量以获得“传送带式”效果）
+    let targetY = nextArea.topY; 
+    console.log(`Target camera scrollY: ${targetY}`);
     
-    // 暂停投石和停止 Ralph 的 tween
+    // 暂停投石和 Ralph 的动作
     if (this.stoneTimer) {
       this.stoneTimer.paused = true;
     }
     this.tweens.killTweensOf(this.ralph);
     
-    // 预加载下一阶段数据
+    // 预加载下一阶段数据（清理当前阶段玻璃、加载下一阶段玻璃、更新 Felix 与 Ralph 位置等）
     this.preLoadNextStage(nextStage);
     
-    // 停止相机跟随 Felix
+    // 停止摄像机跟随 Felix
     this.cameras.main.stopFollow();
     
-    // 使用 tween counter 平滑更新摄像机 scrollY，实现传送带式滚动效果（这里设置20秒滚动）
-    this.tweens.addCounter({
-      from: this.cameras.main.scrollY,
-      to: targetScrollY,
-      duration: 500,
-      ease: 'Linear',
-      onUpdate: (tween) => {
-        let value = tween.getValue();
-        this.cameras.main.setScroll(0, value);
-      },
-      onComplete: () => {
-        if (this.stoneTimer) {
-          this.stoneTimer.paused = false;
-        }
-        // 恢复摄像机跟随 Felix
-        this.cameras.main.startFollow(this.felix, true, 0.25, 0);
-        this.levelTransitioning = false;
+    // 使用 camera.pan() 进行平滑滚动，持续时间设为4000ms（4秒），你可以根据需要调整
+    this.cameras.main.pan(this.cameras.main.midPoint.x, targetY + this.cameras.main.height/2, 4000, 'Linear', false, () => {
+      // 滚动完成后恢复投石和相机跟随
+      if (this.stoneTimer) {
+        this.stoneTimer.paused = false;
       }
+      this.cameras.main.startFollow(this.felix, true, 0.25, 0);
+      this.levelTransitioning = false;
     });
   }
+  
   
   // 预加载下一阶段数据（不做摄像机滚动，由 levelTransition 调用）
   preLoadNextStage(nextStage) {
