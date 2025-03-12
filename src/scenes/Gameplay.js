@@ -649,3 +649,5 @@ class Gameplay extends Phaser.Scene {
 }
 
 window.Gameplay = Gameplay;
+
+
