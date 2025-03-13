@@ -25,6 +25,9 @@ class Gameplay extends Phaser.Scene {
 
     // 默认 Felix 方向（"right" 或 "left"）
     this.felixDirection = "right";
+
+    // FIX: 新增属性，用于记录当前正在修复的玻璃，确保每次只修一块玻璃
+    this.currentRepairingGlass = null;
   }
 
   preload() {
@@ -301,43 +304,60 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-  // 当靠近破损玻璃时，Felix 播放修复动画：
-  // 如果方向为 "right"，循环帧 3～6，修好后定格在帧 3；
-  // 如果方向为 "left"，循环帧 7～10，修好后定格在帧 7。
+  // FIX: 重写 checkAndRepairWindows 方法，
+  // 1. 将修复时间延长到 0.5 秒；
+  // 2. 增加更高 framerate 的修复动画（每 50 毫秒更新一次）；
+  // 3. 每次只修复一块玻璃。
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 100; // 毫秒
+    const REPAIR_INTERVAL = 500; // FIX: 延长修复时间到 0.5 秒
+    // 如果当前已有正在修复的玻璃，则只更新该玻璃的修复进度
+    if (this.currentRepairingGlass) {
+      let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, this.currentRepairingGlass.sprite.x, this.currentRepairingGlass.sprite.y);
+      if (dist < REPAIR_DISTANCE) {
+        this.currentRepairingGlass.repairTimer += delta;
+        if (this.felixDirection === "right") {
+          // FIX: 更高 framerate 修复动画，每 50 毫秒更新一次
+          let animFrame = 3 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
+          this.felix.setFrame(animFrame);
+        } else if (this.felixDirection === "left") {
+          let animFrame = 7 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
+          this.felix.setFrame(animFrame);
+        }
+        if (this.currentRepairingGlass.repairTimer >= REPAIR_INTERVAL) {
+          // 修复完成：玻璃变为完好，Felix 定格在对应 idle 帧
+          this.currentRepairingGlass.sprite.setFrame(0);
+          this.currentRepairingGlass.isBroken = false;
+          this.currentRepairingGlass.repairTimer = 0;
+          if (this.felixDirection === "right") {
+            this.felix.setFrame(3);
+          } else if (this.felixDirection === "left") {
+            this.felix.setFrame(7);
+          }
+          this.currentRepairingGlass = null;
+        }
+      } else {
+        // 如果离开修复范围，重置修复状态
+        this.currentRepairingGlass.repairTimer = 0;
+        this.currentRepairingGlass = null;
+      }
+      return;
+    }
+    // 如果没有正在修复的玻璃，则查找一个在修复范围内的破损玻璃开始修复
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
-      wObj.glasses.forEach(g => {
-        if (!g.isBroken) return;
+      for (let g of wObj.glasses) {
+        if (!g.isBroken) continue;
         let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, g.sprite.x, g.sprite.y);
         if (dist < REPAIR_DISTANCE) {
-          g.repairTimer += delta;
-          // 根据 Felix 当前方向播放修复动画（作用于 Felix）
-          if (this.felixDirection === "right") {
-            let animFrame = 3 + (Math.floor(g.repairTimer / 100) % 4);
-            this.felix.setFrame(animFrame);
-          } else if (this.felixDirection === "left") {
-            let animFrame = 7 + (Math.floor(g.repairTimer / 100) % 4);
-            this.felix.setFrame(animFrame);
-          }
-          if (g.repairTimer >= REPAIR_INTERVAL) {
-            // 修复完成：玻璃变为完好，Felix 定格为 idle 修复帧
-            g.sprite.setFrame(0);
-            g.isBroken = false;
-            g.repairTimer = 0;
-            if (this.felixDirection === "right") {
-              this.felix.setFrame(3);
-            } else if (this.felixDirection === "left") {
-              this.felix.setFrame(7);
-            }
-          }
-        } else {
-          g.repairTimer = 0;
+          // 开始修复此玻璃
+          if (!g.repairTimer) { g.repairTimer = 0; }
+          this.currentRepairingGlass = g;
+          break;
         }
-      });
+      }
+      if (this.currentRepairingGlass) break;
     }
   }
 
@@ -635,38 +655,53 @@ class Gameplay extends Phaser.Scene {
   // 如果方向为 "left"，循环帧 7～10，修复完成后定格在帧 7。
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 100; // 毫秒
+    const REPAIR_INTERVAL = 500; // FIX: 延长修复时间到 0.5 秒
+    // 如果当前已有正在修复的玻璃，则只更新该玻璃的修复进度
+    if (this.currentRepairingGlass) {
+      let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, this.currentRepairingGlass.sprite.x, this.currentRepairingGlass.sprite.y);
+      if (dist < REPAIR_DISTANCE) {
+        this.currentRepairingGlass.repairTimer += delta;
+        if (this.felixDirection === "right") {
+          // FIX: 更高 framerate 修复动画，每 50 毫秒更新一次
+          let animFrame = 3 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
+          this.felix.setFrame(animFrame);
+        } else if (this.felixDirection === "left") {
+          let animFrame = 7 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
+          this.felix.setFrame(animFrame);
+        }
+        if (this.currentRepairingGlass.repairTimer >= REPAIR_INTERVAL) {
+          this.currentRepairingGlass.sprite.setFrame(0);
+          this.currentRepairingGlass.isBroken = false;
+          this.currentRepairingGlass.repairTimer = 0;
+          if (this.felixDirection === "right") {
+            this.felix.setFrame(3);
+          } else if (this.felixDirection === "left") {
+            this.felix.setFrame(7);
+          }
+          this.currentRepairingGlass = null;
+        }
+      } else {
+        // 如果离开修复范围，重置修复状态
+        this.currentRepairingGlass.repairTimer = 0;
+        this.currentRepairingGlass = null;
+      }
+      return;
+    }
+    // 如果没有正在修复的玻璃，则查找一个在修复范围内的破损玻璃开始修复
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
-      wObj.glasses.forEach(g => {
-        if (!g.isBroken) return;
+      for (let g of wObj.glasses) {
+        if (!g.isBroken) continue;
         let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, g.sprite.x, g.sprite.y);
         if (dist < REPAIR_DISTANCE) {
-          g.repairTimer += delta;
-          if (this.felixDirection === "right") {
-            // 循环帧 3～6
-            let animFrame = 3 + (Math.floor(g.repairTimer / 100) % 4);
-            this.felix.setFrame(animFrame);
-          } else if (this.felixDirection === "left") {
-            // 循环帧 7～10
-            let animFrame = 7 + (Math.floor(g.repairTimer / 100) % 4);
-            this.felix.setFrame(animFrame);
-          }
-          if (g.repairTimer >= REPAIR_INTERVAL) {
-            g.sprite.setFrame(0);
-            g.isBroken = false;
-            g.repairTimer = 0;
-            if (this.felixDirection === "right") {
-              this.felix.setFrame(3);
-            } else if (this.felixDirection === "left") {
-              this.felix.setFrame(7);
-            }
-          }
-        } else {
-          g.repairTimer = 0;
+          // 开始修复此玻璃
+          if (!g.repairTimer) { g.repairTimer = 0; }
+          this.currentRepairingGlass = g;
+          break;
         }
-      });
+      }
+      if (this.currentRepairingGlass) break;
     }
   }
 
