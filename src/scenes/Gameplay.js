@@ -4,18 +4,16 @@ class Gameplay extends Phaser.Scene {
   }
 
   init(data) {
-    // 如果是从 Next Loop 过来的，就会有 data.loop；否则默认为 1
+    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart时应传入 loop:1, score:0）
     this.loop = data.loop || 1;
-
-    // Stage 编号
     this.currentStage = 1;
     this.maxStage = 5;
     this.levelTransitioning = false;
     this.windowsById = {};
     this.lastStoneDropIndex = null;
-    this.inFinalStage = false; // 标记是否处于最终阶段
+    this.inFinalStage = false;
 
-    // 分数（若需要沿用上次分数，可写成 data.score || 0）
+    // 分数（如果是重启则 data.score 可能为 0）
     this.score = data.score || 0;
 
     // 根据 Loop 计算初始生命值
@@ -37,11 +35,11 @@ class Gameplay extends Phaser.Scene {
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
 
-    // --- 新增：用于合并石头碰撞的标记，每批石头只扣一次命 ---
+    // --- 用于合并石头碰撞：每批石头只扣一次血 ---
     this.stoneHitProcessed = false;
   }
 
-  // 根据 loop 计算生命值
+  // 根据 loop 计算初始生命值
   getLivesByLoop(loop) {
     if (loop === 1) return 3;
     if (loop === 2) return 4;
@@ -151,7 +149,7 @@ class Gameplay extends Phaser.Scene {
 
     this.loadStageObjectLayers(1);
 
-    // --- Score, Time, Lives, Loop UI ---
+    // --- UI: Score, Time, Loop, Lives ---
     this.scoreText = this.add.text(10, 10, `Score: ${this.score}`, {
       fontSize: "16px",
       fill: "#ffffff"
@@ -162,7 +160,7 @@ class Gameplay extends Phaser.Scene {
       fill: "#ffffff"
     }).setScrollFactor(0).setDepth(99999);
 
-    // 显示 Loop 数，放在 score 下面
+    // 在 Score 下方显示当前 Loop 数
     this.loopText = this.add.text(10, 30, `Loop: ${this.loop}`, {
       fontSize: "16px",
       fill: "#ffffff"
@@ -171,7 +169,7 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // --- 合并石头碰撞：在碰撞回调中只处理一次扣血 ---
+    // --- 合并石头碰撞：每批石头只扣一次血 ---
     this.physics.add.overlap(this.felix, this.stones, () => {
       if (!this.levelTransitioning && !this.stoneHitProcessed && !this.invincible) {
         this.stoneHitProcessed = true;
@@ -181,8 +179,8 @@ class Gameplay extends Phaser.Scene {
           if (!this.failureSnd.isPlaying) {
             this.failureSnd.play();
           }
+          // Restart时重置难度为 Loop 1，得分归零
           this.scene.start("Gameover", {
-            // 重置难度：Restart 之后 Loop 重置为 1
             loop: 1,
             score: 0,
             canNextLoop: false
@@ -194,15 +192,18 @@ class Gameplay extends Phaser.Scene {
       }
     }, null, this);
 
-    // 根据 loop 调整石头投掷频率与速度
+    // --- 确保石头组存在（防止 createStone 出错） ---
+    if (!this.stones) {
+      this.stones = this.physics.add.group();
+    }
+
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
-
     this.stoneTimer = this.time.addEvent({
       delay: stoneInterval,
       loop: true,
       callback: () => {
-        // 每次投掷新石头前重置碰撞处理标记
+        // 每次投掷前重置碰撞处理标记
         this.stoneHitProcessed = false;
         this.throwStones(stoneVelocity);
       },
@@ -217,7 +218,7 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 更新生命图标：缩小并固定间隔
+  // 更新生命图标，缩小图标并固定间距
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
@@ -248,6 +249,10 @@ class Gameplay extends Phaser.Scene {
   }
 
   createStone(x, y, velocity = 150) {
+    // 如果石头组不存在则重新创建
+    if (!this.stones) {
+      this.stones = this.physics.add.group();
+    }
     let stone = this.stones.create(x, y, "stone");
     stone.setScale(0.05).setDepth(9998);
     stone.setVelocityY(velocity);
@@ -285,7 +290,6 @@ class Gameplay extends Phaser.Scene {
     } else {
       console.warn(`Felix Positions ${stage} layer missing or empty.`);
     }
-
     this.stoneDrops = [];
     let stoneDropLayer = this.map.getObjectLayer(`StoneDropPosition ${stage}`);
     if (stoneDropLayer && stoneDropLayer.objects.length > 0) {
@@ -324,16 +328,13 @@ class Gameplay extends Phaser.Scene {
       let gyUpper = objUpper.y + objUpper.height / 2;
       let lowerSprite = this.add.sprite(gxLower, gyLower, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
       let upperSprite = this.add.sprite(gxUpper, gyUpper, "glassSheet").setDepth(this.windowLayerRef.depth + 1);
-
       let frameLower = Phaser.Math.Between(0, 2);
       let frameUpper = Phaser.Math.Between(0, 2);
       lowerSprite.setFrame(frameLower);
       upperSprite.setFrame(frameUpper);
-
       if (frameLower !== 0 || frameUpper !== 0) {
         allZero = false;
       }
-
       let lowerBroken = (frameLower !== 0);
       let upperBroken = (frameUpper !== 0);
       this.windowsById[key] = {
@@ -534,7 +535,6 @@ class Gameplay extends Phaser.Scene {
     }
     this.currentStage = nextStage;
     this.loadGlassForStage(nextStage);
-
     let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
     let nextArea = this.stageAreas[nextStage];
     let newX = this.felix.x;
@@ -547,7 +547,6 @@ class Gameplay extends Phaser.Scene {
       console.log(`Felix => stage${nextStage}: (${newX}, ${newY})`);
     }
     this.felix.setPosition(newX, newY);
-
     this.tweens.killTweensOf(this.ralph);
     let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
     if (rLayer && rLayer.objects.length > 0) {
@@ -560,7 +559,6 @@ class Gameplay extends Phaser.Scene {
     } else {
       console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
     }
-
     this.loadStageObjectLayers(nextStage);
     let stageHeight = 750;
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
