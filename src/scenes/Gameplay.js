@@ -34,7 +34,7 @@ class Gameplay extends Phaser.Scene {
     this.load.image("tileset2Image", "tileset2.png");
 
     // 将 Felix 从静态图像改为 spritesheet，假设每帧 64x64（请根据实际调整）
-    this.load.spritesheet("Felix", "Felix-Sheet-export.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet("Felix", "Felix-Sheet-export.png", { frameWidth: 600, frameHeight: 608 });
     this.load.image("Ralph", "Ralph.png");
     this.load.image("stone", "stone.png");
 
