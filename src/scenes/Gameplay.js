@@ -203,7 +203,7 @@ class Gameplay extends Phaser.Scene {
         // 禁用当前批次内的所有石头碰撞
         this.stones.children.iterate(child => {
           if (child.body && child.batchId === stone.batchId) {
-            child.body.enable = false;
+            child.body.checkCollision.none = true;
           }
         });
         this.time.delayedCall(100, () => { this.invincible = false; });
