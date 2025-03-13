@@ -37,6 +37,10 @@ class Gameplay extends Phaser.Scene {
 
     // 用于石头碰撞时的短暂无敌（防止同一帧内重复扣血）
     this.invincible = false;
+
+    // 新增：用于区分每批扔出的石头，每次 throwStones 前会生成一个新的批次 ID
+    this.processedStoneBatches = new Set();
+    this.currentStoneBatch = 0;
   }
 
   // 根据 loop 计算初始生命值
@@ -172,17 +176,22 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // --- 合并石头碰撞：每次碰撞（非无敌状态）都播放 failure 音效并扣减 1 生命 ---
-    this.physics.add.overlap(this.felix, this.stones, () => {
+    // --- 合并石头碰撞：同一批石头只扣一次血 ---
+    // 利用 batchId 来区分每次 throwStones 的批次
+    this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
+      // 如果石头的 batchId 已经处理，则跳过
+      if (this.processedStoneBatches.has(stone.batchId)) {
+        return;
+      }
       if (!this.levelTransitioning && !this.invincible) {
-        // 每次碰撞播放 failure 音效
+        // 第一次碰撞时，记录该批次
+        this.processedStoneBatches.add(stone.batchId);
         if (!this.failureSnd.isPlaying) {
           this.failureSnd.play();
         }
         this.lives--;
         this.updateLivesUI();
         if (this.lives <= 0) {
-          // Restart时重置难度为 Loop 1，分数归零
           this.scene.start("Gameover", {
             loop: 1,
             score: 0,
@@ -190,11 +199,19 @@ class Gameplay extends Phaser.Scene {
           });
           return;
         }
-        // 设置短暂无敌，避免同一帧多次扣血（100ms）
         this.invincible = true;
+        // 禁用当前批次内的所有石头碰撞
+        this.stones.children.iterate(child => {
+          if (child.body && child.batchId === stone.batchId) {
+            child.body.enable = false;
+          }
+        });
         this.time.delayedCall(100, () => { this.invincible = false; });
       }
     }, null, this);
+
+    // --- 每次扔石头前生成新的批次 ID ---
+    this.currentStoneBatch = 0;
 
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
@@ -202,6 +219,9 @@ class Gameplay extends Phaser.Scene {
       delay: stoneInterval,
       loop: true,
       callback: () => {
+        this.currentStoneBatch++;
+        // 清空上一批的处理记录（可选，或保持累积避免重复处理历史批次）
+        // this.processedStoneBatches.clear();
         this.throwStones(stoneVelocity);
       },
       callbackScope: this
@@ -257,6 +277,8 @@ class Gameplay extends Phaser.Scene {
       this.stones = this.physics.add.group();
     }
     let stone = this.stones.create(x, y, "stone");
+    // 将当前批次 ID 赋值给石头
+    stone.batchId = this.currentStoneBatch;
     stone.setScale(0.05).setDepth(9998);
     stone.setVelocityY(velocity);
   }
