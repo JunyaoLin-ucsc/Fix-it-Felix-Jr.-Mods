@@ -64,7 +64,7 @@ class Gameplay extends Phaser.Scene {
     // 用 spritesheet 加载 RalphSpritesheet.png
     // 注意修改 frameWidth/frameHeight 为你实际资源的帧尺寸（此处假设为 208×176）
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
-      frameWidth: 208,
+      frameWidth: 195,
       frameHeight: 176
     });
 
@@ -293,7 +293,7 @@ class Gameplay extends Phaser.Scene {
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
-    const spacing = 75;
+    const spacing = 60;
     let startX = this.cameras.main.width - 10;
     for (let i = 0; i < this.lives; i++) {
       let icon = this.add.image(startX - i * spacing, 20, "life")
@@ -464,7 +464,7 @@ class Gameplay extends Phaser.Scene {
           this.currentRepairingGlass.sprite.setFrame(0);
           this.currentRepairingGlass.isBroken = false;
           this.currentRepairingGlass.repairTimer = 0;
-          this.score += 1000;
+          this.score += 100;
           this.scoreText.setText(`Score: ${this.score}`);
           if (this.felixDirection === "right") {
             this.felix.setFrame(3);
