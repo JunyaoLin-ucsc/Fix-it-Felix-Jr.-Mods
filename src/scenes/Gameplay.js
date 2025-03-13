@@ -4,7 +4,7 @@ class Gameplay extends Phaser.Scene {
   }
 
   init(data) {
-    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart时应传入 loop:1, score:0）
+    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart时应传入 { loop:1, score:0 }）
     this.loop = data.loop || 1;
     this.currentStage = 1;
     this.maxStage = 5;
@@ -35,8 +35,8 @@ class Gameplay extends Phaser.Scene {
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
 
-    // 用于合并石头碰撞：每批石头只扣一次血
-    this.stoneHitProcessed = false;
+    // 用于石头碰撞时的短暂无敌（防止同一帧内重复扣血）
+    this.invincible = false;
   }
 
   // 根据 loop 计算初始生命值
@@ -72,6 +72,9 @@ class Gameplay extends Phaser.Scene {
   }
 
   create() {
+    // --- 确保石头组存在
+    this.stones = this.physics.add.group();
+
     const map = this.make.tilemap({ key: "gameplayMap" });
     this.map = map;
     const tilesetA = map.addTilesetImage("tileset", "tilesetImage");
@@ -169,25 +172,17 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // --- 合并石头碰撞：每批石头只扣一次血 ---
+    // --- 合并石头碰撞：每次碰撞（非无敌状态）都播放 failure 音效并扣减 1 生命 ---
     this.physics.add.overlap(this.felix, this.stones, () => {
-      if (!this.levelTransitioning && !this.stoneHitProcessed && !this.invincible) {
-        this.stoneHitProcessed = true;
+      if (!this.levelTransitioning && !this.invincible) {
+        // 每次碰撞播放 failure 音效
+        if (!this.failureSnd.isPlaying) {
+          this.failureSnd.play();
+        }
         this.lives--;
         this.updateLivesUI();
-        // 遍历石头组，禁用所有石头的物理体
-        if (this.stones && this.stones.children) {
-          this.stones.children.iterate(child => {
-            if (child.body) {
-              child.body.enable = false;
-            }
-          });
-        }
         if (this.lives <= 0) {
-          if (!this.failureSnd.isPlaying) {
-            this.failureSnd.play();
-          }
-          // Restart时重置难度为 Loop 1，得分归零
+          // Restart时重置难度为 Loop 1，分数归零
           this.scene.start("Gameover", {
             loop: 1,
             score: 0,
@@ -195,15 +190,11 @@ class Gameplay extends Phaser.Scene {
           });
           return;
         }
+        // 设置短暂无敌，避免同一帧多次扣血（100ms）
         this.invincible = true;
-        this.time.delayedCall(1000, () => { this.invincible = false; });
+        this.time.delayedCall(100, () => { this.invincible = false; });
       }
     }, null, this);
-
-    // --- 确保石头组存在 ---
-    if (!this.stones) {
-      this.stones = this.physics.add.group();
-    }
 
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
@@ -211,13 +202,11 @@ class Gameplay extends Phaser.Scene {
       delay: stoneInterval,
       loop: true,
       callback: () => {
-        this.stoneHitProcessed = false;
         this.throwStones(stoneVelocity);
       },
       callbackScope: this
     });
 
-    // --- 当场景关闭时清理定时器 ---
     this.events.on('shutdown', () => {
       if (this.stoneTimer) {
         this.stoneTimer.remove();
@@ -233,7 +222,7 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 更新生命图标：缩小至0.2倍，间隔50像素，右上角对齐
+  // 更新生命图标：缩小至 0.2 倍，间隔 50 像素，右上角对齐
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];

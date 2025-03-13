@@ -96,7 +96,7 @@ class Gameover extends Phaser.Scene {
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
         // 重置游戏难度到 Loop 1，分数归零
-        this.scene.start("Gameplay", { loop: 1, score: 0 });
+        this.scene.start("Gameplay", { loop: 1, score: 0, canNextLoop: false});
       });
     });
   }
