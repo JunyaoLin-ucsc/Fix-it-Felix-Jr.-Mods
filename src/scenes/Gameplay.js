@@ -293,7 +293,7 @@ class Gameplay extends Phaser.Scene {
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
-    const spacing = 50;
+    const spacing = 75;
     let startX = this.cameras.main.width - 10;
     for (let i = 0; i < this.lives; i++) {
       let icon = this.add.image(startX - i * spacing, 20, "life")
