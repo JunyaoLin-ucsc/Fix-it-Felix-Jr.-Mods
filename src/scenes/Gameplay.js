@@ -176,6 +176,11 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
+    this.stageText = this.add.text(10, 50, `Stage: ${this.currentStage}`, {
+      fontSize: "16px",
+      fill: "#ffffff"
+    }).setScrollFactor(0).setDepth(99999);
+
     // --- 合并石头碰撞：同一批石头只扣一次血 ---
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       if (this.processedStoneBatches.has(stone.batchId)) {
@@ -303,6 +308,9 @@ class Gameplay extends Phaser.Scene {
         .setDepth(99999);
       this.lifeIcons.push(icon);
     }
+  }
+  updateStageUI() {
+    this.stageText.setText(`Stage: ${this.currentStage}`);
   }
 
   throwStones(velocity = 150) {
