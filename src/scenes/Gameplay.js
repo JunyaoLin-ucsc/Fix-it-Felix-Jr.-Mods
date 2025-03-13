@@ -261,8 +261,10 @@ class Gameplay extends Phaser.Scene {
         this.createStone(pos.x, pos.y, stoneVelocity);
       });
     }
-    this.time.delayedCall(3 * 200 + 500, () => {
+    // 保存移动 Ralph 的延迟调用引用
+    this.ralphDelayedCall = this.time.delayedCall(3 * 200 + 500, () => {
       this.moveRalphRandom();
+      this.ralphDelayedCall = null;
     });
   }
 
@@ -310,14 +312,13 @@ class Gameplay extends Phaser.Scene {
   // 3. 每次只修复一块玻璃。
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 500; // FIX: 延长修复时间到 0.5 秒
+    const REPAIR_INTERVAL = 500; // 延长修复时间到 0.5 秒
     // 如果当前已有正在修复的玻璃，则只更新该玻璃的修复进度
     if (this.currentRepairingGlass) {
       let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, this.currentRepairingGlass.sprite.x, this.currentRepairingGlass.sprite.y);
       if (dist < REPAIR_DISTANCE) {
         this.currentRepairingGlass.repairTimer += delta;
         if (this.felixDirection === "right") {
-          // FIX: 更高 framerate 修复动画，每 50 毫秒更新一次
           let animFrame = 3 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
           this.felix.setFrame(animFrame);
         } else if (this.felixDirection === "left") {
@@ -325,7 +326,6 @@ class Gameplay extends Phaser.Scene {
           this.felix.setFrame(animFrame);
         }
         if (this.currentRepairingGlass.repairTimer >= REPAIR_INTERVAL) {
-          // 修复完成：玻璃变为完好，Felix 定格在对应 idle 帧
           this.currentRepairingGlass.sprite.setFrame(0);
           this.currentRepairingGlass.isBroken = false;
           this.currentRepairingGlass.repairTimer = 0;
@@ -337,7 +337,6 @@ class Gameplay extends Phaser.Scene {
           this.currentRepairingGlass = null;
         }
       } else {
-        // 如果离开修复范围，重置修复状态
         this.currentRepairingGlass.repairTimer = 0;
         this.currentRepairingGlass = null;
       }
@@ -351,7 +350,6 @@ class Gameplay extends Phaser.Scene {
         if (!g.isBroken) continue;
         let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, g.sprite.x, g.sprite.y);
         if (dist < REPAIR_DISTANCE) {
-          // 开始修复此玻璃
           if (!g.repairTimer) { g.repairTimer = 0; }
           this.currentRepairingGlass = g;
           break;
@@ -362,9 +360,16 @@ class Gameplay extends Phaser.Scene {
   }
 
   // 当所有窗户修复完毕，切换关卡：Felix 瞬移，新关卡开始时 Felix 显示空闲帧0；
-  // 同时摄像机切换为跟随 Ralph，让我们看到 Ralph 向上移动的动画
+  // 现在移除滚动效果，直接切换镜头位置
   levelTransition() {
     this.levelTransitioning = true;
+
+    // 如果存在尚未执行的 Ralph 延迟移动，取消它
+    if (this.ralphDelayedCall) {
+      this.ralphDelayedCall.remove();
+      this.ralphDelayedCall = null;
+    }
+
     let nextStage = this.currentStage + 1;
     if (nextStage > this.maxStage) {
       if (this.stageAreas["final"]) {
@@ -398,7 +403,7 @@ class Gameplay extends Phaser.Scene {
       this.stoneTimer.paused = true;
     }
 
-    // FIX: 直接切换镜头，不进行滚动
+    // 直接切换镜头位置，不进行滚动
     this.cameras.main.stopFollow();
     this.cameras.main.setScroll(0, nextArea.topY);
     if (this.stoneTimer) {
@@ -627,14 +632,13 @@ class Gameplay extends Phaser.Scene {
   // 如果方向为 "left"，循环帧 7～10，修复完成后定格在帧 7。
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 500; // FIX: 延长修复时间到 0.5 秒
+    const REPAIR_INTERVAL = 500; // 延长修复时间到 0.5 秒
     // 如果当前已有正在修复的玻璃，则只更新该玻璃的修复进度
     if (this.currentRepairingGlass) {
       let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, this.currentRepairingGlass.sprite.x, this.currentRepairingGlass.sprite.y);
       if (dist < REPAIR_DISTANCE) {
         this.currentRepairingGlass.repairTimer += delta;
         if (this.felixDirection === "right") {
-          // FIX: 更高 framerate 修复动画，每 50 毫秒更新一次
           let animFrame = 3 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
           this.felix.setFrame(animFrame);
         } else if (this.felixDirection === "left") {
@@ -653,7 +657,6 @@ class Gameplay extends Phaser.Scene {
           this.currentRepairingGlass = null;
         }
       } else {
-        // 如果离开修复范围，重置修复状态
         this.currentRepairingGlass.repairTimer = 0;
         this.currentRepairingGlass = null;
       }
@@ -667,7 +670,6 @@ class Gameplay extends Phaser.Scene {
         if (!g.isBroken) continue;
         let dist = Phaser.Math.Distance.Between(this.felix.x, this.felix.y, g.sprite.x, g.sprite.y);
         if (dist < REPAIR_DISTANCE) {
-          // 开始修复此玻璃
           if (!g.repairTimer) { g.repairTimer = 0; }
           this.currentRepairingGlass = g;
           break;
