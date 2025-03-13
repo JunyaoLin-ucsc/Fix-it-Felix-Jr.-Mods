@@ -398,38 +398,13 @@ class Gameplay extends Phaser.Scene {
       this.stoneTimer.paused = true;
     }
 
-    // 切换摄像机跟随到 Ralph，展示 Ralph 向上移动的动画
+    // FIX: 直接切换镜头，不进行滚动
     this.cameras.main.stopFollow();
-    this.cameras.main.startFollow(this.ralph, true, 0.25, 0.25);
-
-    let ralphLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
-    let targetX = this.ralph.x;
-    let targetY = this.ralph.y - 100; // 默认向上 100 像素
-    if (ralphLayer && ralphLayer.objects.length > 0) {
-      let randR = Phaser.Math.Between(0, ralphLayer.objects.length - 1);
-      let rObj = ralphLayer.objects[randR];
-      targetX = rObj.x + (rObj.width || 0) / 2;
-      targetY = rObj.y + (rObj.height || 0) / 2;
-      console.log(`Ralph target for Stage ${nextStage}: (${targetX}, ${targetY})`);
-    } else {
-      console.warn(`No RalphStage${nextStage} layer found, using default upward movement.`);
+    this.cameras.main.setScroll(0, nextArea.topY);
+    if (this.stoneTimer) {
+      this.stoneTimer.paused = false;
     }
-
-    this.tweens.killTweensOf(this.ralph);
-    this.tweens.add({
-      targets: this.ralph,
-      y: targetY,
-      duration: 2000,
-      ease: "Linear",
-      onComplete: () => {
-        this.cameras.main.stopFollow();
-        this.cameras.main.startFollow(this.felix, true, 0.25, 0.25);
-        if (this.stoneTimer) {
-          this.stoneTimer.paused = false;
-        }
-        this.levelTransitioning = false;
-      }
-    });
+    this.levelTransitioning = false;
   }
 
   preLoadNextStage(nextStage) {
@@ -486,38 +461,35 @@ class Gameplay extends Phaser.Scene {
     this.physics.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
 
-    let currentCenter = this.cameras.main.midPoint;
-    let newCenterY = finalTopY + this.cameras.main.height / 2;
-
     this.cameras.main.stopFollow();
-    this.cameras.main.pan(currentCenter.x, newCenterY, 4000, "Linear", false, () => {
-      this.inFinalStage = true;
-      if (this.stoneTimer) {
-        this.stoneTimer.remove();
-        this.stoneTimer = null;
-      }
-      this.tweens.killTweensOf(this.ralph);
+    this.cameras.main.setScroll(0, finalTopY);
+    
+    this.inFinalStage = true;
+    if (this.stoneTimer) {
+      this.stoneTimer.remove();
+      this.stoneTimer = null;
+    }
+    this.tweens.killTweensOf(this.ralph);
 
-      let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
-      if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
-        let obj = felixFinalLayer.objects[0];
-        let fx = obj.x + (obj.width || 0) / 2;
-        let fy = obj.y + (obj.height || 0) / 2;
-        this.felix.setPosition(fx, fy);
-        this.felix.setFrame(0);
-        console.log(`Felix => final: (${fx}, ${fy})`);
-      }
-      let ralphFinalLayer = this.map.getObjectLayer("RalphFinal");
-      if (ralphFinalLayer && ralphFinalLayer.objects.length > 0) {
-        let obj = ralphFinalLayer.objects[0];
-        let rx = obj.x + (obj.width || 0) / 2;
-        let ry = obj.y + (obj.height || 0) / 2;
-        this.ralph.setPosition(rx, ry);
-        console.log(`Ralph => final: (${rx}, ${ry})`);
-      }
-      this.time.delayedCall(3000, () => {
-        this.scene.start("Gameover");
-      });
+    let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
+    if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
+      let obj = felixFinalLayer.objects[0];
+      let fx = obj.x + (obj.width || 0) / 2;
+      let fy = obj.y + (obj.height || 0) / 2;
+      this.felix.setPosition(fx, fy);
+      this.felix.setFrame(0);
+      console.log(`Felix => final: (${fx}, ${fy})`);
+    }
+    let ralphFinalLayer = this.map.getObjectLayer("RalphFinal");
+    if (ralphFinalLayer && ralphFinalLayer.objects.length > 0) {
+      let obj = ralphFinalLayer.objects[0];
+      let rx = obj.x + (obj.width || 0) / 2;
+      let ry = obj.y + (obj.height || 0) / 2;
+      this.ralph.setPosition(rx, ry);
+      console.log(`Ralph => final: (${rx}, ${ry})`);
+    }
+    this.time.delayedCall(3000, () => {
+      this.scene.start("Gameover");
     });
   }
 
