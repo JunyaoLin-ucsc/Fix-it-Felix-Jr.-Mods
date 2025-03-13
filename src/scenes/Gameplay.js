@@ -160,7 +160,7 @@ class Gameplay extends Phaser.Scene {
       fill: "#ffffff"
     }).setScrollFactor(0).setDepth(99999);
 
-    // 在 Score 下方显示当前 Loop 数
+    // 显示当前 Loop 数，放在 Score 下方
     this.loopText = this.add.text(10, 30, `Loop: ${this.loop}`, {
       fontSize: "16px",
       fill: "#ffffff"
@@ -175,6 +175,12 @@ class Gameplay extends Phaser.Scene {
         this.stoneHitProcessed = true;
         this.lives--;
         this.updateLivesUI();
+        // 禁用当前石头组中所有石头的物理体，防止多次碰撞
+        this.stones.children.iterate(child => {
+          if (child.body) {
+            child.body.enable = false;
+          }
+        });
         if (this.lives <= 0) {
           if (!this.failureSnd.isPlaying) {
             this.failureSnd.play();
@@ -192,7 +198,7 @@ class Gameplay extends Phaser.Scene {
       }
     }, null, this);
 
-    // --- 确保石头组存在（防止 createStone 出错） ---
+    // --- 确保石头组存在 ---
     if (!this.stones) {
       this.stones = this.physics.add.group();
     }
@@ -203,11 +209,18 @@ class Gameplay extends Phaser.Scene {
       delay: stoneInterval,
       loop: true,
       callback: () => {
-        // 每次投掷前重置碰撞处理标记
         this.stoneHitProcessed = false;
         this.throwStones(stoneVelocity);
       },
       callbackScope: this
+    });
+
+    // --- 当场景关闭时清理定时器 ---
+    this.events.on('shutdown', () => {
+      if (this.stoneTimer) {
+        this.stoneTimer.remove();
+        this.stoneTimer = null;
+      }
     });
 
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -218,16 +231,16 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 更新生命图标，缩小图标并固定间距
+  // 更新生命图标：缩小至0.2倍，间隔40像素，右上角对齐
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
-    const spacing = 30;
+    const spacing = 40;
     let startX = this.cameras.main.width - 10;
     for (let i = 0; i < this.lives; i++) {
       let icon = this.add.image(startX - i * spacing, 20, "life")
         .setScrollFactor(0)
-        .setScale(0.3)
+        .setScale(0.2)
         .setOrigin(1, 0)
         .setDepth(99999);
       this.lifeIcons.push(icon);
@@ -249,7 +262,6 @@ class Gameplay extends Phaser.Scene {
   }
 
   createStone(x, y, velocity = 150) {
-    // 如果石头组不存在则重新创建
     if (!this.stones) {
       this.stones = this.physics.add.group();
     }
