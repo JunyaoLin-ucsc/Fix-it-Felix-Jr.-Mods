@@ -18,19 +18,28 @@ class Gameover extends Phaser.Scene {
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
 
-    // 显示 "Game Over" 标题和最终得分
+    // 显示 "Game Over" 标题
     this.add.text(
       map.widthInPixels / 2,
-      map.heightInPixels / 2 - 100,
+      map.heightInPixels / 2 - 120,
       "Game Over",
       { fontSize: "48px", color: "#ff0000", fontFamily: "Arial" }
     ).setOrigin(0.5);
 
+    // 显示最终得分
     this.add.text(
       map.widthInPixels / 2,
-      map.heightInPixels / 2 - 40,
+      map.heightInPixels / 2 - 60,
       `Score: ${data.score}`,
       { fontSize: "32px", color: "#ffffff", fontFamily: "Arial" }
+    ).setOrigin(0.5);
+
+    // 显示当前 Loop 数
+    this.add.text(
+      map.widthInPixels / 2,
+      map.heightInPixels / 2 - 20,
+      `Loop: ${data.loop}`,
+      { fontSize: "28px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5);
 
     // 创建音效对象
@@ -65,7 +74,7 @@ class Gameover extends Phaser.Scene {
       });
     }
 
-    // 始终显示 "Restart" 按钮（返回主菜单）
+    // 始终显示 "Restart" 按钮（重置游戏，难度回到 Loop 1，分数归零）
     let restartBtn = this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2 + 80,
@@ -86,7 +95,8 @@ class Gameover extends Phaser.Scene {
       }
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
-        this.scene.start("MainMenu");
+        // 重置游戏难度到 Loop 1，分数归零
+        this.scene.start("Gameplay", { loop: 1, score: 0 });
       });
     });
   }
