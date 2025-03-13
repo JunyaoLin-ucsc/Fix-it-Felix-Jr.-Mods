@@ -4,7 +4,6 @@ class Gameplay extends Phaser.Scene {
   }
 
   init(data) {
-    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart时应传入 { loop:1, score:0 }）
     this.loop = data.loop || 1;
     this.currentStage = 1;
     this.maxStage = 5;
@@ -13,16 +12,10 @@ class Gameplay extends Phaser.Scene {
     this.lastStoneDropIndex = null;
     this.inFinalStage = false;
 
-    // 分数（如果重启则 data.score 可能为 0）
     this.score = data.score || 0;
-
-    // 根据 Loop 计算初始生命值
     this.lives = this.getLivesByLoop(this.loop);
-
-    // 每个 Stage 60 秒倒计时（进入新 Stage 时会重置）
     this.stageTime = 60;
 
-    // 玻璃区间
     this.stageRanges = {
       1: { start: 1, end: 26 },
       2: { start: 27, end: 56 },
@@ -35,15 +28,13 @@ class Gameplay extends Phaser.Scene {
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
 
-    // 用于石头碰撞时的短暂无敌（防止同一帧内重复扣血）
     this.invincible = false;
 
-    // 新增：用于区分每批扔出的石头，每次 throwStones 前会生成一个新的批次 ID
+    // 区分每批石头
     this.processedStoneBatches = new Set();
     this.currentStoneBatch = 0;
   }
 
-  // 根据 loop 计算初始生命值
   getLivesByLoop(loop) {
     if (loop === 1) return 3;
     if (loop === 2) return 4;
@@ -60,9 +51,15 @@ class Gameplay extends Phaser.Scene {
       frameWidth: 600,
       frameHeight: 608
     });
-    this.load.image("Ralph", "Ralph.png");
-    this.load.image("stone", "stone.png");
 
+    // ❶ 用 spritesheet 加载 RalphSpritesheet.png
+    //   注意修改 frameWidth/frameHeight 为你实际资源的帧尺寸
+    this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
+      frameWidth: 96,
+      frameHeight: 80
+    });
+
+    this.load.image("stone", "stone.png");
     this.load.spritesheet("glassSheet", "Glass-Sheet.png", {
       frameWidth: 32,
       frameHeight: 32
@@ -71,12 +68,11 @@ class Gameplay extends Phaser.Scene {
     this.load.audio("movement", "movement.wav");
     this.load.audio("failure", "failure.wav");
 
-    // 生命图标
     this.load.image("life", "Life.png");
   }
 
   create() {
-    // --- 确保石头组存在
+    // 确保石头组存在
     this.stones = this.physics.add.group();
 
     const map = this.make.tilemap({ key: "gameplayMap" });
@@ -106,13 +102,12 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
+    // 读取 stageAreas
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
         let obj = spaceLayer.objects[0];
         this.stageAreas[s] = { topY: obj.y };
-      } else {
-        console.warn(`Stage ${s} Space layer missing or empty.`);
       }
     }
     let finalSpace = map.getObjectLayer("Final Stage Space");
@@ -121,6 +116,7 @@ class Gameplay extends Phaser.Scene {
       this.stageAreas["final"] = { topY: obj.y };
     }
 
+    // 创建 Felix
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix", 0).setScale(0.1);
     this.felix.setCollideWorldBounds(true).setDepth(9999);
@@ -135,8 +131,11 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, this.windowLayerRef);
 
+    // 设置相机和物理世界边界
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    // stage1 初始
     let stage1Area = this.stageAreas[1];
     if (stage1Area) {
       let stageHeight = 750;
@@ -145,14 +144,8 @@ class Gameplay extends Phaser.Scene {
       this.cameras.main.setScroll(0, stage1Area.topY);
     }
 
-    const ralphLayer = map.getObjectLayer("RalphSpawns");
-    let ralphX = 400, ralphY = 100;
-    if (ralphLayer && ralphLayer.objects.length > 0) {
-      let obj = ralphLayer.objects[0];
-      ralphX = obj.x + (obj.width || 0) / 2;
-      ralphY = obj.y + (obj.height || 0) / 2;
-    }
-    this.ralph = this.add.sprite(ralphX, ralphY, "Ralph").setDepth(1000).setScale(0.2);
+    // ❷ 创建 Ralph 并定义动画
+    this.createRalph();
 
     this.loadStageObjectLayers(1);
 
@@ -167,7 +160,6 @@ class Gameplay extends Phaser.Scene {
       fill: "#ffffff"
     }).setScrollFactor(0).setDepth(99999);
 
-    // 在 Score 下方显示当前 Loop 数
     this.loopText = this.add.text(10, 30, `Loop: ${this.loop}`, {
       fontSize: "16px",
       fill: "#ffffff"
@@ -176,15 +168,13 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // --- 合并石头碰撞：同一批石头只扣一次血 ---
-    // 利用 batchId 来区分每次 throwStones 的批次
+    // 碰撞检测：同一批石头只扣一次血
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       // 如果石头的 batchId 已经处理，则跳过
       if (this.processedStoneBatches.has(stone.batchId)) {
         return;
       }
       if (!this.levelTransitioning && !this.invincible) {
-        // 第一次碰撞时，记录该批次
         this.processedStoneBatches.add(stone.batchId);
         if (!this.failureSnd.isPlaying) {
           this.failureSnd.play();
@@ -200,7 +190,7 @@ class Gameplay extends Phaser.Scene {
           return;
         }
         this.invincible = true;
-        // 禁用当前批次内的所有石头碰撞
+        // 禁用当前批次石头的碰撞，但石头继续下落
         this.stones.children.iterate(child => {
           if (child.body && child.batchId === stone.batchId) {
             child.body.checkCollision.none = true;
@@ -210,7 +200,7 @@ class Gameplay extends Phaser.Scene {
       }
     }, null, this);
 
-    // --- 每次扔石头前生成新的批次 ID ---
+    // 每次扔石头前生成新的批次 ID
     this.currentStoneBatch = 0;
 
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
@@ -220,8 +210,6 @@ class Gameplay extends Phaser.Scene {
       loop: true,
       callback: () => {
         this.currentStoneBatch++;
-        // 清空上一批的处理记录（可选，或保持累积避免重复处理历史批次）
-        // this.processedStoneBatches.clear();
         this.throwStones(stoneVelocity);
       },
       callbackScope: this
@@ -242,7 +230,69 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 更新生命图标：缩小至 0.2 倍，间隔 50 像素，右上角对齐
+  // ❸ 创建 Ralph 并定义动画
+  createRalph() {
+    // Ralph 的初始位置（在 create() 里已计算 ralphX, ralphY）
+    let ralphLayer = this.map.getObjectLayer("RalphSpawns");
+    let ralphX = 400, ralphY = 100;
+    if (ralphLayer && ralphLayer.objects.length > 0) {
+      let obj = ralphLayer.objects[0];
+      ralphX = obj.x + (obj.width || 0) / 2;
+      ralphY = obj.y + (obj.height || 0) / 2;
+    }
+
+    // 用 spritesheet 第0帧作为初始帧
+    this.ralph = this.add.sprite(ralphX, ralphY, "Ralph", 0)
+      .setDepth(1000)
+      .setScale(0.2);
+
+    // 定义动画：Idle(0), MoveRight(1..2), MoveLeft(11..12), Throw(5..10), Final(13..15)
+
+    // Idle: 帧 0
+    this.anims.create({
+      key: "ralph_idle",
+      frames: [{ key: "Ralph", frame: 0 }],
+      frameRate: 1,
+      repeat: -1
+    });
+
+    // Move Right: 帧 1..2
+    this.anims.create({
+      key: "ralph_move_right",
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 1, end: 2 }),
+      frameRate: 5,
+      repeat: -1
+    });
+
+    // Move Left: 帧 11..12
+    this.anims.create({
+      key: "ralph_move_left",
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 11, end: 12 }),
+      frameRate: 5,
+      repeat: -1
+    });
+
+    // Throw Stone: 帧 5..10
+    this.anims.create({
+      key: "ralph_throw",
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 5, end: 10 }),
+      frameRate: 8,
+      repeat: 0
+    });
+
+    // Final Stage: 帧 13..15
+    this.anims.create({
+      key: "ralph_final",
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 13, end: 15 }),
+      frameRate: 5,
+      repeat: -1
+    });
+
+    // 初始播放 idle
+    this.ralph.play("ralph_idle");
+  }
+
+  // 更新生命图标
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
@@ -260,6 +310,14 @@ class Gameplay extends Phaser.Scene {
 
   throwStones(velocity = 150) {
     if (this.inFinalStage) return;
+    // ❹ 让 Ralph 播放扔石头动画
+    this.ralph.play("ralph_throw");
+
+    // 播放完后回到 idle
+    this.ralph.once(Phaser.Animations.Events.ANIMATION_COMPLETE, () => {
+      this.ralph.play("ralph_idle");
+    });
+
     const pos = { x: this.ralph.x, y: this.ralph.y };
     for (let i = 0; i < 3; i++) {
       this.time.delayedCall(i * 200, () => {
@@ -273,16 +331,13 @@ class Gameplay extends Phaser.Scene {
   }
 
   createStone(x, y, velocity = 150) {
-    if (!this.stones) {
-      this.stones = this.physics.add.group();
-    }
     let stone = this.stones.create(x, y, "stone");
-    // 将当前批次 ID 赋值给石头
     stone.batchId = this.currentStoneBatch;
     stone.setScale(0.05).setDepth(9998);
     stone.setVelocityY(velocity);
   }
 
+  // 根据随机目标决定 Ralph 向左/向右移动
   moveRalphRandom() {
     if (this.inFinalStage) return;
     if (!this.stoneDrops || !this.stoneDrops.length) return;
@@ -293,13 +348,25 @@ class Gameplay extends Phaser.Scene {
     } while (idx === this.lastStoneDropIndex && this.stoneDrops.length > 1 && tries < 10);
     this.lastStoneDropIndex = idx;
     let target = this.stoneDrops[idx];
+
+    // ❺ 判断左右，播放对应动画
+    if (target.x > this.ralph.x) {
+      this.ralph.play("ralph_move_right", true);
+    } else {
+      this.ralph.play("ralph_move_left", true);
+    }
+
     this.tweens.killTweensOf(this.ralph);
     this.tweens.add({
       targets: this.ralph,
       x: target.x,
       y: target.y,
       duration: 500,
-      ease: "Linear"
+      ease: "Linear",
+      onComplete: () => {
+        // 到达目标后回到 idle
+        this.ralph.play("ralph_idle");
+      }
     });
   }
 
@@ -312,8 +379,6 @@ class Gameplay extends Phaser.Scene {
         let py = obj.y + obj.height / 2;
         this.windowPlatforms.push({ x: px, y: py });
       });
-    } else {
-      console.warn(`Felix Positions ${stage} layer missing or empty.`);
     }
     this.stoneDrops = [];
     let stoneDropLayer = this.map.getObjectLayer(`StoneDropPosition ${stage}`);
@@ -323,8 +388,6 @@ class Gameplay extends Phaser.Scene {
         let sy = obj.y + (obj.height || 0) / 2;
         this.stoneDrops.push({ x: sx, y: sy });
       });
-    } else {
-      console.warn(`StoneDropPosition ${stage} layer missing or empty.`);
     }
   }
 
@@ -338,11 +401,9 @@ class Gameplay extends Phaser.Scene {
       let lowerLayer = this.map.getObjectLayer("Glass " + num);
       let upperLayer = this.map.getObjectLayer("Glass " + (num + 1));
       if (!lowerLayer || !lowerLayer.objects.length) {
-        console.warn(`Glass ${num} layer missing or empty.`);
         continue;
       }
       if (!upperLayer || !upperLayer.objects.length) {
-        console.warn(`Glass ${num + 1} layer missing or empty.`);
         continue;
       }
       let objLower = lowerLayer.objects[0];
@@ -371,6 +432,7 @@ class Gameplay extends Phaser.Scene {
       };
     }
     if (stage === 1 && allZero) {
+      // 强制打破一个玻璃
       let keys = Object.keys(this.windowsById).filter(k => k.startsWith("1_"));
       if (keys.length > 0) {
         let forcedKey = keys[Phaser.Math.Between(0, keys.length - 1)];
@@ -430,6 +492,7 @@ class Gameplay extends Phaser.Scene {
       }
       return;
     }
+    // 如果没有正在修复的玻璃 => 查找破损玻璃
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
@@ -464,6 +527,7 @@ class Gameplay extends Phaser.Scene {
     }
     this.timeText.setText(`Time: ${Math.floor(this.stageTime)}`);
 
+    // Felix移动帧
     if (this.cursors.right.isDown) {
       this.felixDirection = "right";
       if (!this.allWindowsRepairedForStage()) {
@@ -581,6 +645,8 @@ class Gameplay extends Phaser.Scene {
       let ry = rObj.y + (rObj.height || 0) / 2;
       this.ralph.setPosition(rx, ry);
       console.log(`Ralph => stage${nextStage}: (${rx}, ${ry})`);
+      // Ralph 回到 idle 帧 0
+      this.ralph.play("ralph_idle");
     } else {
       console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
     }
@@ -609,6 +675,7 @@ class Gameplay extends Phaser.Scene {
       this.stoneTimer = null;
     }
     this.tweens.killTweensOf(this.ralph);
+
     let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
     if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
       let obj = felixFinalLayer.objects[0];
@@ -616,7 +683,6 @@ class Gameplay extends Phaser.Scene {
       let fy = obj.y + (obj.height || 0) / 2;
       this.felix.setPosition(fx, fy);
       this.felix.setFrame(0);
-      console.log(`Felix => final: (${fx}, ${fy})`);
     }
     let ralphFinalLayer = this.map.getObjectLayer("RalphFinal");
     if (ralphFinalLayer && ralphFinalLayer.objects.length > 0) {
@@ -624,7 +690,9 @@ class Gameplay extends Phaser.Scene {
       let rx = obj.x + (obj.width || 0) / 2;
       let ry = obj.y + (obj.height || 0) / 2;
       this.ralph.setPosition(rx, ry);
-      console.log(`Ralph => final: (${rx}, ${ry})`);
+
+      // ❻ 在最终阶段播放 ralph_final 动画
+      this.ralph.play("ralph_final");
     }
     this.time.delayedCall(3000, () => {
       this.scene.start("Gameover", {
