@@ -13,7 +13,7 @@ class Gameplay extends Phaser.Scene {
     this.lastStoneDropIndex = null;
     this.inFinalStage = false;
 
-    // 分数（如果是重启则 data.score 可能为 0）
+    // 分数（如果重启则 data.score 可能为 0）
     this.score = data.score || 0;
 
     // 根据 Loop 计算初始生命值
@@ -35,7 +35,7 @@ class Gameplay extends Phaser.Scene {
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
 
-    // --- 用于合并石头碰撞：每批石头只扣一次血 ---
+    // 用于合并石头碰撞：每批石头只扣一次血
     this.stoneHitProcessed = false;
   }
 
@@ -160,7 +160,7 @@ class Gameplay extends Phaser.Scene {
       fill: "#ffffff"
     }).setScrollFactor(0).setDepth(99999);
 
-    // 显示当前 Loop 数，放在 Score 下方
+    // 在 Score 下方显示当前 Loop 数
     this.loopText = this.add.text(10, 30, `Loop: ${this.loop}`, {
       fontSize: "16px",
       fill: "#ffffff"
@@ -175,12 +175,14 @@ class Gameplay extends Phaser.Scene {
         this.stoneHitProcessed = true;
         this.lives--;
         this.updateLivesUI();
-        // 禁用当前石头组中所有石头的物理体，防止多次碰撞
-        this.stones.children.iterate(child => {
-          if (child.body) {
-            child.body.enable = false;
-          }
-        });
+        // 遍历石头组，禁用所有石头的物理体
+        if (this.stones && this.stones.children) {
+          this.stones.children.iterate(child => {
+            if (child.body) {
+              child.body.enable = false;
+            }
+          });
+        }
         if (this.lives <= 0) {
           if (!this.failureSnd.isPlaying) {
             this.failureSnd.play();
@@ -231,11 +233,11 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 更新生命图标：缩小至0.2倍，间隔40像素，右上角对齐
+  // 更新生命图标：缩小至0.2倍，间隔50像素，右上角对齐
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
-    const spacing = 40;
+    const spacing = 50;
     let startX = this.cameras.main.width - 10;
     for (let i = 0; i < this.lives; i++) {
       let icon = this.add.image(startX - i * spacing, 20, "life")
