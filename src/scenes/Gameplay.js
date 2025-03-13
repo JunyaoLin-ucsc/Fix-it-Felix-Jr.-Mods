@@ -412,6 +412,7 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
+  // --- 修改部分：对 Ralph 做和 Felix 类似的瞬移更新 --- 
   preLoadNextStage(nextStage) {
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
@@ -436,6 +437,8 @@ class Gameplay extends Phaser.Scene {
     }
     this.felix.setPosition(newX, newY);
 
+    // --- 对 Ralph 进行类似处理：先清除 tween，再立即更新位置 ---
+    this.tweens.killTweensOf(this.ralph);
     let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
     if (rLayer && rLayer.objects.length > 0) {
       let rIndex = Phaser.Math.Between(0, rLayer.objects.length - 1);
@@ -454,6 +457,7 @@ class Gameplay extends Phaser.Scene {
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
   }
+  // --- 结束修改 ---
 
   transitionToFinalStage() {
     let finalData = this.stageAreas["final"];
