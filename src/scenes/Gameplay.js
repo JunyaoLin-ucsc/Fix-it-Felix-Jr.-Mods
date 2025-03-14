@@ -278,21 +278,21 @@ class Gameplay extends Phaser.Scene {
     });
     this.anims.create({
       key: "ralph_move_left",
-      frames: this.anims.generateFrameNumbers("Ralph", { start: 11, end: 12 }),
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 9, end: 10 }),
       frameRate: 5,
       repeat: -1
     });
     this.anims.create({
       key: "ralph_throw",
-      frames: this.anims.generateFrameNumbers("Ralph", { start: 5, end: 10 }),
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 3, end: 8 }),
       frameRate: 8,
       repeat: 0
     });
     this.anims.create({
       key: "ralph_final",
-      frames: this.anims.generateFrameNumbers("Ralph", { start: 13, end: 15 }),
+      frames: this.anims.generateFrameNumbers("Ralph", { start: 11, end: 13 }),
       frameRate: 5,
-      repeat: -1
+      repeat: 0
     });
 
     this.ralph.play("ralph_idle");
