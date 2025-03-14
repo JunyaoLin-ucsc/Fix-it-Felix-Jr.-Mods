@@ -620,6 +620,7 @@ class Gameplay extends Phaser.Scene {
       }
     }
     this.currentStage = nextStage;
+    this.updateStageUI();
     this.loadGlassForStage(nextStage);
     let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
     let nextArea = this.stageAreas[nextStage];
