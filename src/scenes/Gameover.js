@@ -13,12 +13,12 @@ class Gameover extends Phaser.Scene {
   }
 
   create(data) {
-    // data 对象包含：{ loop, score, canNextLoop }
+    // data 对象包含：{ loop, score, canNextLoop, reachedLoop }
     const map = this.make.tilemap({ key: "gameoverMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
   
-    // 根据是否允许进入下一 Loop，选择不同的标题文本
+    // 根据是否允许进入下一 Loop 选择标题文本
     let titleText;
     if (data.canNextLoop) {
       titleText = "Ralph has escaped and will return.\nAre you going to challenge him?";
@@ -42,10 +42,12 @@ class Gameover extends Phaser.Scene {
     ).setOrigin(0.5);
   
     // 显示当前 Loop 数
+    // 如果传入了 reachedLoop，则显示 reachedLoop，否则显示 data.loop
+    const loopToShow = (data.reachedLoop !== undefined) ? data.reachedLoop : data.loop;
     this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2 - 20,
-      `Loop: ${data.loop}`,
+      `Loop: ${loopToShow}`,
       { fontSize: "28px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5);
   
@@ -102,11 +104,10 @@ class Gameover extends Phaser.Scene {
       }
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
-        // 重置游戏：始终以 Loop 1 难度重新开始
+        // 重置游戏：无论玩家死亡或超时，重新开始时都以 Loop 1 难度启动
         this.scene.start("Gameplay", { loop: 1, score: 0, canNextLoop: false });
       });
     });
-  }
+  }  
 }
-
 window.Gameover = Gameover;
