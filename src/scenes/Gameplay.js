@@ -160,7 +160,8 @@ class Gameplay extends Phaser.Scene {
     // --- UI: Score, Time, Loop, Lives ---
     this.scoreText = this.add.text(10, 10, `Score: ${this.score}`, {
       fontSize: "32px",
-      fill: "#ffffff"
+      fill: "#ffffff",
+      lineSpacing: 5,
     }).setScrollFactor(0).setDepth(99999);
 
     this.timeText = this.add.text(360, 10, `Time: ${this.stageTime}`, {
@@ -170,12 +171,14 @@ class Gameplay extends Phaser.Scene {
 
     this.loopText = this.add.text(10, 30, `Loop: ${this.loop}`, {
       fontSize: "32px",
-      fill: "#ffffff"
+      fill: "#ffffff",
+      lineSpacing: 5,
     }).setScrollFactor(0).setDepth(99999);
 
     this.stageText = this.add.text(10, 50, `Stage: ${this.currentStage}`, {
       fontSize: "32px",
-      fill: "#ffffff"
+      fill: "#ffffff",
+      lineSpacing: 5,
     }).setScrollFactor(0).setDepth(99999);
 
     this.lifeIcons = [];
