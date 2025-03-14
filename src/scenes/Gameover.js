@@ -18,7 +18,7 @@ class Gameover extends Phaser.Scene {
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
   
-    // 根据是否可以进入下一 Loop，选择不同的标题文本
+    // 根据是否允许进入下一 Loop，选择不同的标题文本
     let titleText;
     if (data.canNextLoop) {
       titleText = "Ralph has escaped and will return.\nAre you going to challenge him?";
@@ -53,7 +53,7 @@ class Gameover extends Phaser.Scene {
     this.confirmSnd = this.sound.add("confirm");
     this.selectionSnd = this.sound.add("selection");
   
-    // 如果允许进入下一 Loop，则显示 Next Loop 按钮
+    // 如果允许进入下一 Loop，则显示 "Next Loop" 按钮
     if (data.canNextLoop) {
       let nextLoopBtn = this.add.text(
         map.widthInPixels / 2,
@@ -75,13 +75,13 @@ class Gameover extends Phaser.Scene {
         }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 进入下一个 Loop：Loop 数加 1，并传递当前得分
+          // 进入下一个 Loop：将 loop 数加 1，并传递当前得分
           this.scene.start("Gameplay", { loop: data.loop + 1, score: data.score });
         });
       });
     }
   
-    // 始终显示 Restart 按钮（重置游戏，难度回到 Loop 1，分数归零）
+    // 始终显示 "Restart" 按钮（重置游戏，难度回到 Loop 1，分数归零）
     let restartBtn = this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2 + 80,
@@ -102,7 +102,8 @@ class Gameover extends Phaser.Scene {
       }
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
-        this.scene.start("MainMenu");
+        // 重置游戏：始终以 Loop 1 难度重新开始
+        this.scene.start("Gameplay", { loop: 1, score: 0, canNextLoop: false });
       });
     });
   }
