@@ -153,7 +153,7 @@ class Gameplay extends Phaser.Scene {
     this.createRalph();
 
     // 调用放大函数，将 Ralph 放大（例如放大到 0.5 倍）
-    this.enlargeRalph(1.5);
+    this.enlargeRalph(1);
 
     this.loadStageObjectLayers(1);
 
