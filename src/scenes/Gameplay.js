@@ -247,24 +247,16 @@ class Gameplay extends Phaser.Scene {
     this.loadGlassForStage(this.currentStage);
 
     // --- Bird logic start ---
-    // 按照 stage 编号记录对应的鸟飞行区域（矩形）
+    // 为每个 stage 存储对应 BirdFly 矩形区域
     this.birdFlyAreas = {};
     for (let s = 1; s <= 5; s++) {
       let layer = this.map.getObjectLayer("Stage " + s + " BirdFly");
       if (layer && layer.objects && layer.objects.length > 0) {
-        // 假设该层仅有一个矩形对象
+        // 只取第一个矩形对象
         let areaObj = layer.objects[0];
         this.birdFlyAreas[s] = areaObj; // { x, y, width, height }
       }
     }
-
-    // 每 1500ms 调用 spawnBirdForCurrentStage
-    this.time.addEvent({
-      delay: 1500,
-      callback: this.spawnBirdForCurrentStage,
-      callbackScope: this,
-      loop: true
-    });
 
     // 创建鸟的物理组和碰撞检测
     this.birds = this.physics.add.group();
@@ -287,6 +279,14 @@ class Gameplay extends Phaser.Scene {
         repeat: -1
       });
     }
+
+    // 每 1500 毫秒尝试在当前 stage 生成鸟
+    this.time.addEvent({
+      delay: 1500,
+      callback: this.spawnBirdForCurrentStage,
+      callbackScope: this,
+      loop: true
+    });
     // --- Bird logic end ---
 
     this.felix.setFrame(0);
@@ -635,20 +635,20 @@ class Gameplay extends Phaser.Scene {
   }
 
   // --------------------------------------------------------------------------
-  // 重点：只从当前Stage的BirdFly区域生成鸟
+  // 只在当前 Stage 的 BirdFly 区域生成鸟
   // --------------------------------------------------------------------------
   spawnBirdForCurrentStage() {
     // 如果在最终关或关卡过渡中，就不再生成鸟
     if (this.inFinalStage || this.levelTransitioning) return;
 
-    // 当前 Stage 的区域
+    // 获取当前 stage 的矩形区域
     let areaObj = this.birdFlyAreas[this.currentStage];
     if (!areaObj) {
       // 当前Stage没有配置BirdFly区域，则不生成
       return;
     }
 
-    // 在这里调节出现概率；可自行修改
+    // 随机概率：50% 生成一只，20% 生成两只
     let chance = Phaser.Math.Between(1, 100);
     if (chance <= 50) {
       this.spawnOneBirdInArea(areaObj);
@@ -665,12 +665,17 @@ class Gameplay extends Phaser.Scene {
     // 随机决定鸟的类型（bird1 或 bird1-flip）
     let birdType = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
 
-    // bird1从左侧出现，bird1-flip从右侧出现
-    let spawnX = (birdType === "bird1") ? -32 : this.cameras.main.width + 32;
+    // 如果是 bird1，从矩形左边缘出现；如果是 bird1-flip，从矩形右边缘出现
+    // areaObj.x 和 areaObj.x + areaObj.width 分别是区域的最左、最右
+    let spawnX = (birdType === "bird1")
+      ? areaObj.x
+      : (areaObj.x + areaObj.width);
 
+    // 创建鸟
     let bird = this.physics.add.sprite(spawnX, spawnY, birdType, 0);
     bird.body.setSize(64, 64);
-    bird.setDepth(100); // 确保鸟覆盖tile和玻璃
+    bird.setDepth(100); // 确保鸟覆盖所有图层
+    // 速度设置：bird1 从左向右，bird1-flip 从右向左
     let speed = 100;
     if (birdType === "bird1") {
       bird.body.velocity.x = speed;
@@ -680,32 +685,31 @@ class Gameplay extends Phaser.Scene {
       bird.anims.play("bird1flip_fly");
     }
     this.birds.add(bird);
-    console.log(`[Stage ${this.currentStage}] 生成了一只 ${birdType}，Y=${spawnY}`);
+    console.log(`[Stage ${this.currentStage}] 生成 1 只鸟: ${birdType}, X=${spawnX}, Y=${spawnY}`);
   }
 
-  // 在指定矩形区域里生成两只鸟（不同方向）
+  // 在指定矩形区域里生成两只鸟：一只从左边缘飞入，一只从右边缘飞入
   spawnTwoBirdsInArea(areaObj) {
-    // 随机生成两个不同的Y坐标
     let spawnY1 = Phaser.Math.Between(areaObj.y, areaObj.y + areaObj.height);
     let spawnY2 = Phaser.Math.Between(areaObj.y, areaObj.y + areaObj.height);
 
-    // 第一只bird1（左->右）
-    let bird1 = this.physics.add.sprite(-32, spawnY1, "bird1", 0);
+    // 第一只: bird1（左->右）
+    let bird1 = this.physics.add.sprite(areaObj.x, spawnY1, "bird1", 0);
     bird1.body.setSize(64, 64);
     bird1.setDepth(100);
     bird1.body.velocity.x = 100;
     bird1.anims.play("bird1_fly");
     this.birds.add(bird1);
 
-    // 第二只bird1-flip（右->左）
-    let bird1Flip = this.physics.add.sprite(this.cameras.main.width + 32, spawnY2, "bird1-flip", 0);
+    // 第二只: bird1-flip（右->左）
+    let bird1Flip = this.physics.add.sprite(areaObj.x + areaObj.width, spawnY2, "bird1-flip", 0);
     bird1Flip.body.setSize(64, 64);
     bird1Flip.setDepth(100);
     bird1Flip.body.velocity.x = -100;
     bird1Flip.anims.play("bird1flip_fly");
     this.birds.add(bird1Flip);
 
-    console.log(`[Stage ${this.currentStage}] 同时生成两只鸟: bird1(Y=${spawnY1}) 和 bird1-flip(Y=${spawnY2})`);
+    console.log(`[Stage ${this.currentStage}] 生成 2 只鸟: bird1(Y=${spawnY1}), bird1-flip(Y=${spawnY2})`);
   }
   // --------------------------------------------------------------------------
 
