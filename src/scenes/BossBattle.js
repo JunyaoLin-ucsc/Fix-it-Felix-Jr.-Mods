@@ -15,9 +15,10 @@ class BossBattle extends Phaser.Scene {
     // 【新增】加载 FelixGunSpritesheet.png
     // 注意要把 frameWidth / frameHeight 替换成实际帧宽度 / 高度
     this.load.spritesheet("FelixGun", "FelixGunSpritesheet.png", {
-      frameWidth: 128,
-      frameHeight: 128
+      frameWidth: 641,
+      frameHeight: 608
     });
+    this.felix.scale(0.5);
   }
 
   create() {
