@@ -718,6 +718,7 @@ class Gameplay extends Phaser.Scene {
   
     console.log(`[Stage ${this.currentStage}] 生成 2 只鸟: bird1(Y=${spawnY1}), bird1-flip(Y=${spawnY2})`);
   }
+  
   // --------------------------------------------------------------------------
 
   handleBirdCollision(felix, bird) {
