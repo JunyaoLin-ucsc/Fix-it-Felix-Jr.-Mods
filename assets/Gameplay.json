@@ -4241,116 +4241,6 @@
         }, 
         {
          "draworder":"topdown",
-         "id":355,
-         "name":"Stage 1 BirdFly",
-         "objects":[
-                {
-                 "height":528,
-                 "id":7274,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":1280,
-                 "x":0,
-                 "y":4320
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":356,
-         "name":"Stage 2 BirdFly",
-         "objects":[
-                {
-                 "height":512,
-                 "id":7275,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":1280,
-                 "x":0,
-                 "y":3520
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":357,
-         "name":"Stage 3 BirdFly",
-         "objects":[
-                {
-                 "height":528,
-                 "id":7277,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":1280,
-                 "x":0,
-                 "y":2704
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":358,
-         "name":"Stage 4 BirdFly",
-         "objects":[
-                {
-                 "height":528,
-                 "id":7278,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":1280,
-                 "x":0,
-                 "y":1888
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
-         "id":359,
-         "name":"Stage 5 BirdFly",
-         "objects":[
-                {
-                 "height":528,
-                 "id":7279,
-                 "name":"",
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":1280,
-                 "x":0,
-                 "y":1072
-                }],
-         "opacity":1,
-         "type":"objectgroup",
-         "visible":true,
-         "x":0,
-         "y":0
-        }, 
-        {
-         "draworder":"topdown",
          "id":354,
          "name":"Final Stage Space",
          "objects":[
@@ -8639,8 +8529,7 @@
          "visible":true,
          "x":0,
          "y":0
-        },
-    
+        }, 
         {
          "draworder":"topdown",
          "id":210,
@@ -8750,7 +8639,8 @@
          "visible":true,
          "x":0,
          "y":0
-        }, 
+        },
+    
         {
          "draworder":"topdown",
          "id":215,
@@ -10400,8 +10290,7 @@
          "visible":true,
          "x":0,
          "y":0
-        },
-    
+        }, 
         {
          "draworder":"topdown",
          "id":290,
@@ -10511,7 +10400,8 @@
          "visible":true,
          "x":0,
          "y":0
-        }, 
+        },
+    
         {
          "draworder":"topdown",
          "id":295,
@@ -11216,8 +11106,8 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":360,
- "nextobjectid":7280,
+ "nextlayerid":355,
+ "nextobjectid":7272,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.11.2",
