@@ -6,10 +6,10 @@ let config = {
         pixelArt: true
     },
     physics: {
-        default: "arcade",
-        arcade: {
+        default: "matter",
+        matter: {
             debug: true,
-            gravity: { y: 0 }
+            // gravity: { y: 1 }  // 根据需要调整重力（Matter 默认尺度不同于 Arcade）
         }
     },
     scene: [MainMenu, Tutorial, Gameplay, Gameover, BossBattle]

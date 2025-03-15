@@ -4,7 +4,7 @@ class Gameplay extends Phaser.Scene {
   }
 
   init(data) {
-    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart时应传入 { loop:1, score:0 }）
+    // 如果是从 Next Loop 过来的，则 data.loop 存在，否则默认为 1（Restart 时传入 { loop:1, score:0 }）
     this.loop = data.loop || 1;
     this.currentStage = 1;
     this.maxStage = 5;
@@ -12,17 +12,13 @@ class Gameplay extends Phaser.Scene {
     this.windowsById = {};
     this.lastStoneDropIndex = null;
     this.inFinalStage = false;
-
-    // 分数（如果重启则 data.score 可能为 0）
+    // 玩家分数
     this.score = data.score || 0;
-
     // 根据 Loop 计算初始生命值
     this.lives = this.getLivesByLoop(this.loop);
-
-    // 每个 Stage 60 秒倒计时（进入新 Stage 时会重置）
+    // 每个 Stage 60 秒倒计时
     this.stageTime = 60;
-
-    // 玻璃区间
+    // 各 Stage 的玻璃区间
     this.stageRanges = {
       1: { start: 1, end: 26 },
       2: { start: 27, end: 56 },
@@ -30,20 +26,16 @@ class Gameplay extends Phaser.Scene {
       4: { start: 87, end: 116 },
       5: { start: 117, end: 146 }
     };
-
     this.stageAreas = {};
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
-
-    // 用于石头碰撞时的短暂无敌（防止同一帧内重复扣血）
+    // 用于石头碰撞时的短暂无敌
     this.invincible = false;
-
-    // 用于区分每批扔出的石头，每次 throwStones 前会生成一个新的批次 ID
+    // 用于区分每批石头
     this.processedStoneBatches = new Set();
     this.currentStoneBatch = 0;
   }
 
-  // 根据 loop 计算初始生命值
   getLivesByLoop(loop) {
     if (loop === 1) return 3;
     if (loop === 2) return 4;
@@ -61,8 +53,6 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 608
     });
 
-    // 用 spritesheet 加载 RalphSpritesheet.png
-    // 注意修改 frameWidth/frameHeight 为你实际资源的帧尺寸（此处假设为 192*176）
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
@@ -81,14 +71,15 @@ class Gameplay extends Phaser.Scene {
   }
 
   create() {
-    // 确保石头组存在
-    this.stones = this.physics.add.group();
+    // 用数组保存石头（MatterJS 下没有 Arcade Group）
+    this.stones = [];
 
     const map = this.make.tilemap({ key: "gameplayMap" });
     this.map = map;
     const tilesetA = map.addTilesetImage("tileset", "tilesetImage");
     const tilesetB = map.addTilesetImage("tileset2", "tileset2Image");
 
+    // 创建各图层
     map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
     map.createLayer("Grass", [tilesetA, tilesetB], 0, -32).setDepth(1);
     map.createLayer("House", [tilesetA, tilesetB], 0, -32).setDepth(2);
@@ -105,12 +96,16 @@ class Gameplay extends Phaser.Scene {
     this.windowLayerRef = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
     const doorLayer = map.createLayer("Door", [tilesetA, tilesetB], 0, 0).setDepth(11);
 
+    // 将需要碰撞的图层转换为 Matter 静态物理体
+    this.matter.world.convertTilemapLayer(floorLayer);
+    this.matter.world.convertTilemapLayer(doorLayer);
+    this.matter.world.convertTilemapLayer(floorGrassLayer);
+    this.matter.world.convertTilemapLayer(this.windowLayerRef);
+
     this.movementSnd = this.sound.add("movement");
     this.failureSnd = this.sound.add("failure");
 
-    if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
-    if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
-
+    // 读取各 Stage 区域数据
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -124,37 +119,26 @@ class Gameplay extends Phaser.Scene {
       this.stageAreas["final"] = { topY: obj.y };
     }
 
-    // 创建 Felix
+    // 用 Matter 创建 Felix
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
-    this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix", 0).setScale(0.1);
-    this.felix.setCollideWorldBounds(true).setDepth(9999);
-    this.time.delayedCall(0, () => {
-      const dw = this.felix.displayWidth;
-      const dh = this.felix.displayHeight;
-      this.felix.body.setSize(dw * 10, dh * 10);
-      this.felix.body.setOffset(dw, dh * 0.02);
-    });
-    this.physics.add.collider(this.felix, floorLayer);
-    this.physics.add.collider(this.felix, doorLayer);
-    this.physics.add.collider(this.felix, floorGrassLayer);
-    this.physics.add.collider(this.felix, this.windowLayerRef);
+    this.felix = this.matter.add.sprite(felixSpawn.x, felixSpawn.y, "Felix", 0).setScale(0.1);
+    this.felix.setFixedRotation();
+    this.felix.setDepth(9999);
 
+    // 设置 Matter 世界边界
+    this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     let stage1Area = this.stageAreas[1];
     if (stage1Area) {
       let stageHeight = 750;
-      this.physics.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
+      this.matter.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
       this.cameras.main.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
       this.cameras.main.setScroll(0, stage1Area.topY);
     }
 
     // 创建 Ralph 并定义动画
     this.createRalph();
-
-    // 调用放大函数，将 Ralph 放大（例如放大到 0.5 倍）
     this.enlargeRalph(1.75);
-
     this.loadStageObjectLayers(1);
 
     // --- UI: Score, Time, Loop, Lives ---
@@ -184,39 +168,45 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // --- 合并石头碰撞：同一批石头只扣一次血 ---
-    this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
-      if (this.processedStoneBatches.has(stone.batchId)) {
-        return;
-      }
-      if (!this.levelTransitioning && !this.invincible) {
-        this.processedStoneBatches.add(stone.batchId);
-        if (!this.failureSnd.isPlaying) {
-          this.failureSnd.play();
-        }
-        this.lives--;
-        this.updateLivesUI();
-        if (this.lives <= 0) {
-          this.scene.start("Gameover", {
-            loop: 1,
-            score: 0,
-            canNextLoop: false
-          });
-          return;
-        }
-        this.invincible = true;
-        this.stones.children.iterate(child => {
-          if (child.body && child.batchId === stone.batchId) {
-            child.body.checkCollision.none = true;
+    // MatterJS 碰撞事件：监听 Felix 与石头之间的碰撞
+    this.matter.world.on("collisionstart", (event) => {
+      event.pairs.forEach(pair => {
+        let bodyA = pair.bodyA;
+        let bodyB = pair.bodyB;
+        let gameObjectA = bodyA.gameObject;
+        let gameObjectB = bodyB.gameObject;
+        if (!gameObjectA || !gameObjectB) return;
+
+        if ((gameObjectA === this.felix && gameObjectB.texture && gameObjectB.texture.key === "stone") ||
+            (gameObjectB === this.felix && gameObjectA.texture && gameObjectA.texture.key === "stone")) {
+          let stone = (gameObjectA === this.felix) ? gameObjectB : gameObjectA;
+          if (this.processedStoneBatches.has(stone.batchId)) return;
+          if (!this.levelTransitioning && !this.invincible) {
+            this.processedStoneBatches.add(stone.batchId);
+            if (!this.failureSnd.isPlaying) {
+              this.failureSnd.play();
+            }
+            this.lives--;
+            this.updateLivesUI();
+            if (this.lives <= 0) {
+              this.scene.start("Gameover", {
+                loop: this.loop,
+                score: 0,
+                canNextLoop: false
+              });
+              return;
+            }
+            this.invincible = true;
+            // 简单处理：禁用当前石头的碰撞
+            stone.setCollisionCategory(null);
+            this.time.delayedCall(100, () => { this.invincible = false; });
           }
-        });
-        this.time.delayedCall(100, () => { this.invincible = false; });
-      }
-    }, null, this);
+        }
+      });
+    });
 
     // 每次扔石头前生成新的批次 ID
     this.currentStoneBatch = 0;
-
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
     this.stoneTimer = this.time.addEvent({
@@ -238,18 +228,11 @@ class Gameplay extends Phaser.Scene {
 
     this.cursors = this.input.keyboard.createCursorKeys();
     this.isWindowJumping = false;
-
     this.loadGlassForStage(this.currentStage);
     this.felix.setFrame(0);
     this.levelTransitioning = false;
   }
 
-  // 放大 Ralph 的方法
-  enlargeRalph(newScale) {
-    this.ralph.setScale(newScale);
-  }
-
-  // 创建 Ralph 并定义动画
   createRalph() {
     let ralphLayer = this.map.getObjectLayer("RalphSpawns");
     let ralphX = 400, ralphY = 100;
@@ -258,12 +241,10 @@ class Gameplay extends Phaser.Scene {
       ralphX = obj.x + (obj.width || 0) / 2;
       ralphY = obj.y + (obj.height || 0) / 2;
     }
-
     this.ralph = this.add.sprite(ralphX, ralphY, "Ralph", 0)
       .setDepth(1000)
       .setScale(0.2);
 
-    // 定义动画
     this.anims.create({
       key: "ralph_idle",
       frames: [{ key: "Ralph", frame: 0 }],
@@ -298,6 +279,10 @@ class Gameplay extends Phaser.Scene {
     this.ralph.play("ralph_idle");
   }
 
+  enlargeRalph(newScale) {
+    this.ralph.setScale(newScale);
+  }
+
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
@@ -311,10 +296,6 @@ class Gameplay extends Phaser.Scene {
         .setDepth(99999);
       this.lifeIcons.push(icon);
     }
-  }
-  
-  updateStageUI() {
-    this.stageText.setText(`Stage: ${this.currentStage}`);
   }
 
   throwStones(velocity = 150) {
@@ -336,10 +317,11 @@ class Gameplay extends Phaser.Scene {
   }
 
   createStone(x, y, velocity = 150) {
-    let stone = this.stones.create(x, y, "stone");
+    let stone = this.matter.add.sprite(x, y, "stone");
     stone.batchId = this.currentStoneBatch;
     stone.setScale(0.05).setDepth(9998);
-    stone.setVelocityY(velocity);
+    stone.setVelocity(0, velocity);
+    this.stones.push(stone);
   }
 
   moveRalphRandom() {
@@ -596,7 +578,8 @@ class Gameplay extends Phaser.Scene {
     console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
     this.stageTime = 60;
     let stageHeight = 750;
-    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    // MatterJS 下重新设置世界边界
+    this.matter.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.preLoadNextStage(nextStage);
     this.felix.setFrame(0);
@@ -643,14 +626,13 @@ class Gameplay extends Phaser.Scene {
       let ry = rObj.y + (rObj.height || 0) / 2;
       this.ralph.setPosition(rx, ry);
       console.log(`Ralph => stage${nextStage}: (${rx}, ${ry})`);
-      // Ralph 回到 idle 帧 0
       this.ralph.play("ralph_idle");
     } else {
       console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
     }
     this.loadStageObjectLayers(nextStage);
     let stageHeight = 750;
-    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
+    this.matter.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
   }
 
@@ -663,7 +645,7 @@ class Gameplay extends Phaser.Scene {
     this.stageTime = 60;
     let finalTopY = finalData.topY;
     let stageHeight = 750;
-    this.physics.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
+    this.matter.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
     this.cameras.main.stopFollow();
     this.cameras.main.setScroll(0, finalTopY);
@@ -710,6 +692,7 @@ class Gameplay extends Phaser.Scene {
       ease: "Linear",
       onComplete: () => {
         this.isWindowJumping = false;
+        // MatterJS 下停止运动，调用 setVelocity(0,0)
         this.felix.setVelocity(0, 0);
       }
     });
@@ -825,6 +808,69 @@ class Gameplay extends Phaser.Scene {
       }
     });
     return candidate;
+  }
+
+  updateStageUI() {
+    this.stageText.setText(`Stage: ${this.currentStage}`);
+  }
+
+  update(time, delta) {
+    if (!this.cursors) return;
+    if (this.levelTransitioning || this.isWindowJumping) return;
+
+    this.stageTime -= delta / 1000;
+    if (this.stageTime <= 0) {
+      this.scene.start("Gameover", {
+        loop: this.loop,
+        score: this.score,
+        canNextLoop: false
+      });
+      return;
+    }
+    this.timeText.setText(`Time: ${Math.floor(this.stageTime)}`);
+
+    if (this.cursors.right.isDown) {
+      this.felixDirection = "right";
+      if (!this.allWindowsRepairedForStage()) {
+        this.felix.setFrame(1);
+      }
+    } else if (this.cursors.left.isDown) {
+      this.felixDirection = "left";
+      if (!this.allWindowsRepairedForStage()) {
+        this.felix.setFrame(2);
+      }
+    } else if (this.cursors.up.isDown || this.cursors.down.isDown) {
+      if (this.felixDirection === "right") {
+        this.felix.setFrame(1);
+      } else {
+        this.felix.setFrame(2);
+      }
+    } else {
+      this.felix.setFrame(0);
+    }
+
+    this.checkAndRepairWindows(delta);
+
+    if (this.allWindowsRepairedForStage()) {
+      console.log(`All windows in Stage ${this.currentStage} repaired => levelTransition().`);
+      this.levelTransition();
+      return;
+    }
+
+    let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
+    if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
+      let aboveIdx = this.findPlatformAbove(currentIndex);
+      if (aboveIdx !== null) this.doWindowMoveTween(aboveIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.down)) {
+      let belowIdx = this.findPlatformBelow(currentIndex);
+      if (belowIdx !== null) this.doWindowMoveTween(belowIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.left)) {
+      let leftIdx = this.findPlatformLeft(currentIndex);
+      if (leftIdx !== null) this.doWindowJumpAnimation(currentIndex, leftIdx);
+    } else if (Phaser.Input.Keyboard.JustDown(this.cursors.right)) {
+      let rightIdx = this.findPlatformRight(currentIndex);
+      if (rightIdx !== null) this.doWindowJumpAnimation(currentIndex, rightIdx);
+    }
   }
 }
 
