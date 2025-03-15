@@ -9,35 +9,27 @@ class BossBattle extends Phaser.Scene {
     this.load.tilemapTiledJSON("bossBattleMap", "BossBattle.json");
 
     // 加载两张 tileset 对应的图像
-    // 注意这里 "morningAdventuresImage" / "layoutHelpImage" 是 Phaser 用的 key
-    // "morning_adventures_tileset_16x16.png" / "layout_help.png" 是你项目里的实际文件名
     this.load.image("morningAdventuresImage", "morning_adventures_tileset_16x16.png");
     this.load.image("layoutHelpImage", "layout_help.png");
 
-    // 若有其他资源（比如 Felix、Boss 角色的 spritesheet 等），在此继续 load...
+    // 示例：若需要 Felix 的 spritesheet，可以在此加载
     // this.load.spritesheet("Felix", "Felix.png", { frameWidth: 32, frameHeight: 32 });
   }
 
   create(data) {
-    // 创建 Tilemap
     const map = this.make.tilemap({ key: "bossBattleMap" });
 
-    // 假设在 Tiled 中的 tileset 名称分别是 "morning_adventures_tileset_16x16" 和 "layout_help"
-    // 对应的第二个参数要与 preload() 里 this.load.image(...) 的 key 保持一致
     const morningTileset = map.addTilesetImage("morning_adventures_tileset_16x16", "morningAdventuresImage");
     const layoutTileset   = map.addTilesetImage("layout_help", "layoutHelpImage");
 
-    // 将两个 tileset 打包到同一个数组里传给 createLayer
-    // 假设你在 Tiled 中有三个图层：Background、Floor、Real Floor
-    // 并且都要使用这两张 tileset
+    // 创建图层：Background、Floor、Real Floor
     const backgroundLayer = map.createLayer("Background", [morningTileset, layoutTileset], 0, 0).setDepth(0);
     const floorLayer      = map.createLayer("Floor",      [morningTileset, layoutTileset], 0, 0).setDepth(1);
     const realFloorLayer  = map.createLayer("Real Floor", [morningTileset, layoutTileset], 0, 0).setDepth(2);
 
-    // 如果需要物理碰撞，可设置对应图层的 collision
-    // floorLayer.setCollisionByProperty({ collides: true });
-    // realFloorLayer.setCollisionByProperty({ collides: true });
-    // ...
+    // 【新增/修改】如果需要物理碰撞，让 floorLayer 或 realFloorLayer 可碰撞
+    floorLayer.setCollisionByProperty({ collides: true });
+    realFloorLayer.setCollisionByProperty({ collides: true });
 
     // 从对象层 "FelixSpawns" 中读取 Felix 的生成点
     const spawnLayer = map.getObjectLayer("FelixSpawns");
@@ -48,19 +40,23 @@ class BossBattle extends Phaser.Scene {
       spawnY = spawnObj.y + (spawnObj.height || 0) / 2;
     }
 
-    // 这里仅示例：创建一个 Felix，放在 BossBattle 里
-    // 实际上你也可以做别的，比如加载 Boss、添加战斗逻辑等
+    // 创建 Felix
     this.felix = this.physics.add.sprite(spawnX, spawnY, "Felix", 0).setScale(0.1);
     this.felix.setCollideWorldBounds(true);
+
+    // 【新增/修改】让 Felix 与地面图层碰撞
+    this.physics.add.collider(this.felix, floorLayer);
+    this.physics.add.collider(this.felix, realFloorLayer);
+
+    // 若场景里需要重力，可在物理配置里加 gravity，或者在这里设置
+    // 例如：
+    this.physics.world.gravity.y = 800;  // 或你想要的数值
 
     // 设置相机与物理世界边界
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // 可选：如果需要让相机跟随 Felix
-    // this.cameras.main.startFollow(this.felix);
-
-    // 显示一个标题文本
+    // 标题文本
     this.add.text(
       map.widthInPixels / 2, 
       50, 
@@ -68,7 +64,7 @@ class BossBattle extends Phaser.Scene {
       { fontSize: "48px", fill: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5);
 
-    // 例如，你在这里加一个临时按钮，让玩家点击后返回主菜单
+    // 临时按钮：点击后返回主菜单
     const returnBtn = this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels - 100,
@@ -80,11 +76,40 @@ class BossBattle extends Phaser.Scene {
       this.scene.start("MainMenu");
     });
 
-    // ... 在这里继续写 Boss 的创建、战斗逻辑等 ...
+    // 【新增】创建光标键
+    this.cursors = this.input.keyboard.createCursorKeys();
   }
 
   update(time, delta) {
-    // 若需要在 BossBattle 中处理 Felix 的移动、Boss AI 等，可在此实现
+    // 【新增】Felix 左右移动与跳跃逻辑
+    if (!this.felix) return;  // 如果还没创建完就返回
+
+    const speed = 200;        // 走/跑速度
+    const jumpVelocity = -400;  // 跳跃向上速度
+
+    // 左右移动
+    if (this.cursors.left.isDown) {
+      this.felix.setVelocityX(-speed);
+      // 可在此设置动画：this.felix.anims.play("walk-left", true);
+    }
+    else if (this.cursors.right.isDown) {
+      this.felix.setVelocityX(speed);
+      // 可在此设置动画：this.felix.anims.play("walk-right", true);
+    }
+    else {
+      // 无按键时水平速度归零
+      this.felix.setVelocityX(0);
+      // 可在此设置 idle 动画：this.felix.anims.play("idle", true);
+    }
+
+    // 上方向键跳跃（需要角色与地面接触）
+    // 这里用 body.blocked.down 来判断角色是否在地面
+    if (this.cursors.up.isDown && this.felix.body.blocked.down) {
+      this.felix.setVelocityY(jumpVelocity);
+      // 可在此设置跳跃动画：this.felix.anims.play("jump", true);
+    }
+
+    // 若需要更多 Boss AI 或其他逻辑，可在此继续实现
   }
 }
 
