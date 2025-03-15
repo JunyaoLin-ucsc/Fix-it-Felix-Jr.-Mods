@@ -20,9 +20,10 @@ class MainMenu extends Phaser.Scene {
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
     map.createLayer("Street Lamp", tileset, 0, 0);
-    // 将 Moon 和 Stars 存到变量中，方便后续滚动
-    this.moonLayer = map.createLayer("Moon", tileset, 0, 0);
-    this.starsLayer = map.createLayer("Stars", tileset, 0, 0);
+    
+    // 将 Moon 和 Stars 层改为 DynamicTilemapLayer 以支持 tilePosition 滚动
+    this.moonLayer = map.createDynamicLayer("Moon", tileset, 0, 0);
+    this.starsLayer = map.createDynamicLayer("Stars", tileset, 0, 0);
 
     this.add.text(
       map.widthInPixels / 2, 
@@ -63,7 +64,7 @@ class MainMenu extends Phaser.Scene {
   }
 
   update(time, delta) {
-    // 每帧让 Moon 和 Stars 层 tilePosition.x 增加，达到缓慢从左向右滚动效果
+    // 每帧让 Moon 和 Stars 层 tilePositionX 增加，达到从左向右滚动效果
     const scrollSpeed = 0.2;
     this.moonLayer.tilePositionX += scrollSpeed;
     this.starsLayer.tilePositionX += scrollSpeed;
