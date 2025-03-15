@@ -240,6 +240,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -249,6 +254,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -258,6 +268,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -267,6 +282,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -274,6 +294,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":true
                         }]
@@ -285,6 +310,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":true
                         }]
                 }, 
                 {
@@ -292,6 +322,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":true
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":true
                         }]
@@ -303,6 +338,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":true
                         }]
                 }, 
                 {
@@ -310,6 +350,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -321,6 +366,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -330,6 +380,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -339,6 +394,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -348,6 +408,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -357,6 +422,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -366,6 +436,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -375,6 +450,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -384,6 +464,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -393,6 +478,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -400,6 +490,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -411,6 +506,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -420,6 +520,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -429,6 +534,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -438,6 +548,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -447,6 +562,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -454,6 +574,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -465,6 +590,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -472,6 +602,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -483,6 +618,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -490,6 +630,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -501,6 +646,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -508,6 +658,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -519,6 +674,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -526,6 +686,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -537,6 +702,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -544,6 +714,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -555,6 +730,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -562,6 +742,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -573,6 +758,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -580,6 +770,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -591,6 +786,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -598,6 +798,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -609,6 +814,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -618,6 +828,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -627,6 +842,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -636,6 +856,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -643,6 +868,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -654,6 +884,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -661,6 +896,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -672,6 +912,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -679,6 +924,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -690,6 +940,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -697,6 +952,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -708,6 +968,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -717,6 +982,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -726,6 +996,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":true
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -733,6 +1008,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -744,6 +1024,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -751,6 +1036,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]
@@ -762,6 +1052,11 @@
                          "name":"collides",
                          "type":"bool",
                          "value":false
+                        }, 
+                        {
+                         "name":"slope",
+                         "type":"bool",
+                         "value":false
                         }]
                 }, 
                 {
@@ -769,6 +1064,11 @@
                  "properties":[
                         {
                          "name":"collides",
+                         "type":"bool",
+                         "value":false
+                        }, 
+                        {
+                         "name":"slope",
                          "type":"bool",
                          "value":false
                         }]

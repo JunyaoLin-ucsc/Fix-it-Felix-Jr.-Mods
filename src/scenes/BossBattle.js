@@ -122,6 +122,18 @@ class BossBattle extends Phaser.Scene {
     this.facing = "right";  // 初始设为 right
     // 创建光标键
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    // 【新增】为所有标记了 slope 属性的砖块添加斜坡碰撞回调
+    floorLayer.forEachTile(tile => {
+      if (tile.properties.slope) {
+        floorLayer.setTileCollisionCallback(tile.index, this.handleSlope, this);
+      }
+    });
+    realFloorLayer.forEachTile(tile => {
+      if (tile.properties.slope) {
+        realFloorLayer.setTileCollisionCallback(tile.index, this.handleSlope, this);
+      }
+    });
   }
 
   update(time, delta) {
@@ -165,6 +177,21 @@ class BossBattle extends Phaser.Scene {
       } else {
         this.felix.anims.play("jump-left", true);
       }
+    }
+  }
+
+  // 【新增】斜坡碰撞处理函数：假设斜坡为 45°（由左低右高），根据碰撞点调整 Felix 位置
+  handleSlope(sprite, tile) {
+    // 计算 sprite 在当前砖块内的水平相对位置
+    let relativeX = sprite.x - tile.pixelX;
+    // 根据 45° 斜坡公式：在砖块内相对位置越右，地面越高
+    // 当 relativeX 为 0 时，地面在 tile.pixelY + tile.width（砖块底部）
+    // 当 relativeX 为 tile.width 时，地面在 tile.pixelY（砖块顶部）
+    let slopeGroundY = tile.pixelY + tile.width - relativeX;
+    // 如果 sprite 的底部低于斜坡表面，则进行修正
+    if (sprite.y + sprite.height / 2 > slopeGroundY) {
+      sprite.y = slopeGroundY - sprite.height / 2;
+      sprite.body.velocity.y = 0;
     }
   }
 }
