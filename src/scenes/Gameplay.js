@@ -652,7 +652,7 @@ class Gameplay extends Phaser.Scene {
     // 创建鸟并启用碰撞盒
     let bird = this.physics.add.sprite(spawnX, spawnY, birdType, 0);
     bird.body.setSize(64, 64);
-    bird.setDepth(10); // 确保鸟覆盖所有tile layer
+    bird.setDepth(100); // 确保鸟覆盖所有tile layer
     let speed = 100;
     if (birdType === "bird1") {
       bird.body.velocity.x = speed;
