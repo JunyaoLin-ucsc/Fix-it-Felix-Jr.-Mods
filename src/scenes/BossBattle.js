@@ -12,7 +12,8 @@ class BossBattle extends Phaser.Scene {
     this.load.image("morningAdventuresImage", "morning_adventures_tileset_16x16.png");
     this.load.image("layoutHelpImage", "layout_help.png");
 
-    // 加载 FelixGunSpritesheet.png（注意替换帧尺寸为实际尺寸）
+    // 【新增】加载 FelixGunSpritesheet.png
+    // 注意要把 frameWidth / frameHeight 替换成实际帧宽度 / 高度
     this.load.spritesheet("FelixGun", "FelixGunSpritesheet.png", {
       frameWidth: 641,
       frameHeight: 608
@@ -30,9 +31,9 @@ class BossBattle extends Phaser.Scene {
     const floorLayer      = map.createLayer("Floor",      [morningTileset, layoutTileset], 0, 0).setDepth(1);
     const realFloorLayer  = map.createLayer("Real Floor", [morningTileset, layoutTileset], 0, 0).setDepth(2);
 
-    // Matter：将 tilemap 图层转换为静态物理体
-    this.matter.world.convertTilemapLayer(floorLayer);
-    this.matter.world.convertTilemapLayer(realFloorLayer);
+    // 如果有碰撞属性，启用物理碰撞
+    floorLayer.setCollisionByProperty({ collides: true });
+    realFloorLayer.setCollisionByProperty({ collides: true });
 
     // 从对象层 FelixSpawns 中读取生成点
     const spawnLayer = map.getObjectLayer("FelixSpawns");
@@ -43,16 +44,23 @@ class BossBattle extends Phaser.Scene {
       spawnY = spawnObj.y + (spawnObj.height || 0) / 2;
     }
 
-    // 使用 Matter 创建 Felix
-    this.felix = this.matter.add.sprite(spawnX, spawnY, "FelixGun", 0);
+    // 创建 Felix
+    this.felix = this.physics.add.sprite(spawnX, spawnY, "FelixGun", 0);
     this.felix.setScale(0.1);  // 适当调整大小
-    this.felix.setFixedRotation();  // 防止碰撞时旋转
+    this.felix.setCollideWorldBounds(true);
 
-    // 设置 Matter 世界边界（与 tilemap 尺寸一致）
-    this.matter.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    // 让 Felix 与地面碰撞
+    this.physics.add.collider(this.felix, floorLayer);
+    this.physics.add.collider(this.felix, realFloorLayer);
 
-    // 设置相机边界，并让摄像机跟随 Felix
+    // 若需要重力，可以在物理世界设置
+    this.physics.world.gravity.y = 800;  // 示例数值
+
+    // 设置相机与物理世界边界
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    // 【关键】让摄像机跟随 Felix
     this.cameras.main.startFollow(this.felix, false, 0.1, 0.1);
 
     // 添加标题文本
@@ -63,7 +71,7 @@ class BossBattle extends Phaser.Scene {
       { fontSize: "48px", fill: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5);
 
-    // 创建返回主菜单按钮
+    // 创建临时按钮返回主菜单
     const returnBtn = this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels - 100,
@@ -74,7 +82,7 @@ class BossBattle extends Phaser.Scene {
       this.scene.start("MainMenu");
     });
 
-    // 定义动画（与原版一致）
+    // 【定义动画】静止向右=0，静止向左=1，走右=2..3，走左=4..5，跳右=6，跳左=7
     this.anims.create({
       key: "idle-right",
       frames: [{ key: "FelixGun", frame: 0 }],
@@ -111,31 +119,46 @@ class BossBattle extends Phaser.Scene {
     });
 
     // 用于记录 Felix 最后面向方向
-    this.facing = "right";  
+    this.facing = "right";  // 初始设为 right
     // 创建光标键
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    // 【新增】为所有标记了 slope 属性的砖块添加斜坡碰撞回调
+    floorLayer.forEachTile(tile => {
+      if (tile.properties.slope) {
+        floorLayer.setTileCollisionCallback(tile.index, this.handleSlope, this);
+      }
+    });
+    realFloorLayer.forEachTile(tile => {
+      if (tile.properties.slope) {
+        realFloorLayer.setTileCollisionCallback(tile.index, this.handleSlope, this);
+      }
+    });
   }
 
   update(time, delta) {
     if (!this.felix) return;
 
     const speed = 200;
-    // Matter 跳跃力度（需微调）
-    const jumpVelocity = -10;
+    const jumpVelocity = -400;
 
     // 左右移动
     if (this.cursors.left.isDown) {
       this.felix.setVelocityX(-speed);
+      // 播放 move-left
       this.felix.anims.play("move-left", true);
       this.facing = "left";
     }
     else if (this.cursors.right.isDown) {
       this.felix.setVelocityX(speed);
+      // 播放 move-right
       this.felix.anims.play("move-right", true);
       this.facing = "right";
     }
     else {
+      // 无按键时水平速度归零
       this.felix.setVelocityX(0);
+      // 根据 facing 播放对应 idle
       if (this.facing === "right") {
         this.felix.anims.play("idle-right", true);
       } else {
@@ -143,14 +166,32 @@ class BossBattle extends Phaser.Scene {
       }
     }
 
-    // 简单判断是否在地面：当垂直速度接近 0 时允许跳跃
-    if (this.cursors.up.isDown && Math.abs(this.felix.body.velocity.y) < 1) {
+    // 跳跃：只有当角色脚下着地才允许
+    // 可以用 body.blocked.down 或 body.onFloor() / body.touching.down
+    if (this.cursors.up.isDown && this.felix.body.blocked.down) {
       this.felix.setVelocityY(jumpVelocity);
+
+      // 根据 facing 决定跳跃动画
       if (this.facing === "right") {
         this.felix.anims.play("jump-right", true);
       } else {
         this.felix.anims.play("jump-left", true);
       }
+    }
+  }
+
+  // 【新增】斜坡碰撞处理函数：假设斜坡为 45°（由左低右高），根据碰撞点调整 Felix 位置
+  handleSlope(sprite, tile) {
+    // 计算 sprite 在当前砖块内的水平相对位置
+    let relativeX = sprite.x - tile.pixelX;
+    // 根据 45° 斜坡公式：在砖块内相对位置越右，地面越高
+    // 当 relativeX 为 0 时，地面在 tile.pixelY + tile.width（砖块底部）
+    // 当 relativeX 为 tile.width 时，地面在 tile.pixelY（砖块顶部）
+    let slopeGroundY = tile.pixelY + tile.width - relativeX;
+    // 如果 sprite 的底部低于斜坡表面，则进行修正
+    if (sprite.y + sprite.height / 2 > slopeGroundY) {
+      sprite.y = slopeGroundY - sprite.height / 2;
+      sprite.body.velocity.y = 0;
     }
   }
 }
