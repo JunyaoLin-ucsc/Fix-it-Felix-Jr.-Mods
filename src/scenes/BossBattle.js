@@ -126,7 +126,7 @@ class BossBattle extends Phaser.Scene {
     if (!this.felix) return;
 
     const speed = 200;
-    const jumpVelocity = -400;
+    const jumpVelocity = -600;
 
     // 左右移动
     if (this.cursors.left.isDown) {
