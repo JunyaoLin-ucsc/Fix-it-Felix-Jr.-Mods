@@ -140,8 +140,8 @@ class Gameover extends Phaser.Scene {
       this.time.delayedCall(200, () => {
         // 无论如何，都回到 loop=1, score=0
         this.scene.start("Gameplay", {
-          loop: 1,
-          score: 0,
+          loop: this.loop,
+          score: this.score,
           canNextLoop: false
         });
       });
