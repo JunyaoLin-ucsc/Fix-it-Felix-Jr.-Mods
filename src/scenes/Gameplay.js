@@ -62,7 +62,7 @@ class Gameplay extends Phaser.Scene {
     });
 
     // 用 spritesheet 加载 RalphSpritesheet.png
-    // 注意修改 frameWidth/frameHeight 为你实际资源的帧尺寸（此处假设为 208×176）
+    // 注意修改 frameWidth/frameHeight 为你实际资源的帧尺寸（此处假设为 192*176）
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
