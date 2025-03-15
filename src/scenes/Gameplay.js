@@ -246,9 +246,30 @@ class Gameplay extends Phaser.Scene {
     this.loadGlassForStage(this.currentStage);
 
     // --- Bird logic start ---
+    // 改为使用矩形区域：将每个 Stage X BirdFly 对象的整个区域存入数组
+    this.birdSpawnAreas = [];
+    for (let i = 1; i <= 5; i++) {
+      let layer = this.map.getObjectLayer("Stage " + i + " BirdFly");
+      if (layer && layer.objects && layer.objects.length > 0) {
+        // 此处假设 object 为矩形区域，包含 x, y, width, height
+        let areaObj = layer.objects[0];
+        this.birdSpawnAreas.push(areaObj);
+      }
+    }
+
+    // 定时调用 spawnBird，每 1500 毫秒一次（可根据需求调整）
+    this.time.addEvent({
+      delay: 1500,
+      callback: this.spawnBird,
+      callbackScope: this,
+      loop: true
+    });
+
+    // 创建鸟的物理组和碰撞检测
     this.birds = this.physics.add.group();
     this.physics.add.overlap(this.birds, this.felix, this.handleBirdCollision, null, this);
 
+    // 创建鸟的动画
     if (!this.anims.exists("bird1_fly")) {
       this.anims.create({
         key: "bird1_fly",
@@ -265,22 +286,6 @@ class Gameplay extends Phaser.Scene {
         repeat: -1
       });
     }
-
-    this.birdSpawnPositions = [];
-    for (let i = 1; i <= 5; i++) {
-      let layer = this.map.getObjectLayer("Stage " + i + " BirdFly");
-      if (layer && layer.objects && layer.objects.length > 0) {
-        let spawnObj = layer.objects[0];
-        this.birdSpawnPositions.push(spawnObj.y);
-      }
-    }
-
-    this.time.addEvent({
-      delay: 3000,
-      callback: this.spawnBird,
-      callbackScope: this,
-      loop: true
-    });
     // --- Bird logic end ---
 
     this.felix.setFrame(0);
@@ -626,33 +631,32 @@ class Gameplay extends Phaser.Scene {
   }
 
   spawnBird() {
-    // 随机决定生成单只或同时生成两只鸟（出现频率较低）
+    // 随机决定生成单只或同时生成两只鸟（出现概率可根据需求调整）
     let chance = Phaser.Math.Between(1, 100);
-    if (chance <= 30) {
+    console.log("spawnBird() 被调用，随机数 =", chance);
+    if (chance <= 50) {
       this.spawnOneBird();
-    } else if (chance > 30 && chance <= 40) {
+    } else if (chance > 50 && chance <= 70) {
       this.spawnTwoBirds();
     }
   }
 
   spawnOneBird() {
-    // 筛选出当前没有被占用的飞行高度（同一时刻同一高度只能有一只鸟，容差5像素）
-    let availablePositions = this.birdSpawnPositions.filter(yPos => {
-      return !this.birds.getChildren().some(bird => Math.abs(bird.y - yPos) < 5);
-    });
-    if (availablePositions.length === 0) {
+    // 如果没有从 object layer 获取到区域，则使用摄像机中心作为默认
+    if (!this.birdSpawnAreas || this.birdSpawnAreas.length === 0) {
+      let fallbackY = this.cameras.main.centerY;
+      console.log("Fallback: 没有可用的鸟生成区域，使用默认Y =", fallbackY);
+      this.spawnBirdAtY(fallbackY);
       return;
     }
-    // 随机选择一个可用的高度
-    let spawnY = Phaser.Utils.Array.GetRandom(availablePositions);
-    // 随机选择鸟的类型
+    // 随机选择一个区域（矩形区域），并在该区域内随机选取 Y 坐标
+    let region = Phaser.Utils.Array.GetRandom(this.birdSpawnAreas);
+    let spawnY = Phaser.Math.Between(region.y, region.y + region.height);
     let birdType = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
-    // 根据鸟类型设置X轴初始位置：bird1从左侧出现，bird1-flip从右侧出现
     let spawnX = (birdType === "bird1") ? -32 : this.cameras.main.width + 32;
-    // 创建鸟并启用碰撞盒
     let bird = this.physics.add.sprite(spawnX, spawnY, birdType, 0);
     bird.body.setSize(64, 64);
-    bird.setDepth(100); // 确保鸟覆盖所有tile layer
+    bird.setDepth(100); // 确保鸟在所有层之上
     let speed = 100;
     if (birdType === "bird1") {
       bird.body.velocity.x = speed;
@@ -662,36 +666,40 @@ class Gameplay extends Phaser.Scene {
       bird.anims.play("bird1flip_fly");
     }
     this.birds.add(bird);
+    console.log("生成了一只", birdType, "鸟，Y 坐标：", spawnY);
   }
 
   spawnTwoBirds() {
-    // 筛选当前未被占用的高度，必须至少有两个不同高度
-    let availablePositions = this.birdSpawnPositions.filter(yPos => {
-      return !this.birds.getChildren().some(bird => Math.abs(bird.y - yPos) < 5);
-    });
-    if (availablePositions.length < 2) {
-      // 若不足两个位置则只生成一只
+    // 若区域数量不足两个，则退回生成一只鸟
+    if (!this.birdSpawnAreas || this.birdSpawnAreas.length === 0) {
       this.spawnOneBird();
       return;
     }
-    // 随机打乱后取前两个不同高度
-    Phaser.Utils.Array.Shuffle(availablePositions);
-    let spawnY1 = availablePositions[0];
-    let spawnY2 = availablePositions[1];
-    // 分别生成bird1和bird1-flip，它们不能处于同一高度
+    if (this.birdSpawnAreas.length < 2) {
+      console.log("区域不足两个，生成一只鸟。");
+      this.spawnOneBird();
+      return;
+    }
+    // 随机打乱区域数组，取前两个不同区域
+    let regions = Phaser.Utils.Array.Shuffle(this.birdSpawnAreas.slice());
+    let region1 = regions[0];
+    let region2 = regions[1];
+    let spawnY1 = Phaser.Math.Between(region1.y, region1.y + region1.height);
+    let spawnY2 = Phaser.Math.Between(region2.y, region2.y + region2.height);
     let bird1 = this.physics.add.sprite(-32, spawnY1, "bird1", 0);
     bird1.body.setSize(64, 64);
-    bird1.setDepth(10);
+    bird1.setDepth(100);
     bird1.body.velocity.x = 100;
     bird1.anims.play("bird1_fly");
     this.birds.add(bird1);
 
     let bird1Flip = this.physics.add.sprite(this.cameras.main.width + 32, spawnY2, "bird1-flip", 0);
     bird1Flip.body.setSize(64, 64);
-    bird1Flip.setDepth(10);
+    bird1Flip.setDepth(100);
     bird1Flip.body.velocity.x = -100;
     bird1Flip.anims.play("bird1flip_fly");
     this.birds.add(bird1Flip);
+    console.log("生成了两只鸟：bird1 Y =", spawnY1, "和 bird1-flip Y =", spawnY2);
   }
 
   handleBirdCollision(felix, bird) {
