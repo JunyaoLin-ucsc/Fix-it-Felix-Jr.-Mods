@@ -8,7 +8,8 @@ class BossBattle extends Phaser.Scene {
       // 加载 BossBattle 场景的 tilemap（Tiled 生成的 JSON 文件）
       this.load.tilemapTiledJSON("bossBattleMap", "BossBattle.json");
       // 加载 tileset 图像（假设使用相同的 tileset）
-      this.load.image("tilesetImage", "tileset.png");
+      this.load.image("tilesetImage", "layout_help.png");
+      this.load.image("tilesetImage2", "morning_adventures_tileset_16x16.png")
       // 如有需要，加载 Boss 图片、音效等其他资源
     }
   
