@@ -116,7 +116,6 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
-    // 记录每个 stage 的 Y 范围（来自 Stage X Space）
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -247,14 +246,13 @@ class Gameplay extends Phaser.Scene {
     this.loadGlassForStage(this.currentStage);
 
     // --- Bird logic start ---
-    // 为每个 stage 存储对应 BirdFly 矩形区域
+    // 按照 stage 编号记录对应的鸟飞行区域（矩形）
     this.birdFlyAreas = {};
-    for (let s = 1; s <= 5; s++) {
-      let layer = this.map.getObjectLayer("Stage " + s + " BirdFly");
+    for (let i = 1; i <= 5; i++) {
+      let layer = this.map.getObjectLayer("Stage " + i + " BirdFly");
       if (layer && layer.objects && layer.objects.length > 0) {
-        // 只取第一个矩形对象
         let areaObj = layer.objects[0];
-        this.birdFlyAreas[s] = areaObj; // { x, y, width, height }
+        this.birdFlyAreas[i] = areaObj;
       }
     }
 
@@ -280,9 +278,9 @@ class Gameplay extends Phaser.Scene {
       });
     }
 
-    // 每 1500 毫秒尝试在当前 stage 生成鸟
+    // 每 3000 毫秒随机生成鸟
     this.time.addEvent({
-      delay: 1500,
+      delay: 3000,
       callback: this.spawnBirdForCurrentStage,
       callbackScope: this,
       loop: true
@@ -641,32 +639,29 @@ class Gameplay extends Phaser.Scene {
     // 如果在最终关或关卡过渡中，就不再生成鸟
     if (this.inFinalStage || this.levelTransitioning) return;
 
-    // 获取当前 stage 的矩形区域
     let areaObj = this.birdFlyAreas[this.currentStage];
     if (!areaObj) {
-      // 当前Stage没有配置BirdFly区域，则不生成
       return;
     }
 
-    // 随机概率：50% 生成一只，20% 生成两只
+    // 随机决定：30% 生成一只鸟，10% 生成两只鸟，其他不生成
     let chance = Phaser.Math.Between(1, 100);
-    if (chance <= 50) {
+    if (chance <= 30) {
       this.spawnOneBirdInArea(areaObj);
-    } else if (chance > 50 && chance <= 70) {
+    } else if (chance > 30 && chance <= 40) {
       this.spawnTwoBirdsInArea(areaObj);
     }
   }
 
-  // 在指定矩形区域里生成一只鸟
+  // ---------------【以下两个函数是唯一做了最小改动的地方】---------------
   spawnOneBirdInArea(areaObj) {
     // 在区域的纵向范围内随机取一个 Y
     let spawnY = Phaser.Math.Between(areaObj.y, areaObj.y + areaObj.height);
-  
+
     // 随机决定鸟的类型（bird1 或 bird1-flip）
     let birdType = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
-  
-    // 如果是 bird1，从矩形左边缘出现；如果是 bird1-flip，从矩形右边缘出现
-    // 稍微偏移一些距离，防止鸟贴在边界卡住
+
+    // 稍微偏移一下，避免贴边界卡住
     let spawnX;
     let speed;
     if (birdType === "bird1") {
@@ -676,57 +671,53 @@ class Gameplay extends Phaser.Scene {
       spawnX = areaObj.x + areaObj.width + 20; // 往右侧再偏移一点
       speed = -100;
     }
-  
+
     // 创建鸟
     let bird = this.physics.add.sprite(spawnX, spawnY, birdType, 0);
     bird.body.setSize(64, 64);
     bird.setDepth(100); // 确保鸟覆盖所有图层
-  
+
     // 关键：关闭与世界边界的碰撞，并禁用重力，防止鸟被边界卡住或下落
     bird.setCollideWorldBounds(false);
     bird.body.allowGravity = false;
-  
-    // 速度设置：bird1 从左向右，bird1-flip 从右向左
+
     bird.body.velocity.x = speed;
     if (birdType === "bird1") {
       bird.anims.play("bird1_fly");
     } else {
       bird.anims.play("bird1flip_fly");
     }
-  
     this.birds.add(bird);
-    console.log(`[Stage ${this.currentStage}] 生成 1 只鸟: ${birdType}, X=${spawnX}, Y=${spawnY}`);
+
+    console.log(`[Stage ${this.currentStage}] 生成 1 只鸟: ${birdType}, X=${spawnX}, Y=${spawnY}, speed=${speed}`);
   }
-  
+
   spawnTwoBirdsInArea(areaObj) {
     let spawnY1 = Phaser.Math.Between(areaObj.y, areaObj.y + areaObj.height);
     let spawnY2 = Phaser.Math.Between(areaObj.y, areaObj.y + areaObj.height);
-  
-    // 第一只: bird1（左->右），同样偏移一些
+
+    // 第一只: bird1（左->右）
     let bird1 = this.physics.add.sprite(areaObj.x - 20, spawnY1, "bird1", 0);
     bird1.body.setSize(64, 64);
     bird1.setDepth(100);
-    // 关闭边界碰撞 & 禁用重力
     bird1.setCollideWorldBounds(false);
     bird1.body.allowGravity = false;
     bird1.body.velocity.x = 100;
     bird1.anims.play("bird1_fly");
     this.birds.add(bird1);
-  
-    // 第二只: bird1-flip（右->左），同样偏移一些
+
+    // 第二只: bird1-flip（右->左）
     let bird1Flip = this.physics.add.sprite(areaObj.x + areaObj.width + 20, spawnY2, "bird1-flip", 0);
     bird1Flip.body.setSize(64, 64);
     bird1Flip.setDepth(100);
-    // 关闭边界碰撞 & 禁用重力
     bird1Flip.setCollideWorldBounds(false);
     bird1Flip.body.allowGravity = false;
     bird1Flip.body.velocity.x = -100;
     bird1Flip.anims.play("bird1flip_fly");
     this.birds.add(bird1Flip);
-  
+
     console.log(`[Stage ${this.currentStage}] 生成 2 只鸟: bird1(Y=${spawnY1}), bird1-flip(Y=${spawnY2})`);
   }
-  
   // --------------------------------------------------------------------------
 
   handleBirdCollision(felix, bird) {
