@@ -44,7 +44,7 @@ class BossBattle extends Phaser.Scene {
 
     // 创建 Felix
     this.felix = this.physics.add.sprite(spawnX, spawnY, "FelixGun", 0);
-    this.felix.setScale(0.1);
+    this.felix.setScale(0.07);
     this.felix.setCollideWorldBounds(true);
 
     // 让 Felix 与地面碰撞
@@ -119,14 +119,19 @@ class BossBattle extends Phaser.Scene {
     // 创建键盘光标键
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // 原来用于斜坡处理的代码已全部移除
+    // ========== 可变跳跃逻辑 ==========
+    // 标记是否正在跳跃
+    this.isJumping = false;
+    // 跳跃初速度（长跳时的力度）
+    this.jumpVelocity = -600;
+    // 若松开上键，则把垂直速度限制到此值，以形成小跳
+    this.shortJumpVelocity = -250;
   }
 
   update(time, delta) {
     if (!this.felix) return;
 
     const speed = 200;
-    const jumpVelocity = -600;
 
     // 左右移动
     if (this.cursors.left.isDown) {
@@ -146,14 +151,36 @@ class BossBattle extends Phaser.Scene {
       }
     }
 
-    // 跳跃：仅在角色着地时允许
+    // 如果脚下着地，允许再次跳跃
+    if (this.felix.body.blocked.down) {
+      this.isJumping = false;
+    }
+
+    // 按下上键 && 脚下着地 => 进行跳跃
     if (this.cursors.up.isDown && this.felix.body.blocked.down) {
-      this.felix.setVelocityY(jumpVelocity);
+      this.felix.setVelocityY(this.jumpVelocity);
+      this.isJumping = true;
+      // 播放跳跃动画
       if (this.facing === "right") {
         this.felix.anims.play("jump-right", true);
       } else {
         this.felix.anims.play("jump-left", true);
       }
+    }
+
+    // 若正在跳跃，当玩家松开上键时，截断跳跃
+    // 也就是如果角色还在上升（velocity.y < 0），则把它限制到 shortJumpVelocity
+    if (
+      this.isJumping &&                // 正在跳跃
+      !this.cursors.up.isDown &&       // 上键被松开
+      this.felix.body.velocity.y < 0   // 角色还在向上飞
+    ) {
+      // 将角色垂直速度限制为 shortJumpVelocity
+      if (this.felix.body.velocity.y < this.shortJumpVelocity) {
+        this.felix.setVelocityY(this.shortJumpVelocity);
+      }
+      // 只截断一次，避免重复执行
+      this.isJumping = false;
     }
   }
 }
