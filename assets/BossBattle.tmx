@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="160" height="52" tilewidth="16" tileheight="16" infinite="0" nextlayerid="5" nextobjectid="3">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="160" height="52" tilewidth="16" tileheight="16" infinite="0" nextlayerid="7" nextobjectid="6">
  <editorsettings>
   <export target="BossBattle.json" format="json"/>
  </editorsettings>
@@ -539,6 +539,19 @@
  </layer>
  <objectgroup id="4" name="FelixSpawns">
   <object id="2" x="320" y="544">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="5" name="RalphSpawns">
+  <object id="3" x="960" y="480">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="6" name="RalphEdges">
+  <object id="4" x="128" y="480">
+   <point/>
+  </object>
+  <object id="5" x="2432" y="480">
    <point/>
   </object>
  </objectgroup>
