@@ -189,7 +189,7 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // ★ 修改石头碰撞回调：若草莓Buff生效则不扣血
+    // 当草莓Buff生效时，不再扣血
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       if (this.processedStoneBatches.has(stone.batchId)) {
         return;
@@ -215,11 +215,13 @@ class Gameplay extends Phaser.Scene {
             child.body.checkCollision.none = true;
           }
         });
-        this.time.delayedCall(100, () => { this.invincible = false; });
+        this.time.delayedCall(100, () => {
+          this.invincible = false;
+        });
       }
     }, null, this);
 
-    // 创建 pickups 组，用来存放草莓/西瓜/金币，深度在前面
+    // 创建 pickups 组，用来存放草莓/西瓜/金币
     this.pickups = this.physics.add.group();
     this.spawnPickupsForStage(1);
     this.physics.add.overlap(this.felix, this.pickups, this.handlePickup, null, this);
@@ -485,7 +487,7 @@ class Gameplay extends Phaser.Scene {
 
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    // 修窗间隔，若西瓜Buff生效则100，否则500
+    // 若西瓜Buff生效则100，否则500
     const REPAIR_INTERVAL = this.watermelonBuffActive ? 100 : 500;
 
     if (this.currentRepairingGlass) {
@@ -540,7 +542,6 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 先更新Stage时间和Buff时间，再判断是否跳过移动和修窗
   update(time, delta) {
     if (!this.cursors) return;
 
@@ -556,7 +557,7 @@ class Gameplay extends Phaser.Scene {
     }
     this.timeText.setText(`Time: ${Math.floor(this.stageTime)}`);
 
-    // 更新草莓 Buff 倒计时
+    // 草莓Buff
     if (this.strawberryBuffActive) {
       this.strawberryBuffTime -= delta / 1000;
       if (this.strawberryBuffTime <= 0) {
@@ -567,7 +568,7 @@ class Gameplay extends Phaser.Scene {
       }
     }
 
-    // 更新西瓜 Buff 倒计时
+    // 西瓜Buff
     if (this.watermelonBuffActive) {
       this.watermelonBuffTime -= delta / 1000;
       if (this.watermelonBuffTime <= 0) {
@@ -579,7 +580,7 @@ class Gameplay extends Phaser.Scene {
       }
     }
 
-    // 如果过关或正在跳跃，只跳过“移动/修窗”部分，但保持上述倒计时正常进行
+    // 若过关或正在跳跃，只跳过“移动/修窗”部分
     if (this.levelTransitioning) return;
     if (this.isWindowJumping) return;
 
@@ -614,7 +615,7 @@ class Gameplay extends Phaser.Scene {
       return;
     }
 
-    // 输入检测：Felix 窗口跳跃
+    // 窗口跳跃检测
     let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
       let aboveIdx = this.findPlatformAbove(currentIndex);
@@ -906,7 +907,7 @@ class Gameplay extends Phaser.Scene {
     return candidate;
   }
 
-  /* 随机生成物品：草莓/西瓜/金币 */
+  // 随机生成物品：草莓/西瓜/金币
   spawnPickupsForStage(stage) {
     let positions = this.windowPlatforms.slice();
     Phaser.Utils.Array.Shuffle(positions);
@@ -921,7 +922,7 @@ class Gameplay extends Phaser.Scene {
       let pos = positions.pop();
       let pickup = this.pickups.create(pos.x, pos.y, "strawberry");
       pickup.pickupType = "strawberry";
-      pickup.setDepth(99999); // 保证在玻璃之前
+      pickup.setDepth(99999); // 保证在玻璃层前
     }
     for (let i = 0; i < watermelonCount; i++) {
       if (positions.length === 0) break;
@@ -939,21 +940,19 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  /* 处理Felix与物品碰撞(★ 在已有时间上叠加Buff时长) */
+  // 处理Felix与物品碰撞：草莓与西瓜buff均改为3秒和5秒，并可叠加
   handlePickup(felix, pickup) {
     if (!pickup.active) return;
     switch (pickup.pickupType) {
       case "strawberry":
-        // 无论是否已有草莓Buff，都将buff时间叠加
+        // 若已有剩余时间则叠加，否则直接设置3秒
         this.strawberryBuffActive = true;
-        // 确保时间不出现负数，再加 10
-        this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 10;
+        this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 3; // 改成3秒
         this.strawberryBuffText.setVisible(true);
         break;
       case "watermelon":
-        // 同理，西瓜Buff时间叠加
         this.watermelonBuffActive = true;
-        this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 7;
+        this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 5; // 改成5秒
         this.repairInterval = 100;
         this.watermelonBuffText.setVisible(true);
         break;
