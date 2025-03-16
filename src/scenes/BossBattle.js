@@ -72,8 +72,6 @@ class BossBattle extends Phaser.Scene {
     // 让摄像机跟随 Felix
     this.cameras.main.startFollow(this.felix, false, 0.1, 0.1);
     
-    // （原来显示 Boss Battle 标题的代码已删除）
-
     // 创建返回主菜单的按钮
     const returnBtn = this.add.text(
       map.widthInPixels / 2,
@@ -266,6 +264,14 @@ class BossBattle extends Phaser.Scene {
         bird.destroy();
       }
     });
+
+    // 清理超出视口范围的云（基于当前摄像机滚动位置）
+    this.cloudGroup.children.each((cloud) => {
+      const cam = this.cameras.main;
+      if (cloud.x > cam.scrollX + cam.width + 150 || cloud.x < cam.scrollX - 150) {
+        cloud.destroy();
+      }
+    });
   }
 
   // fireBullet()：根据 Felix 当前的枪口位置发射子弹
@@ -294,11 +300,11 @@ class BossBattle extends Phaser.Scene {
     console.log(`子弹发射位置：(${muzzleX}, ${muzzleY})，朝向：${this.facing}`);
   }
 
-  // spawnBird()：在固定高度水平飞过的鸟（bird1 从左往右飞，bird1-flip 从右往左飞）
+  // spawnBird()：在随机高度水平飞过的鸟（bird1 从左往右飞，bird1-flip 从右往左飞）
   spawnBird() {
     const cam = this.cameras.main;
-    // 固定鸟的高度：设为摄像机上方 200 像素（你可以根据需要调高或降低）
-    const birdY = cam.scrollY + 200;
+    // 随机生成鸟的高度：在摄像机上方 80 到 300 像素之间
+    const birdY = Phaser.Math.Between(cam.scrollY + 80, cam.scrollY + 300);
     const chance = Phaser.Math.Between(1, 100);
     if (chance <= 50) {
       const type = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
@@ -334,15 +340,15 @@ class BossBattle extends Phaser.Scene {
     const cam = this.cameras.main;
     // 随机选择 cloud 类型
     const cloudType = Phaser.Math.RND.pick(["cloud", "cloud2"]);
-    // 云的初始 Y 值在当前摄像机上方 20 到 150 之间（你可以调高以让云更明显）
+    // 云的初始 Y 值在摄像机上方 20 到 150 之间
     const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 150);
     const startSide = Phaser.Math.Between(0, 1);
     let cloud;
     if (startSide === 0) {
       // 从左侧生成
       cloud = this.cloudGroup.create(cam.scrollX - 100, cloudY, cloudType);
-      // 放大云，使其看起来更大
-      cloud.setScale(1.5);
+      // 放大云两倍（原来的 scale 1.5 改为 3）
+      cloud.setScale(3);
       this.tweens.add({
         targets: cloud,
         x: cam.scrollX + cam.width + 100,
@@ -353,7 +359,7 @@ class BossBattle extends Phaser.Scene {
     } else {
       // 从右侧生成
       cloud = this.cloudGroup.create(cam.scrollX + cam.width + 100, cloudY, cloudType);
-      cloud.setScale(1.5);
+      cloud.setScale(3);
       this.tweens.add({
         targets: cloud,
         x: cam.scrollX - 100,
@@ -362,7 +368,6 @@ class BossBattle extends Phaser.Scene {
         onComplete: () => { cloud.destroy(); }
       });
     }
-    // 将云放在所有元素之上
     cloud.setDepth(1000);
   }
 }
