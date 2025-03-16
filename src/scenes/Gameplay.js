@@ -78,6 +78,12 @@ class Gameplay extends Phaser.Scene {
     this.load.audio("failure", "failure.wav");
 
     this.load.image("life", "Life.png");
+
+    /* NEW CODE: 加载新物品 */
+    this.load.image("coin", "coin.png");
+    this.load.image("strawberry", "strawberry.png");
+    this.load.image("watermelon", "watermelon.png");
+    /* NEW CODE END */
   }
 
   create() {
@@ -198,8 +204,8 @@ class Gameplay extends Phaser.Scene {
         this.updateLivesUI();
         if (this.lives <= 0) {
           this.scene.start("Gameover", {
-            loop: 1,
-            score: 0,
+            loop: this.loop,
+            score: this.score,
             canNextLoop: false
           });
           return;
@@ -213,6 +219,29 @@ class Gameplay extends Phaser.Scene {
         this.time.delayedCall(100, () => { this.invincible = false; });
       }
     }, null, this);
+
+    /* NEW CODE: 初始化 pickups 与 buff 相关变量 */
+    this.pickups = this.physics.add.group();
+    this.spawnPickupsForStage(1);
+    this.physics.add.overlap(this.felix, this.pickups, this.handlePickup, null, this);
+
+    this.strawberryBuffActive = false;
+    this.watermelonBuffActive = false;
+    this.strawberryBuffTime = 0;
+    this.watermelonBuffTime = 0;
+    this.repairInterval = 500;  // 默认修窗间隔
+
+    this.strawberryBuffText = this.add.text(360, 50, "", {
+      fontSize: "32px",
+      fill: "#ffffff"
+    }).setScrollFactor(0).setDepth(99999);
+    this.watermelonBuffText = this.add.text(360, 90, "", {
+      fontSize: "32px",
+      fill: "#ffffff"
+    }).setScrollFactor(0).setDepth(99999);
+    this.strawberryBuffText.setVisible(false);
+    this.watermelonBuffText.setVisible(false);
+    /* NEW CODE END */
 
     // 每次扔石头前生成新的批次 ID
     this.currentStoneBatch = 0;
@@ -457,7 +486,9 @@ class Gameplay extends Phaser.Scene {
 
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
-    const REPAIR_INTERVAL = 500;
+    /* NEW CODE: 根据西瓜 Buff 状态决定修窗间隔 */
+    const REPAIR_INTERVAL = this.watermelonBuffActive ? 100 : 500;
+    /* NEW CODE END */
     if (this.currentRepairingGlass) {
       let dist = Phaser.Math.Distance.Between(
         this.felix.x, this.felix.y,
@@ -567,6 +598,28 @@ class Gameplay extends Phaser.Scene {
       let rightIdx = this.findPlatformRight(currentIndex);
       if (rightIdx !== null) this.doWindowJumpAnimation(currentIndex, rightIdx);
     }
+
+    /* NEW CODE: 更新 Buff 倒计时显示 */
+    if (this.strawberryBuffActive) {
+      this.strawberryBuffTime -= delta / 1000;
+      if (this.strawberryBuffTime <= 0) {
+        this.strawberryBuffActive = false;
+        this.strawberryBuffText.setVisible(false);
+      } else {
+        this.strawberryBuffText.setText("Strawberry Buff Time: " + this.strawberryBuffTime.toFixed(1));
+      }
+    }
+    if (this.watermelonBuffActive) {
+      this.watermelonBuffTime -= delta / 1000;
+      if (this.watermelonBuffTime <= 0) {
+        this.watermelonBuffActive = false;
+        this.watermelonBuffText.setVisible(false);
+        this.repairInterval = 500;
+      } else {
+        this.watermelonBuffText.setText("Watermelon Buff Time: " + this.watermelonBuffTime.toFixed(1));
+      }
+    }
+    /* NEW CODE END */
   }
 
   levelTransition() {
@@ -649,6 +702,15 @@ class Gameplay extends Phaser.Scene {
       console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
     }
     this.loadStageObjectLayers(nextStage);
+    /* NEW CODE: 切换 Stage 时清除之前的 pickups 与 Buff */
+    this.pickups.clear(true, true);
+    this.spawnPickupsForStage(nextStage);
+    this.strawberryBuffActive = false;
+    this.watermelonBuffActive = false;
+    this.strawberryBuffText.setVisible(false);
+    this.watermelonBuffText.setVisible(false);
+    this.repairInterval = 500;
+    /* NEW CODE END */
     let stageHeight = 750;
     this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
@@ -825,6 +887,64 @@ class Gameplay extends Phaser.Scene {
       }
     });
     return candidate;
+  }
+
+  /* NEW CODE: 根据当前 stage 的 Felix Positions 随机生成新物品 */
+  spawnPickupsForStage(stage) {
+    let positions = this.windowPlatforms.slice();
+    Phaser.Utils.Array.Shuffle(positions);
+    
+    // 草莓和西瓜各随机生成 0~2 个
+    let strawberryCount = Phaser.Math.Between(0, 2);
+    let watermelonCount = Phaser.Math.Between(0, 2);
+    // 金币出现概率为 5%
+    let coinCount = (Phaser.Math.FloatBetween(0, 1) <= 0.05) ? 1 : 0;
+    
+    for (let i = 0; i < strawberryCount; i++) {
+      if (positions.length === 0) break;
+      let pos = positions.pop();
+      let pickup = this.pickups.create(pos.x, pos.y, "strawberry");
+      pickup.pickupType = "strawberry";
+    }
+    for (let i = 0; i < watermelonCount; i++) {
+      if (positions.length === 0) break;
+      let pos = positions.pop();
+      let pickup = this.pickups.create(pos.x, pos.y, "watermelon");
+      pickup.pickupType = "watermelon";
+    }
+    for (let i = 0; i < coinCount; i++) {
+      if (positions.length === 0) break;
+      let pos = positions.pop();
+      let pickup = this.pickups.create(pos.x, pos.y, "coin");
+      pickup.pickupType = "coin";
+    }
+  }
+
+  /* NEW CODE: 处理 Felix 与新物品的碰撞 */
+  handlePickup(felix, pickup) {
+    if (!pickup.active) return;
+    switch (pickup.pickupType) {
+      case "strawberry":
+        if (!this.strawberryBuffActive) {
+          this.strawberryBuffActive = true;
+          this.strawberryBuffTime = 10;
+          this.strawberryBuffText.setVisible(true);
+        }
+        break;
+      case "watermelon":
+        if (!this.watermelonBuffActive) {
+          this.watermelonBuffActive = true;
+          this.watermelonBuffTime = 7;
+          this.repairInterval = 100;
+          this.watermelonBuffText.setVisible(true);
+        }
+        break;
+      case "coin":
+        this.lives++;
+        this.updateLivesUI();
+        break;
+    }
+    pickup.destroy();
   }
 }
 
