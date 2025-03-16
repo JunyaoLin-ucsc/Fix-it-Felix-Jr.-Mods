@@ -93,24 +93,24 @@ class BossBattle extends Phaser.Scene {
     });
     this.anims.create({
       key: "move-right",
-      frames: this.anims.generateFrameNumbers("FelixGun", { start: 2, end: 3 }),
-      frameRate: 5,
+      frames: this.anims.generateFrameNumbers("FelixGun", { start: 2, end: 5 }),
+      frameRate: 18,
       repeat: -1
     });
     this.anims.create({
       key: "move-left",
-      frames: this.anims.generateFrameNumbers("FelixGun", { start: 4, end: 5 }),
-      frameRate: 5,
+      frames: this.anims.generateFrameNumbers("FelixGun", { start: 6, end: 9 }),
+      frameRate: 18,
       repeat: -1
     });
     this.anims.create({
       key: "jump-right",
-      frames: [{ key: "FelixGun", frame: 6 }],
+      frames: [{ key: "FelixGun", frame: 10 }],
       frameRate: 1
     });
     this.anims.create({
       key: "jump-left",
-      frames: [{ key: "FelixGun", frame: 7 }],
+      frames: [{ key: "FelixGun", frame: 11 }],
       frameRate: 1
     });
 
