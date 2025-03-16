@@ -138,8 +138,8 @@ class BossBattle extends Phaser.Scene {
     // ★★★ 关键：根据实际枪口位置修正偏移量，保证子弹从枪口发射 ★★★
     // 下列数值仅做示例，可根据测试情况微调
     this.muzzleOffset = {
-      right: { x: 35, y: -10 },   // 面向右时，相对 Felix 中心往右35, 往上10
-      left: { x: -35, y: -10 }    // 面向左时，相对 Felix 中心往左35, 往上10
+      right: { x: 53, y: 15 },   // 面向右时，相对 Felix 中心往右35, 往上10
+      left: { x: -53, y: 15 }    // 面向左时，相对 Felix 中心往左35, 往上10
     };
 
     // 记录是否在射击
