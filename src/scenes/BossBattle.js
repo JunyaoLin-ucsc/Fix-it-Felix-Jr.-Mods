@@ -21,6 +21,15 @@ class BossBattle extends Phaser.Scene {
     // ----------------- 加载 Bullet 的 spritesheet -----------------
     // 假设 Bullet-Sheet.png 的每帧尺寸为 32x32（请根据实际情况调整）
     this.load.spritesheet("bullet", "Bullet-Sheet.png", { frameWidth: 32, frameHeight: 32 });
+    
+    // ----------------- 新增：加载鸟的 spritesheet -----------------
+    // bird1：从左往右飞；bird1-flip：从右往左飞；假设帧尺寸为 64x64
+    this.load.spritesheet("bird1", "bird1.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet("bird1-flip", "bird1-flip.png", { frameWidth: 64, frameHeight: 64 });
+    
+    // ----------------- 新增：加载云的图片 -----------------
+    this.load.image("cloud", "cloud.png");
+    this.load.image("cloud2", "cloud2.png");
   }
 
   create() {
@@ -63,6 +72,13 @@ class BossBattle extends Phaser.Scene {
     // 让摄像机跟随 Felix
     this.cameras.main.startFollow(this.felix, false, 0.1, 0.1);
     
+    // 添加标题文本
+    this.add.text(
+      map.widthInPixels / 2,
+      50,
+      "Boss Battle",
+      { fontSize: "48px", fill: "#ffffff", fontFamily: "Arial" }
+    ).setOrigin(0.5);
 
     // 创建返回主菜单的按钮
     const returnBtn = this.add.text(
@@ -128,11 +144,10 @@ class BossBattle extends Phaser.Scene {
     // 创建子弹物理组
     this.bullets = this.physics.add.group();
 
-    // ★★★ 关键：根据实际枪口位置修正偏移量，保证子弹从枪口发射 ★★★
-    // 下列数值仅做示例，可根据测试情况微调
+    // ★★★ 保持原 offset 设置不变 ★★★
     this.muzzleOffset = {
-      right: { x: 53, y: 15 },   // 面向右时，相对 Felix 中心往右35, 往上10
-      left: { x: -53, y: 15 }    // 面向左时，相对 Felix 中心往左35, 往上10
+      right: { x: 53, y: 15 },
+      left: { x: -53, y: 15 }
     };
 
     // 记录是否在射击
@@ -158,6 +173,41 @@ class BossBattle extends Phaser.Scene {
       loop: true
     });
     // ----------------- 子弹发射逻辑结束 -----------------
+
+    // ----------------- 新增：鸟的实现 -----------------
+    this.birdGroup = this.physics.add.group();
+    if (!this.anims.exists("bird1_fly")) {
+      this.anims.create({
+        key: "bird1_fly",
+        frames: this.anims.generateFrameNumbers("bird1", { start: 0, end: 1 }),
+        frameRate: 5,
+        repeat: -1
+      });
+    }
+    if (!this.anims.exists("bird1flip_fly")) {
+      this.anims.create({
+        key: "bird1flip_fly",
+        frames: this.anims.generateFrameNumbers("bird1-flip", { start: 0, end: 1 }),
+        frameRate: 5,
+        repeat: -1
+      });
+    }
+    // 每 3000 毫秒生成一次鸟
+    this.time.addEvent({
+      delay: 3000,
+      callback: this.spawnBird,
+      callbackScope: this,
+      loop: true
+    });
+    // ----------------- 新增：云的实现 -----------------
+    this.cloudGroup = this.add.group();
+    // 每 5000 毫秒生成一朵云
+    this.time.addEvent({
+      delay: 5000,
+      callback: this.spawnCloud,
+      callbackScope: this,
+      loop: true
+    });
   }
 
   update(time, delta) {
@@ -214,6 +264,14 @@ class BossBattle extends Phaser.Scene {
         bullet.destroy();
       }
     });
+
+    // 清理超出视口范围的鸟（基于当前摄像机滚动位置）
+    this.birdGroup.children.each((bird) => {
+      const cam = this.cameras.main;
+      if (bird.x > cam.scrollX + cam.width + 100 || bird.x < cam.scrollX - 100) {
+        bird.destroy();
+      }
+    });
   }
 
   // fireBullet()：根据 Felix 当前的枪口位置发射子弹
@@ -233,16 +291,81 @@ class BossBattle extends Phaser.Scene {
     // 缩小子弹 0.5 倍
     bullet.setScale(0.5);
 
-    // 如果 bullet spritesheet 有动画，也可播放动画
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
     bullet.body.allowGravity = false;
-
-    // 根据 Felix 朝向决定子弹发射方向
     bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
 
     console.log(`子弹发射位置：(${muzzleX}, ${muzzleY})，朝向：${this.facing}`);
+  }
+
+  // spawnBird()：在固定高度水平飞过的鸟（bird1 从左往右飞，bird1-flip 从右往左飞）
+  spawnBird() {
+    const cam = this.cameras.main;
+    // 固定鸟的高度，假设在摄像机上方 150 像素处
+    const birdY = cam.scrollY + 150;
+    const chance = Phaser.Math.Between(1, 100);
+    if (chance <= 50) {
+      const type = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
+      if (type === "bird1") {
+        // 从左侧生成
+        let bird = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
+        bird.body.allowGravity = false;
+        bird.body.velocity.x = 150;
+        bird.anims.play("bird1_fly");
+      } else {
+        // 从右侧生成
+        let bird = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
+        bird.body.allowGravity = false;
+        bird.body.velocity.x = -150;
+        bird.anims.play("bird1flip_fly");
+      }
+    } else {
+      // 同时生成左右各一只
+      let birdLeft = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
+      birdLeft.body.allowGravity = false;
+      birdLeft.body.velocity.x = 150;
+      birdLeft.anims.play("bird1_fly");
+      
+      let birdRight = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
+      birdRight.body.allowGravity = false;
+      birdRight.body.velocity.x = -150;
+      birdRight.anims.play("bird1flip_fly");
+    }
+  }
+
+  // spawnCloud()：在场景上方水平移动的云
+  spawnCloud() {
+    const cam = this.cameras.main;
+    // 随机选择 cloud 类型
+    const cloudType = Phaser.Math.RND.pick(["cloud", "cloud2"]);
+    // 云的初始 Y 值在当前摄像机上方 20 到 100 之间
+    const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 100);
+    const startSide = Phaser.Math.Between(0, 1);
+    let cloud;
+    if (startSide === 0) {
+      // 从左侧生成
+      cloud = this.cloudGroup.create(cam.scrollX - 100, cloudY, cloudType);
+      this.tweens.add({
+        targets: cloud,
+        x: cam.scrollX + cam.width + 100,
+        duration: 20000,
+        ease: "Linear",
+        onComplete: () => { cloud.destroy(); }
+      });
+    } else {
+      // 从右侧生成
+      cloud = this.cloudGroup.create(cam.scrollX + cam.width + 100, cloudY, cloudType);
+      this.tweens.add({
+        targets: cloud,
+        x: cam.scrollX - 100,
+        duration: 20000,
+        ease: "Linear",
+        onComplete: () => { cloud.destroy(); }
+      });
+    }
+    cloud.setDepth(1000);
   }
 }
 
