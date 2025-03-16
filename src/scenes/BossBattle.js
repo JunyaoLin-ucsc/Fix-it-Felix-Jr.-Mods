@@ -48,7 +48,7 @@ class BossBattle extends Phaser.Scene {
 
     // 创建 Felix（使用 FelixGun spritesheet）
     this.felix = this.physics.add.sprite(spawnX, spawnY, "FelixGun", 0);
-    this.felix.setScale(0.25);
+    this.felix.setScale(0.20);
     this.felix.setCollideWorldBounds(true);
 
     // 让 Felix 与地面碰撞
