@@ -62,14 +62,7 @@ class BossBattle extends Phaser.Scene {
 
     // 让摄像机跟随 Felix
     this.cameras.main.startFollow(this.felix, false, 0.1, 0.1);
-
-    // 添加标题文本
-    this.add.text(
-      map.widthInPixels / 2,
-      50,
-      "Boss Battle",
-      { fontSize: "48px", fill: "#ffffff", fontFamily: "Arial" }
-    ).setOrigin(0.5);
+    
 
     // 创建返回主菜单的按钮
     const returnBtn = this.add.text(
