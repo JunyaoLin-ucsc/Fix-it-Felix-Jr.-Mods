@@ -135,10 +135,11 @@ class BossBattle extends Phaser.Scene {
     // 创建子弹物理组
     this.bullets = this.physics.add.group();
 
-    // 定义枪口偏移量：Felix 持枪时枪口相对于 Felix 中心的偏移（不随动画改变，但会因跳跃高度改变）
+    // ★★★ 关键：根据实际枪口位置修正偏移量，保证子弹从枪口发射 ★★★
+    // 下列数值仅做示例，可根据测试情况微调
     this.muzzleOffset = {
-      right: { x: 100, y: 50 },
-      left: { x: -100, y: 50 }
+      right: { x: 35, y: -10 },   // 面向右时，相对 Felix 中心往右35, 往上10
+      left: { x: -35, y: -10 }    // 面向左时，相对 Felix 中心往左35, 往上10
     };
 
     // 记录是否在射击
@@ -164,8 +165,6 @@ class BossBattle extends Phaser.Scene {
       loop: true
     });
     // ----------------- 子弹发射逻辑结束 -----------------
-
-    // ----------------- BossBattle 其它逻辑保持不变 -----------------
   }
 
   update(time, delta) {
@@ -228,23 +227,26 @@ class BossBattle extends Phaser.Scene {
   fireBullet() {
     if (!this.shooting) return;
 
-    // 根据当前朝向确定枪口偏移
-    let offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
-    // 子弹生成位置 = Felix 当前坐标 + 偏移，再向上偏移20像素，并且若面向左，则额外向左偏移40像素
-    let additionalLeftOffset = (this.facing === "left") ? 40 : 0;
-    let muzzleX = this.felix.x + offset.x - additionalLeftOffset;
-    let muzzleY = this.felix.y + offset.y - 35;
+    // 根据当前朝向获取偏移量
+    const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
+    // 计算子弹生成位置 = Felix 中心 + 偏移
+    const muzzleX = this.felix.x + offset.x;
+    const muzzleY = this.felix.y + offset.y;
 
-    let bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
+    // 创建子弹
+    const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
     // 当 Felix 面向右时，使用帧0；面向左时使用帧1
     bullet.setFrame((this.facing === "right") ? 0 : 1);
-    // 缩小子弹0.5倍
+    // 缩小子弹 0.5 倍
     bullet.setScale(0.5);
 
+    // 如果 bullet spritesheet 有动画，也可播放动画
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
     bullet.body.allowGravity = false;
+
+    // 根据 Felix 朝向决定子弹发射方向
     bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
 
     console.log(`子弹发射位置：(${muzzleX}, ${muzzleY})，朝向：${this.facing}`);
