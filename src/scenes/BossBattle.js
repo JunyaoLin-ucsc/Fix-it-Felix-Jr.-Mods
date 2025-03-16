@@ -17,6 +17,10 @@ class BossBattle extends Phaser.Scene {
       frameWidth: 641,
       frameHeight: 608
     });
+
+    // ----------------- 加载 Bullet 的 spritesheet -----------------
+    // 假设 Bullet-Sheet.png 的每帧尺寸为 32x32（请根据实际情况调整）
+    this.load.spritesheet("bullet", "Bullet-Sheet.png", { frameWidth: 32, frameHeight: 32 });
   }
 
   create() {
@@ -42,7 +46,7 @@ class BossBattle extends Phaser.Scene {
       spawnY = spawnObj.y + (spawnObj.height || 0) / 2;
     }
 
-    // 创建 Felix
+    // 创建 Felix（使用 FelixGun spritesheet）
     this.felix = this.physics.add.sprite(spawnX, spawnY, "FelixGun", 0);
     this.felix.setScale(0.25);
     this.felix.setCollideWorldBounds(true);
@@ -114,7 +118,7 @@ class BossBattle extends Phaser.Scene {
       frameRate: 1
     });
 
-    // 记录角色最后的面向
+    // 记录角色最后的面向（初始向右）
     this.facing = "right";
     // 创建键盘光标键
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -126,6 +130,43 @@ class BossBattle extends Phaser.Scene {
     this.jumpVelocity = -600;
     // 若松开上键，则把垂直速度限制到此值，以形成小跳
     this.shortJumpVelocity = -250;
+
+    // ----------------- 子弹发射相关逻辑 -----------------
+    // 创建子弹物理组
+    this.bullets = this.physics.add.group();
+
+    // 定义枪口偏移量：Felix 持枪时枪口相对于 Felix 中心的偏移（不随动画改变，但会因跳跃高度改变）
+    // 你可以根据实际情况调整这些值
+    this.muzzleOffset = {
+      right: { x: 100, y: 50 },
+      left: { x: -100, y: 50 }
+    };
+
+    // 记录是否在射击
+    this.shooting = false;
+
+    // 鼠标左键按下时开始射击
+    this.input.on("pointerdown", (pointer) => {
+      if (pointer.leftButtonDown()) {
+        this.shooting = true;
+      }
+    });
+
+    // 鼠标左键松开时停止射击
+    this.input.on("pointerup", () => {
+      this.shooting = false;
+    });
+
+    // 设置一个定时器，每 200 毫秒检查一次射击状态并发射子弹
+    this.shootTimer = this.time.addEvent({
+      delay: 200,
+      callback: this.fireBullet,
+      callbackScope: this,
+      loop: true
+    });
+    // ----------------- 子弹发射逻辑结束 -----------------
+
+    // ----------------- BossBattle 其它逻辑保持不变 -----------------
   }
 
   update(time, delta) {
@@ -156,11 +197,10 @@ class BossBattle extends Phaser.Scene {
       this.isJumping = false;
     }
 
-    // 按下上键 && 脚下着地 => 进行跳跃
+    // 按下上键且脚下着地时跳跃
     if (this.cursors.up.isDown && this.felix.body.blocked.down) {
       this.felix.setVelocityY(this.jumpVelocity);
       this.isJumping = true;
-      // 播放跳跃动画
       if (this.facing === "right") {
         this.felix.anims.play("jump-right", true);
       } else {
@@ -168,20 +208,42 @@ class BossBattle extends Phaser.Scene {
       }
     }
 
-    // 若正在跳跃，当玩家松开上键时，截断跳跃
-    // 也就是如果角色还在上升（velocity.y < 0），则把它限制到 shortJumpVelocity
-    if (
-      this.isJumping &&                // 正在跳跃
-      !this.cursors.up.isDown &&       // 上键被松开
-      this.felix.body.velocity.y < 0   // 角色还在向上飞
-    ) {
-      // 将角色垂直速度限制为 shortJumpVelocity
+    // 若正在跳跃且松开上键时截断跳跃，形成短跳效果
+    if (this.isJumping && !this.cursors.up.isDown && this.felix.body.velocity.y < 0) {
       if (this.felix.body.velocity.y < this.shortJumpVelocity) {
         this.felix.setVelocityY(this.shortJumpVelocity);
       }
-      // 只截断一次，避免重复执行
       this.isJumping = false;
     }
+
+    // 清理超出屏幕范围的子弹
+    this.bullets.children.each((bullet) => {
+      if (bullet.x > this.cameras.main.width + 50 || bullet.x < -50) {
+        bullet.destroy();
+      }
+    });
+  }
+
+  // fireBullet()：根据 Felix 当前的枪口位置发射子弹
+  fireBullet() {
+    if (!this.shooting) return;
+
+    // 根据当前朝向确定枪口偏移
+    let offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
+    // 子弹生成位置 = Felix 当前坐标 + 偏移
+    let muzzleX = this.felix.x + offset.x;
+    let muzzleY = this.felix.y + offset.y;
+
+    let bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
+    // 如果 bullet spritesheet 有动画，也可以播放动画
+    if (this.anims.exists("bullet_fly")) {
+      bullet.anims.play("bullet_fly");
+    }
+    bullet.body.allowGravity = false;
+    // 根据 Felix 朝向决定子弹发射方向
+    bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
+
+    console.log(`子弹发射位置：(${muzzleX}, ${muzzleY})，朝向：${this.facing}`);
   }
 }
 
