@@ -543,7 +543,7 @@
   </object>
  </objectgroup>
  <objectgroup id="5" name="RalphSpawns">
-  <object id="3" x="960" y="480">
+  <object id="3" x="960" y="544">
    <point/>
   </object>
  </objectgroup>
