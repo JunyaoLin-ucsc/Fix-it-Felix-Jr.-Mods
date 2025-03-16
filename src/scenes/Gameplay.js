@@ -79,7 +79,7 @@ class Gameplay extends Phaser.Scene {
 
     this.load.image("life", "Life.png");
 
-    // ★ 新增对coin、strawberry、watermelon的加载
+    // 需要加载的物品资源：coin、strawberry、watermelon
     this.load.image("coin", "coin.png");
     this.load.image("strawberry", "strawberry.png");
     this.load.image("watermelon", "watermelon.png");
@@ -540,11 +540,11 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // ★ 修改 update，将时间和buff倒计时的更新放到最前面
+  // 先更新Stage时间和Buff时间，再判断是否跳过移动和修窗
   update(time, delta) {
     if (!this.cursors) return;
 
-    // 先更新 Stage 时间
+    // Stage时间
     this.stageTime -= delta / 1000;
     if (this.stageTime <= 0) {
       this.scene.start("Gameover", {
@@ -583,7 +583,7 @@ class Gameplay extends Phaser.Scene {
     if (this.levelTransitioning) return;
     if (this.isWindowJumping) return;
 
-    // 以下是你原先的移动、修窗、检查是否修好等逻辑
+    // 移动逻辑
     if (this.cursors.right.isDown) {
       this.felixDirection = "right";
       if (!this.allWindowsRepairedForStage()) {
@@ -604,14 +604,17 @@ class Gameplay extends Phaser.Scene {
       this.felix.setFrame(0);
     }
 
+    // 修窗逻辑
     this.checkAndRepairWindows(delta);
 
+    // 检查是否全部修好
     if (this.allWindowsRepairedForStage()) {
       console.log(`All windows in Stage ${this.currentStage} repaired => levelTransition().`);
       this.levelTransition();
       return;
     }
 
+    // 输入检测：Felix 窗口跳跃
     let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
       let aboveIdx = this.findPlatformAbove(currentIndex);
@@ -671,6 +674,7 @@ class Gameplay extends Phaser.Scene {
   }
 
   preLoadNextStage(nextStage) {
+    // 销毁本Stage的玻璃
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage === this.currentStage) {
@@ -681,6 +685,8 @@ class Gameplay extends Phaser.Scene {
     this.currentStage = nextStage;
     this.updateStageUI();
     this.loadGlassForStage(nextStage);
+
+    // 刷新Felix位置
     let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
     let nextArea = this.stageAreas[nextStage];
     let newX = this.felix.x;
@@ -694,6 +700,8 @@ class Gameplay extends Phaser.Scene {
     }
     this.felix.setPosition(newX, newY);
     this.tweens.killTweensOf(this.ralph);
+
+    // 刷新Ralph位置
     let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
     if (rLayer && rLayer.objects.length > 0) {
       let rIndex = Phaser.Math.Between(0, rLayer.objects.length - 1);
@@ -709,9 +717,11 @@ class Gameplay extends Phaser.Scene {
     }
     this.loadStageObjectLayers(nextStage);
 
-    // 切换 Stage 时清除之前的 pickups 与 Buff
+    // 切换Stage时，清除pickups并刷新
     this.pickups.clear(true, true);
     this.spawnPickupsForStage(nextStage);
+
+    // 重置buff
     this.strawberryBuffActive = false;
     this.watermelonBuffActive = false;
     this.strawberryBuffText.setVisible(false);
@@ -911,7 +921,7 @@ class Gameplay extends Phaser.Scene {
       let pos = positions.pop();
       let pickup = this.pickups.create(pos.x, pos.y, "strawberry");
       pickup.pickupType = "strawberry";
-      pickup.setDepth(99999); // 保证在玻璃前
+      pickup.setDepth(99999); // 保证在玻璃之前
     }
     for (let i = 0; i < watermelonCount; i++) {
       if (positions.length === 0) break;
@@ -929,24 +939,23 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  /* 处理Felix与物品碰撞 */
+  /* 处理Felix与物品碰撞(★ 在已有时间上叠加Buff时长) */
   handlePickup(felix, pickup) {
     if (!pickup.active) return;
     switch (pickup.pickupType) {
       case "strawberry":
-        if (!this.strawberryBuffActive) {
-          this.strawberryBuffActive = true;
-          this.strawberryBuffTime = 10;
-          this.strawberryBuffText.setVisible(true);
-        }
+        // 无论是否已有草莓Buff，都将buff时间叠加
+        this.strawberryBuffActive = true;
+        // 确保时间不出现负数，再加 10
+        this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 10;
+        this.strawberryBuffText.setVisible(true);
         break;
       case "watermelon":
-        if (!this.watermelonBuffActive) {
-          this.watermelonBuffActive = true;
-          this.watermelonBuffTime = 7;
-          this.repairInterval = 100;
-          this.watermelonBuffText.setVisible(true);
-        }
+        // 同理，西瓜Buff时间叠加
+        this.watermelonBuffActive = true;
+        this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 7;
+        this.repairInterval = 100;
+        this.watermelonBuffText.setVisible(true);
         break;
       case "coin":
         this.lives++;
