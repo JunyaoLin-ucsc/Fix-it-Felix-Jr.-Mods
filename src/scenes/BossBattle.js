@@ -72,13 +72,7 @@ class BossBattle extends Phaser.Scene {
     // 让摄像机跟随 Felix
     this.cameras.main.startFollow(this.felix, false, 0.1, 0.1);
     
-    // 添加标题文本
-    this.add.text(
-      map.widthInPixels / 2,
-      50,
-      "Boss Battle",
-      { fontSize: "48px", fill: "#ffffff", fontFamily: "Arial" }
-    ).setOrigin(0.5);
+    // （原来显示 Boss Battle 标题的代码已删除）
 
     // 创建返回主菜单的按钮
     const returnBtn = this.add.text(
@@ -144,7 +138,7 @@ class BossBattle extends Phaser.Scene {
     // 创建子弹物理组
     this.bullets = this.physics.add.group();
 
-    // ★★★ 保持原 offset 设置不变 ★★★
+    // 保持原 offset 设置不变
     this.muzzleOffset = {
       right: { x: 53, y: 15 },
       left: { x: -53, y: 15 }
@@ -303,8 +297,8 @@ class BossBattle extends Phaser.Scene {
   // spawnBird()：在固定高度水平飞过的鸟（bird1 从左往右飞，bird1-flip 从右往左飞）
   spawnBird() {
     const cam = this.cameras.main;
-    // 固定鸟的高度，假设在摄像机上方 150 像素处
-    const birdY = cam.scrollY + 150;
+    // 固定鸟的高度：设为摄像机上方 200 像素（你可以根据需要调高或降低）
+    const birdY = cam.scrollY + 200;
     const chance = Phaser.Math.Between(1, 100);
     if (chance <= 50) {
       const type = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
@@ -340,31 +334,35 @@ class BossBattle extends Phaser.Scene {
     const cam = this.cameras.main;
     // 随机选择 cloud 类型
     const cloudType = Phaser.Math.RND.pick(["cloud", "cloud2"]);
-    // 云的初始 Y 值在当前摄像机上方 20 到 100 之间
-    const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 100);
+    // 云的初始 Y 值在当前摄像机上方 20 到 150 之间（你可以调高以让云更明显）
+    const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 150);
     const startSide = Phaser.Math.Between(0, 1);
     let cloud;
     if (startSide === 0) {
       // 从左侧生成
       cloud = this.cloudGroup.create(cam.scrollX - 100, cloudY, cloudType);
+      // 放大云，使其看起来更大
+      cloud.setScale(1.5);
       this.tweens.add({
         targets: cloud,
         x: cam.scrollX + cam.width + 100,
-        duration: 20000,
+        duration: 30000,
         ease: "Linear",
         onComplete: () => { cloud.destroy(); }
       });
     } else {
       // 从右侧生成
       cloud = this.cloudGroup.create(cam.scrollX + cam.width + 100, cloudY, cloudType);
+      cloud.setScale(1.5);
       this.tweens.add({
         targets: cloud,
         x: cam.scrollX - 100,
-        duration: 20000,
+        duration: 30000,
         ease: "Linear",
         onComplete: () => { cloud.destroy(); }
       });
     }
+    // 将云放在所有元素之上
     cloud.setDepth(1000);
   }
 }
