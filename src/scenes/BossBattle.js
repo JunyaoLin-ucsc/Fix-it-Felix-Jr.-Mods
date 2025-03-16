@@ -355,60 +355,64 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ★【新增】创建 Angry Ralph
-  createAngryRalph(map) {
-    // 1) 定义动画：idle=frame0, move-right=1,2, move-left=9,10
-    this.anims.create({
-      key: "angryralph_idle",
-      frames: [{ key: "AngryRalph", frame: 0 }],
-      frameRate: 1,
-      repeat: -1
-    });
-    this.anims.create({
-      key: "angryralph_move_right",
-      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
-      frameRate: 5,
-      repeat: -1
-    });
-    this.anims.create({
-      key: "angryralph_move_left",
-      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 9, end: 10 }),
-      frameRate: 5,
-      repeat: -1
-    });
+// ★【新增】创建 Angry Ralph
+createAngryRalph(map) {
+  // 1) 定义动画：idle=frame0, move-right=1,2, move-left=9,10
+  this.anims.create({
+    key: "angryralph_idle",
+    frames: [{ key: "AngryRalph", frame: 0 }],
+    frameRate: 1,
+    repeat: -1
+  });
+  this.anims.create({
+    key: "angryralph_move_right",
+    frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
+    frameRate: 5,
+    repeat: -1
+  });
+  this.anims.create({
+    key: "angryralph_move_left",
+    frames: this.anims.generateFrameNumbers("AngryRalph", { start: 9, end: 10 }),
+    frameRate: 5,
+    repeat: -1
+  });
 
-    // 2) 从对象层 "RalphSpawns" 中读取坐标
-    let ralphSpawnX = 400, ralphSpawnY = 100;
-    let ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
-    if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
-      let obj = ralphSpawnLayer.objects[0];
-      ralphSpawnX = obj.x + (obj.width || 0) / 2;
-      ralphSpawnY = obj.y + (obj.height || 0) / 2;
-    }
-
-    // 3) 在该位置创建 angryRalph
-    this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
-      .setDepth(5)
-      .setScale(1); // 可根据需求放大缩小
-
-    this.angryRalph.play("angryralph_idle");
-
-    // 4) 读取 "RalphEdges" 对象层，假设这里有2个对象分别表示左右边界
-    this.angryRalphEdges = { left: 100, right: 600 }; // 默认
-    let edgesLayer = map.getObjectLayer("RalphEdges");
-    if (edgesLayer && edgesLayer.objects.length >= 2) {
-      let edgeA = edgesLayer.objects[0];
-      let edgeB = edgesLayer.objects[1];
-      let xA = edgeA.x + (edgeA.width || 0) / 2;
-      let xB = edgeB.x + (edgeB.width || 0) / 2;
-      this.angryRalphEdges.left = Math.min(xA, xB);
-      this.angryRalphEdges.right = Math.max(xA, xB);
-    }
-
-    // 5) 速度和 AI 状态
-    this.angryRalphSpeed = 100; // 移动速度
-    this.angryRalphNextDecisionTime = 0; 
-    this.angryRalphState = "idle"; // "idle" | "moveLeft" | "moveRight"
+  // 2) 从对象层 "RalphSpawns" 中读取坐标
+  let ralphSpawnX = 400, ralphSpawnY = 100;
+  let ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
+  if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
+    let obj = ralphSpawnLayer.objects[0];
+    ralphSpawnX = obj.x + (obj.width || 0) / 2;
+    ralphSpawnY = obj.y + (obj.height || 0) / 2;
   }
+
+  // 3) 在该位置创建 angryRalph
+  this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
+    .setDepth(5)
+    .setScale(1); // 可根据需求放大缩小
+  
+  // 新增：禁用重力，防止掉出地图
+  this.angryRalph.body.allowGravity = false;
+  
+  this.angryRalph.play("angryralph_idle");
+
+  // 4) 读取 "RalphEdges" 对象层，假设这里有2个对象分别表示左右边界
+  this.angryRalphEdges = { left: 100, right: 600 }; // 默认
+  let edgesLayer = map.getObjectLayer("RalphEdges");
+  if (edgesLayer && edgesLayer.objects.length >= 2) {
+    let edgeA = edgesLayer.objects[0];
+    let edgeB = edgesLayer.objects[1];
+    let xA = edgeA.x + (edgeA.width || 0) / 2;
+    let xB = edgeB.x + (edgeB.width || 0) / 2;
+    this.angryRalphEdges.left = Math.min(xA, xB);
+    this.angryRalphEdges.right = Math.max(xA, xB);
+  }
+
+  // 5) 速度和 AI 状态
+  this.angryRalphSpeed = 100; // 移动速度
+  this.angryRalphNextDecisionTime = 0; 
+  this.angryRalphState = "idle"; // "idle" | "moveLeft" | "moveRight"
+}
 
   // ★【新增】在 update() 中被调用：让 AngryRalph 来回移动或idle
   updateAngryRalph(time, delta) {
