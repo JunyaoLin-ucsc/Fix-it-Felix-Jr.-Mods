@@ -231,7 +231,7 @@ class BossBattle extends Phaser.Scene {
     let offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
     // 子弹生成位置 = Felix 当前坐标 + 偏移，再向上偏移20像素
     let muzzleX = this.felix.x + offset.x;
-    let muzzleY = this.felix.y + offset.y - 10;
+    let muzzleY = this.felix.y + offset.y - 34;
 
     let bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
     // 根据 Felix 朝向决定 bullet 使用的帧：
