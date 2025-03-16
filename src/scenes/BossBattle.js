@@ -136,7 +136,6 @@ class BossBattle extends Phaser.Scene {
     this.bullets = this.physics.add.group();
 
     // 定义枪口偏移量：Felix 持枪时枪口相对于 Felix 中心的偏移（不随动画改变，但会因跳跃高度改变）
-    // 你可以根据实际情况调整这些值
     this.muzzleOffset = {
       right: { x: 100, y: 50 },
       left: { x: -100, y: 50 }
@@ -230,11 +229,17 @@ class BossBattle extends Phaser.Scene {
 
     // 根据当前朝向确定枪口偏移
     let offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
-    // 子弹生成位置 = Felix 当前坐标 + 偏移
+    // 子弹生成位置 = Felix 当前坐标 + 偏移，再向上偏移20像素
     let muzzleX = this.felix.x + offset.x;
-    let muzzleY = this.felix.y + offset.y;
+    let muzzleY = this.felix.y + offset.y - 20;
 
     let bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
+    // 根据 Felix 朝向决定 bullet 使用的帧：
+    // 当面向右时，使用帧0；当面向左时，使用帧1
+    bullet.setFrame((this.facing === "right") ? 0 : 1);
+    // 缩小子弹0.5倍
+    bullet.setScale(0.5);
+
     // 如果 bullet spritesheet 有动画，也可以播放动画
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
