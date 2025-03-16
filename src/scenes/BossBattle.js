@@ -139,15 +139,25 @@ class BossBattle extends Phaser.Scene {
       right: { x: 53, y: 15 },
       left: { x: -53, y: 15 }
     };
+
+    // ① 是否在射击
     this.shooting = false;
+
+    // ② 监听鼠标按下：单击瞬间就先发一颗子弹，然后把 shooting 状态设为 true
     this.input.on("pointerdown", (pointer) => {
       if (pointer.leftButtonDown()) {
         this.shooting = true;
+        // 单击时立即发射一颗子弹
+        this.fireBullet();
       }
     });
+
+    // ③ 监听鼠标松开：停止射击
     this.input.on("pointerup", () => {
       this.shooting = false;
     });
+
+    // ④ 每隔200毫秒检测一次 shooting，如果为true则连续发射子弹
     this.shootTimer = this.time.addEvent({
       delay: 200,
       callback: this.fireBullet,
@@ -263,16 +273,20 @@ class BossBattle extends Phaser.Scene {
     this.updateAngryRalph(time, delta);
   }
 
-  // ----------------- 保持你的其余函数逻辑不变 -----------------
-
+  // 子弹发射
   fireBullet() {
+    // 如果当前未在射击状态，不发射
     if (!this.shooting) return;
+
     const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
     const muzzleX = this.felix.x + offset.x;
     const muzzleY = this.felix.y + offset.y;
+
     const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     bullet.setScale(0.5);
+
+    // 若有bullet_fly动画，则播放
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
@@ -302,6 +316,7 @@ class BossBattle extends Phaser.Scene {
       birdLeft.body.allowGravity = false;
       birdLeft.body.velocity.x = 150;
       birdLeft.anims.play("bird1_fly");
+
       let birdRight = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
       birdRight.body.allowGravity = false;
       birdRight.body.velocity.x = -150;
@@ -381,7 +396,6 @@ class BossBattle extends Phaser.Scene {
     this.angryRalphEdges = { left: 100, right: 600 }; // 默认
     let edgesLayer = map.getObjectLayer("RalphEdges");
     if (edgesLayer && edgesLayer.objects.length >= 2) {
-      // 取前两个对象的 x 值，分别作为 left / right
       let edgeA = edgesLayer.objects[0];
       let edgeB = edgesLayer.objects[1];
       let xA = edgeA.x + (edgeA.width || 0) / 2;
@@ -392,7 +406,6 @@ class BossBattle extends Phaser.Scene {
 
     // 5) 速度和 AI 状态
     this.angryRalphSpeed = 100; // 移动速度
-    // 用一个定时器/时间戳来决定何时切换移动或idle
     this.angryRalphNextDecisionTime = 0; 
     this.angryRalphState = "idle"; // "idle" | "moveLeft" | "moveRight"
   }
@@ -401,9 +414,8 @@ class BossBattle extends Phaser.Scene {
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
 
-    // 如果到达左右边界，就强制停下或换个方向
+    // 如果到达左右边界，就强制停下或切换到idle
     if (this.angryRalph.x <= this.angryRalphEdges.left) {
-      // 把位置校正到边界，避免卡住
       this.angryRalph.x = this.angryRalphEdges.left;
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle", true);
@@ -417,11 +429,9 @@ class BossBattle extends Phaser.Scene {
 
     // 每隔一段随机时间重新决定状态
     if (time > this.angryRalphNextDecisionTime) {
-      // 在 idle / moveLeft / moveRight 三种状态中随机选一个
       let states = ["idle", "moveLeft", "moveRight"];
       let chosen = Phaser.Utils.Array.GetRandom(states);
 
-      // 应用新的状态
       switch (chosen) {
         case "idle":
           this.angryRalph.setVelocityX(0);
