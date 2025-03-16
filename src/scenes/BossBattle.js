@@ -215,9 +215,10 @@ class BossBattle extends Phaser.Scene {
       this.isJumping = false;
     }
 
-    // 清理超出屏幕范围的子弹
+    // 清理超出视口范围的子弹（基于当前摄像机滚动位置）
     this.bullets.children.each((bullet) => {
-      if (bullet.x > this.cameras.main.width + 50 || bullet.x < -50) {
+      const cam = this.cameras.main;
+      if (bullet.x > cam.scrollX + cam.width + 50 || bullet.x < cam.scrollX - 50) {
         bullet.destroy();
       }
     });
@@ -229,13 +230,13 @@ class BossBattle extends Phaser.Scene {
 
     // 根据当前朝向确定枪口偏移
     let offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
-    // 子弹生成位置 = Felix 当前坐标 + 偏移，再向上偏移20像素
-    let muzzleX = this.felix.x + offset.x;
-    let muzzleY = this.felix.y + offset.y - 34;
+    // 子弹生成位置 = Felix 当前坐标 + 偏移，再向上偏移20像素，并且若向左则再额外向左偏移一些（如20像素）
+    let additionalLeftOffset = (this.facing === "left") ? 20 : 0;
+    let muzzleX = this.felix.x + offset.x - additionalLeftOffset;
+    let muzzleY = this.felix.y + offset.y - 20;
 
     let bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
-    // 根据 Felix 朝向决定 bullet 使用的帧：
-    // 当面向右时，使用帧0；当面向左时，使用帧1
+    // 当 Felix 面向右时，使用帧0；面向左时使用帧1
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     // 缩小子弹0.5倍
     bullet.setScale(0.5);
