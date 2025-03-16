@@ -19,17 +19,21 @@ class BossBattle extends Phaser.Scene {
     });
 
     // ----------------- 加载 Bullet 的 spritesheet -----------------
-    // 假设 Bullet-Sheet.png 的每帧尺寸为 32x32（请根据实际情况调整）
     this.load.spritesheet("bullet", "Bullet-Sheet.png", { frameWidth: 32, frameHeight: 32 });
-    
+
     // ----------------- 新增：加载鸟的 spritesheet -----------------
-    // bird1：从左往右飞；bird1-flip：从右往左飞；假设帧尺寸为 64x64
     this.load.spritesheet("bird1", "bird1.png", { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet("bird1-flip", "bird1-flip.png", { frameWidth: 64, frameHeight: 64 });
-    
+
     // ----------------- 新增：加载云的图片 -----------------
     this.load.image("cloud", "cloud.png");
     this.load.image("cloud2", "cloud2.png");
+
+    // ★【新增】加载 AngryRalphSpritesheet.png
+    this.load.spritesheet("AngryRalph", "AngryRalphSpritesheet.png", {
+      frameWidth: 192,
+      frameHeight: 176
+    });
   }
 
   create() {
@@ -83,7 +87,7 @@ class BossBattle extends Phaser.Scene {
       this.scene.start("MainMenu");
     });
 
-    // 定义动画：idle、move 和 jump 状态（左右区分）
+    // 定义 Felix 的动画
     this.anims.create({
       key: "idle-right",
       frames: [{ key: "FelixGun", frame: 0 }],
@@ -119,45 +123,31 @@ class BossBattle extends Phaser.Scene {
       frameRate: 1
     });
 
-    // 记录角色最后的面向（初始向右）
+    // 记录Felix最后的面向（初始向右）
     this.facing = "right";
     // 创建键盘光标键
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // ========== 可变跳跃逻辑 ==========
-    // 标记是否正在跳跃
+    // ========== 可变跳跃逻辑 ========== 
     this.isJumping = false;
-    // 跳跃初速度（长跳时的力度）
     this.jumpVelocity = -600;
-    // 若松开上键，则把垂直速度限制到此值，以形成小跳
     this.shortJumpVelocity = -250;
 
     // ----------------- 子弹发射相关逻辑 -----------------
-    // 创建子弹物理组
     this.bullets = this.physics.add.group();
-
-    // 保持原 offset 设置不变
     this.muzzleOffset = {
       right: { x: 53, y: 15 },
       left: { x: -53, y: 15 }
     };
-
-    // 记录是否在射击
     this.shooting = false;
-
-    // 鼠标左键按下时开始射击
     this.input.on("pointerdown", (pointer) => {
       if (pointer.leftButtonDown()) {
         this.shooting = true;
       }
     });
-
-    // 鼠标左键松开时停止射击
     this.input.on("pointerup", () => {
       this.shooting = false;
     });
-
-    // 设置一个定时器，每 200 毫秒检查一次射击状态并发射子弹
     this.shootTimer = this.time.addEvent({
       delay: 200,
       callback: this.fireBullet,
@@ -166,7 +156,7 @@ class BossBattle extends Phaser.Scene {
     });
     // ----------------- 子弹发射逻辑结束 -----------------
 
-    // ----------------- 新增：鸟的实现 -----------------
+    // ----------------- 鸟/云相关的初始化 -----------------
     this.birdGroup = this.physics.add.group();
     if (!this.anims.exists("bird1_fly")) {
       this.anims.create({
@@ -184,22 +174,22 @@ class BossBattle extends Phaser.Scene {
         repeat: -1
       });
     }
-    // 每 3000 毫秒生成一次鸟
     this.time.addEvent({
       delay: 3000,
       callback: this.spawnBird,
       callbackScope: this,
       loop: true
     });
-    // ----------------- 新增：云的实现 -----------------
     this.cloudGroup = this.add.group();
-    // 每 5000 毫秒生成一朵云
     this.time.addEvent({
       delay: 5000,
       callback: this.spawnCloud,
       callbackScope: this,
       loop: true
     });
+
+    // ★【新增】创建 Angry Ralph
+    this.createAngryRalph(map);
   }
 
   update(time, delta) {
@@ -207,7 +197,7 @@ class BossBattle extends Phaser.Scene {
 
     const speed = 200;
 
-    // 左右移动
+    // Felix 左右移动
     if (this.cursors.left.isDown) {
       this.felix.setVelocityX(-speed);
       this.felix.anims.play("move-left", true);
@@ -225,12 +215,10 @@ class BossBattle extends Phaser.Scene {
       }
     }
 
-    // 如果脚下着地，允许再次跳跃
+    // 跳跃检测
     if (this.felix.body.blocked.down) {
       this.isJumping = false;
     }
-
-    // 按下上键且脚下着地时跳跃
     if (this.cursors.up.isDown && this.felix.body.blocked.down) {
       this.felix.setVelocityY(this.jumpVelocity);
       this.isJumping = true;
@@ -240,8 +228,6 @@ class BossBattle extends Phaser.Scene {
         this.felix.anims.play("jump-left", true);
       }
     }
-
-    // 若正在跳跃且松开上键时截断跳跃，形成短跳效果
     if (this.isJumping && !this.cursors.up.isDown && this.felix.body.velocity.y < 0) {
       if (this.felix.body.velocity.y < this.shortJumpVelocity) {
         this.felix.setVelocityY(this.shortJumpVelocity);
@@ -249,7 +235,7 @@ class BossBattle extends Phaser.Scene {
       this.isJumping = false;
     }
 
-    // 清理超出视口范围的子弹（基于当前摄像机滚动位置）
+    // 清理超出视口范围的子弹
     this.bullets.children.each((bullet) => {
       const cam = this.cameras.main;
       if (bullet.x > cam.scrollX + cam.width + 50 || bullet.x < cam.scrollX - 50) {
@@ -257,7 +243,7 @@ class BossBattle extends Phaser.Scene {
       }
     });
 
-    // 清理超出视口范围的鸟（基于当前摄像机滚动位置）
+    // 清理超出视口范围的鸟
     this.birdGroup.children.each((bird) => {
       const cam = this.cameras.main;
       if (bird.x > cam.scrollX + cam.width + 100 || bird.x < cam.scrollX - 100) {
@@ -265,69 +251,57 @@ class BossBattle extends Phaser.Scene {
       }
     });
 
-    // 清理超出视口范围的云（基于当前摄像机滚动位置）
+    // 清理超出视口范围的云
     this.cloudGroup.children.each((cloud) => {
       const cam = this.cameras.main;
       if (cloud.x > cam.scrollX + cam.width + 150 || cloud.x < cam.scrollX - 150) {
         cloud.destroy();
       }
     });
+
+    // ★【新增】每帧更新 Angry Ralph 的移动逻辑
+    this.updateAngryRalph(time, delta);
   }
 
-  // fireBullet()：根据 Felix 当前的枪口位置发射子弹
+  // ----------------- 保持你的其余函数逻辑不变 -----------------
+
   fireBullet() {
     if (!this.shooting) return;
-
-    // 根据当前朝向获取偏移量
     const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
-    // 计算子弹生成位置 = Felix 中心 + 偏移
     const muzzleX = this.felix.x + offset.x;
     const muzzleY = this.felix.y + offset.y;
-
-    // 创建子弹
     const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
-    // 当 Felix 面向右时，使用帧0；面向左时使用帧1
     bullet.setFrame((this.facing === "right") ? 0 : 1);
-    // 缩小子弹 0.5 倍
     bullet.setScale(0.5);
-
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
     bullet.body.allowGravity = false;
     bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
-
-    console.log(`子弹发射位置：(${muzzleX}, ${muzzleY})，朝向：${this.facing}`);
   }
 
-  // spawnBird()：在随机高度水平飞过的鸟（bird1 从左往右飞，bird1-flip 从右往左飞）
   spawnBird() {
     const cam = this.cameras.main;
-    // 随机生成鸟的高度：在摄像机上方 80 到 300 像素之间
     const birdY = Phaser.Math.Between(cam.scrollY + 80, cam.scrollY + 300);
     const chance = Phaser.Math.Between(1, 100);
     if (chance <= 50) {
       const type = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
       if (type === "bird1") {
-        // 从左侧生成
         let bird = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
         bird.body.allowGravity = false;
         bird.body.velocity.x = 150;
         bird.anims.play("bird1_fly");
       } else {
-        // 从右侧生成
         let bird = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
         bird.body.allowGravity = false;
         bird.body.velocity.x = -150;
         bird.anims.play("bird1flip_fly");
       }
     } else {
-      // 同时生成左右各一只
       let birdLeft = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
       birdLeft.body.allowGravity = false;
       birdLeft.body.velocity.x = 150;
       birdLeft.anims.play("bird1_fly");
-      
       let birdRight = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
       birdRight.body.allowGravity = false;
       birdRight.body.velocity.x = -150;
@@ -335,19 +309,14 @@ class BossBattle extends Phaser.Scene {
     }
   }
 
-  // spawnCloud()：在场景上方水平移动的云
   spawnCloud() {
     const cam = this.cameras.main;
-    // 随机选择 cloud 类型
     const cloudType = Phaser.Math.RND.pick(["cloud", "cloud2"]);
-    // 云的初始 Y 值在摄像机上方 20 到 150 之间
     const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 150);
     const startSide = Phaser.Math.Between(0, 1);
     let cloud;
     if (startSide === 0) {
-      // 从左侧生成
       cloud = this.cloudGroup.create(cam.scrollX - 100, cloudY, cloudType);
-      // 放大云两倍（原来的 scale 1.5 改为 3）
       cloud.setScale(3);
       this.tweens.add({
         targets: cloud,
@@ -357,7 +326,6 @@ class BossBattle extends Phaser.Scene {
         onComplete: () => { cloud.destroy(); }
       });
     } else {
-      // 从右侧生成
       cloud = this.cloudGroup.create(cam.scrollX + cam.width + 100, cloudY, cloudType);
       cloud.setScale(3);
       this.tweens.add({
@@ -369,6 +337,111 @@ class BossBattle extends Phaser.Scene {
       });
     }
     cloud.setDepth(1000);
+  }
+
+  // ★【新增】创建 Angry Ralph
+  createAngryRalph(map) {
+    // 1) 定义动画：idle=frame0, move-right=1,2, move-left=9,10
+    this.anims.create({
+      key: "angryralph_idle",
+      frames: [{ key: "AngryRalph", frame: 0 }],
+      frameRate: 1,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "angryralph_move_right",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
+      frameRate: 5,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "angryralph_move_left",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 9, end: 10 }),
+      frameRate: 5,
+      repeat: -1
+    });
+
+    // 2) 从对象层 "RalphSpawns" 中读取坐标
+    let ralphSpawnX = 400, ralphSpawnY = 100;
+    let ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
+    if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
+      let obj = ralphSpawnLayer.objects[0];
+      ralphSpawnX = obj.x + (obj.width || 0) / 2;
+      ralphSpawnY = obj.y + (obj.height || 0) / 2;
+    }
+
+    // 3) 在该位置创建 angryRalph
+    this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
+      .setDepth(5)
+      .setScale(1); // 可根据需求放大缩小
+
+    this.angryRalph.play("angryralph_idle");
+
+    // 4) 读取 "RalphEdges" 对象层，假设这里有2个对象分别表示左右边界
+    this.angryRalphEdges = { left: 100, right: 600 }; // 默认
+    let edgesLayer = map.getObjectLayer("RalphEdges");
+    if (edgesLayer && edgesLayer.objects.length >= 2) {
+      // 取前两个对象的 x 值，分别作为 left / right
+      let edgeA = edgesLayer.objects[0];
+      let edgeB = edgesLayer.objects[1];
+      let xA = edgeA.x + (edgeA.width || 0) / 2;
+      let xB = edgeB.x + (edgeB.width || 0) / 2;
+      this.angryRalphEdges.left = Math.min(xA, xB);
+      this.angryRalphEdges.right = Math.max(xA, xB);
+    }
+
+    // 5) 速度和 AI 状态
+    this.angryRalphSpeed = 100; // 移动速度
+    // 用一个定时器/时间戳来决定何时切换移动或idle
+    this.angryRalphNextDecisionTime = 0; 
+    this.angryRalphState = "idle"; // "idle" | "moveLeft" | "moveRight"
+  }
+
+  // ★【新增】在 update() 中被调用：让 AngryRalph 来回移动或idle
+  updateAngryRalph(time, delta) {
+    if (!this.angryRalph) return;
+
+    // 如果到达左右边界，就强制停下或换个方向
+    if (this.angryRalph.x <= this.angryRalphEdges.left) {
+      // 把位置校正到边界，避免卡住
+      this.angryRalph.x = this.angryRalphEdges.left;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+      this.angryRalphState = "idle";
+    } else if (this.angryRalph.x >= this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+      this.angryRalphState = "idle";
+    }
+
+    // 每隔一段随机时间重新决定状态
+    if (time > this.angryRalphNextDecisionTime) {
+      // 在 idle / moveLeft / moveRight 三种状态中随机选一个
+      let states = ["idle", "moveLeft", "moveRight"];
+      let chosen = Phaser.Utils.Array.GetRandom(states);
+
+      // 应用新的状态
+      switch (chosen) {
+        case "idle":
+          this.angryRalph.setVelocityX(0);
+          this.angryRalph.play("angryralph_idle", true);
+          break;
+        case "moveLeft":
+          this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_left", true);
+          break;
+        case "moveRight":
+          this.angryRalph.setVelocityX(this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_right", true);
+          break;
+      }
+      this.angryRalphState = chosen;
+
+      // 下次随机 1~3 秒之后再做决定
+      let delay = Phaser.Math.Between(1000, 3000);
+      this.angryRalphNextDecisionTime = time + delay;
+    }
   }
 }
 
