@@ -5,7 +5,7 @@ class MainMenu extends Phaser.Scene {
 
   preload() {
     this.load.path = "./assets/";
-    // 加载主菜单地图和 tileset
+    // 加载主菜单地图 & tileset
     this.load.tilemapTiledJSON("mainMenuMap", "MainMenu.json");
     this.load.image("tilesetImage", "tileset.png");
     // 加载音效（确认和选择），以及主菜单背景音乐
@@ -15,7 +15,7 @@ class MainMenu extends Phaser.Scene {
   }
 
   create() {
-    // 首先停止所有前一场景的声音（如 Gameplay 的 bgm），防止返回主菜单时重叠
+    // 首先停止前一场景的所有声音，防止返回主菜单时重叠
     this.sound.stopAll();
 
     const map = this.make.tilemap({ key: "mainMenuMap" });
@@ -42,12 +42,12 @@ class MainMenu extends Phaser.Scene {
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
 
-    // "Play" 按钮
+    // 将 "Play" 按钮放在屏幕正中（Y 坐标改为 map.heightInPixels / 2）
     let playButton = this.add.text(
       map.widthInPixels / 2, 
-      map.heightInPixels - 80,
+      map.heightInPixels / 2,
       "Play",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
+      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
     ).setOrigin(0.5).setInteractive();
 
     playButton.on("pointerover", () => {
@@ -62,7 +62,7 @@ class MainMenu extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 延时200ms后进入 Tutorial，此时保持 mainMenuBGM 播放
+      // 延时200ms后进入 Tutorial，此时保持主菜单BGM 播放
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });
