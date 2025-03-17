@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="52" tilewidth="16" tileheight="16" infinite="0" nextlayerid="9" nextobjectid="3">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="80" height="52" tilewidth="16" tileheight="16" infinite="0" nextlayerid="10" nextobjectid="4">
  <tileset firstgid="1" name="tileset" tilewidth="16" tileheight="16" tilecount="2112" columns="33">
   <image source="C:/Users/ljuny/Downloads/tileset.png" width="528" height="1024"/>
  </tileset>
@@ -344,6 +344,11 @@
    <point/>
   </object>
   <object id="2" x="368" y="704">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="9" name="RalphSpawns">
+  <object id="3" x="640" y="704">
    <point/>
   </object>
  </objectgroup>
