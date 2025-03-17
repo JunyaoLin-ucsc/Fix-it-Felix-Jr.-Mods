@@ -55,7 +55,7 @@ class BossBattle extends Phaser.Scene {
   }
 
   create() {
-    // 初始化 FelixDamageApplied 标记，每次新动作重置
+    // 初始化 Felix 捶地伤害标记，每次新动作重置
     this.felixDamageApplied = false;
 
     // 创建 Tilemap，并关联 tileset
@@ -538,12 +538,10 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
-  // 【唯一修改】：子弹命中后直接销毁该子弹（确保每颗子弹只生效一次），不会对 Ralph 的 Spritesheet 或 Hitbox 产生影响
+  // 【唯一修改】：子弹命中 Ralph 后，只扣血，并设置 hitRalph 标记，确保同一颗子弹仅产生一次伤害，且不销毁或隐藏 Ralph 的 Spritesheet 与 Hitbox
   handleBulletHitRalph(bullet, ralph) {
-    // 若该子弹已被处理，则返回
     if (bullet.hitRalph) return;
     bullet.hitRalph = true;
-    bullet.destroy();
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
     if (this.ralphHP < 0) this.ralphHP = 0;
