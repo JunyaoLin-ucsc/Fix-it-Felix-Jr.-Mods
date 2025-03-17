@@ -116,6 +116,7 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
+    // 记录每个Stage的 topY 位置，供后面计算摄像机滚动
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -144,15 +145,14 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, this.windowLayerRef);
 
-    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+    // 因为我们要让相机可以滚动整个地图，所以把物理和相机边界设为整张地图大小
+    // 这样才能让相机自由 tween 到任何 stage 顶端
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
-    let stage1Area = this.stageAreas[1];
-    if (stage1Area) {
-      let stageHeight = 750;
-      this.physics.world.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
-      this.cameras.main.setBounds(0, stage1Area.topY, map.widthInPixels, stageHeight);
-      this.cameras.main.setScroll(0, stage1Area.topY);
-    }
+    this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
+
+    // 若你想在游戏过程中摄像机跟随Felix（非切关时），可以在这里开启跟随
+    // 并设置一些跟随缓动（镜头不生硬贴上）
+    this.cameras.main.startFollow(this.felix, false, 0.05, 0.05);
 
     // 创建 Ralph 并定义动画
     this.createRalph();
@@ -189,7 +189,7 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // 当草莓Buff生效时，不再扣血
+    // 石头碰撞判定
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       if (this.processedStoneBatches.has(stone.batchId)) {
         return;
@@ -246,7 +246,6 @@ class Gameplay extends Phaser.Scene {
 
     // 每次扔石头前生成新的批次 ID
     this.currentStoneBatch = 0;
-
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
     this.stoneTimer = this.time.addEvent({
@@ -638,8 +637,10 @@ class Gameplay extends Phaser.Scene {
       this.ralphDelayedCall.remove();
       this.ralphDelayedCall = null;
     }
+
     let nextStage = this.currentStage + 1;
     if (nextStage > this.maxStage) {
+      // 如果超过stage 5，就进入最终场景
       if (this.stageAreas["final"]) {
         console.log("All normal stages done => go to Final Stage.");
         this.transitionToFinalStage();
@@ -649,6 +650,7 @@ class Gameplay extends Phaser.Scene {
       this.levelTransitioning = false;
       return;
     }
+
     let currentArea = this.stageAreas[this.currentStage];
     let nextArea = this.stageAreas[nextStage];
     if (!currentArea || !nextArea) {
@@ -656,24 +658,48 @@ class Gameplay extends Phaser.Scene {
       this.levelTransitioning = false;
       return;
     }
+
     console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
     this.stageTime = 60;
-    let stageHeight = 750;
-    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-    this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-    this.preLoadNextStage(nextStage);
-    this.felix.setFrame(0);
+
+    // 暂停石头投掷
     if (this.stoneTimer) {
       this.stoneTimer.paused = true;
     }
+
+    // 预加载并销毁旧玻璃
+    this.preLoadNextStage(nextStage);
+
+    // 让摄像机先停止跟随，以便我们用 tween 来移动它
     this.cameras.main.stopFollow();
-    this.cameras.main.setScroll(0, nextArea.topY);
-    if (this.stoneTimer) {
-      this.stoneTimer.paused = false;
-    }
-    this.levelTransitioning = false;
+
+    // ================ 核心思路：先把Felix & Ralph瞬移到下一Stage，然后摄像机做向上滚动 ================
+
+    // 记录当前摄像机滚动位置和下一个Stage的滚动目标
+    let oldScrollY = this.cameras.main.scrollY;
+    let newScrollY = nextArea.topY; // 要滚到下一个stage的topY
+
+    // 用 tween 实现摄像机滚动
+    this.tweens.add({
+      targets: this.cameras.main,
+      scrollY: newScrollY,
+      duration: 1500, // 1.5秒的滚动，可以自行调节
+      ease: "Quad.easeInOut",
+      onComplete: () => {
+        // 滚动结束后，让摄像机再次跟随 Felix
+        this.cameras.main.startFollow(this.felix, false, 0.05, 0.05);
+
+        // 恢复石头计时器
+        if (this.stoneTimer) {
+          this.stoneTimer.paused = false;
+        }
+
+        this.levelTransitioning = false;
+      }
+    });
   }
 
+  // 把预加载下一个stage与角色瞬移部分，单独放在一个函数里
   preLoadNextStage(nextStage) {
     // 销毁本Stage的玻璃
     for (let key in this.windowsById) {
@@ -687,11 +713,12 @@ class Gameplay extends Phaser.Scene {
     this.updateStageUI();
     this.loadGlassForStage(nextStage);
 
-    // 刷新Felix位置
+    // Felix换位置
     let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
-    let nextArea = this.stageAreas[nextStage];
+    let nextData = this.stageAreas[nextStage];
     let newX = this.felix.x;
-    let newY = nextArea ? nextArea.topY + 200 : this.felix.y;
+    let newY = nextData ? nextData.topY + 200 : this.felix.y;
+
     if (felixLayer && felixLayer.objects.length > 0) {
       let randF = Phaser.Math.Between(0, felixLayer.objects.length - 1);
       let fObj = felixLayer.objects[randF];
@@ -700,9 +727,9 @@ class Gameplay extends Phaser.Scene {
       console.log(`Felix => stage${nextStage}: (${newX}, ${newY})`);
     }
     this.felix.setPosition(newX, newY);
-    this.tweens.killTweensOf(this.ralph);
 
-    // 刷新Ralph位置
+    // Ralph换位置
+    this.tweens.killTweensOf(this.ralph);
     let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
     if (rLayer && rLayer.objects.length > 0) {
       let rIndex = Phaser.Math.Between(0, rLayer.objects.length - 1);
@@ -716,6 +743,7 @@ class Gameplay extends Phaser.Scene {
     } else {
       console.warn(`No RalphStage${nextStage} or empty. Keep old pos.`);
     }
+
     this.loadStageObjectLayers(nextStage);
 
     // 切换Stage时，清除pickups并刷新
@@ -728,13 +756,9 @@ class Gameplay extends Phaser.Scene {
     this.strawberryBuffText.setVisible(false);
     this.watermelonBuffText.setVisible(false);
     this.repairInterval = 500;
-
-    let stageHeight = 750;
-    this.physics.world.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
-    this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
   }
 
-  // 【只改这里】进入最终关卡后，不再跳Gameover，而是跳到Continue
+  // 最终关卡，不再跳Gameover，而是跳Continue
   transitionToFinalStage() {
     let finalData = this.stageAreas["final"];
     if (!finalData) {
@@ -742,18 +766,19 @@ class Gameplay extends Phaser.Scene {
       return;
     }
     this.stageTime = 60;
-    let finalTopY = finalData.topY;
-    let stageHeight = 750;
-    this.physics.world.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
-    this.cameras.main.setBounds(0, finalTopY, this.map.widthInPixels, stageHeight);
-    this.cameras.main.stopFollow();
-    this.cameras.main.setScroll(0, finalTopY);
-    this.inFinalStage = true;
+
+    // 如果有石头计时器，关掉
     if (this.stoneTimer) {
       this.stoneTimer.remove();
       this.stoneTimer = null;
     }
     this.tweens.killTweensOf(this.ralph);
+
+    this.inFinalStage = true;
+    // 停止相机跟随
+    this.cameras.main.stopFollow();
+
+    // 先把Felix和Ralph瞬移到final stage对应位置
     let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
     if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
       let obj = felixFinalLayer.objects[0];
@@ -771,12 +796,24 @@ class Gameplay extends Phaser.Scene {
       this.ralph.play("ralph_final");
     }
 
-    // 改：原本这里是跳到Gameover
-    this.time.delayedCall(3000, () => {
-      this.scene.start("Continue", {
-        loop: this.loop,
-        score: this.score
-      });
+    // 让摄像机滚上去
+    let oldScrollY = this.cameras.main.scrollY;
+    let finalTopY = finalData.topY;
+    this.tweens.add({
+      targets: this.cameras.main,
+      scrollY: finalTopY,
+      duration: 1500,
+      ease: "Quad.easeInOut",
+      onComplete: () => {
+        // 给 Ralph 播放点动画之类...
+        // 延时后进入 Continue 场景
+        this.time.delayedCall(1500, () => {
+          this.scene.start("Continue", {
+            loop: this.loop,
+            score: this.score
+          });
+        });
+      }
     });
   }
 
