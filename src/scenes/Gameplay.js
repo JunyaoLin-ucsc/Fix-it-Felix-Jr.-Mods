@@ -742,6 +742,9 @@ class Gameplay extends Phaser.Scene {
     }
     this.stageTime = 60;
 
+    console.log("Current scrollY=", this.cameras.main.scrollY, 
+      " finalTopY=", finalData.topY);
+
     if (this.stoneTimer) {
       this.stoneTimer.remove();
       this.stoneTimer = null;
