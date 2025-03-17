@@ -473,7 +473,7 @@ class BossBattle extends Phaser.Scene {
     // 默认不受重力影响；在 crashDown 状态下启用重力
     this.angryRalph.body.allowGravity = false;
     // 调整碰撞体积：原先 (120,140) 放大2倍为 (240,280)，偏移 (72,72)
-    this.angryRalph.setBodySize(240, 280);
+    this.angryRalph.setBodySize(120, 140);
     this.angryRalph.setOffset(72, 72);
 
     this.angryRalph.play("angryralph_idle");
