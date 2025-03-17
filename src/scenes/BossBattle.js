@@ -55,6 +55,9 @@ class BossBattle extends Phaser.Scene {
   }
 
   create() {
+    // 初始化 FelixDamageApplied 标记，每次新动作重置
+    this.felixDamageApplied = false;
+
     // 创建 Tilemap，并关联 tileset
     const map = this.make.tilemap({ key: "bossBattleMap" });
     const morningTileset = map.addTilesetImage("morning_adventures_tileset_16x16", "morningAdventuresImage");
@@ -266,6 +269,8 @@ class BossBattle extends Phaser.Scene {
           if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
           this.angryRalph.play("angryralph_idle");
           this.angryRalphState = "postCrash";
+          // 重置 Felix 捶地伤害标记，每次 Ralph 完成捶地后允许再次伤害
+          this.felixDamageApplied = false;
         });
       }
     });
@@ -273,7 +278,7 @@ class BossBattle extends Phaser.Scene {
     // overlap：子弹击中 Ralph => HP -0.5%
     this.physics.add.overlap(this.bullets, this.angryRalph, this.handleBulletHitRalph, null, this);
 
-    // overlap：Felix 与 Ralph => 捶地伤害
+    // overlap：Felix 与 Ralph => 捶地伤害（每次仅一次）
     this.physics.add.overlap(this.felix, this.angryRalph, this.handleFelixRalphContact, null, this);
 
     // overlap：Felix 与 lasers => 激光伤害
@@ -349,7 +354,7 @@ class BossBattle extends Phaser.Scene {
     const muzzleX = this.felix.x + offset.x;
     const muzzleY = this.felix.y + offset.y;
     const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
-    // 重置子弹的 hitRalph 标记
+    // 重置 hitRalph 标记
     bullet.hitRalph = false;
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     bullet.setScale(0.5);
@@ -533,10 +538,12 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
-  // 【唯一修改】：当子弹命中 Ralph 时，只扣血，并为该子弹设置 hitRalph 标记，保证每个子弹只生效一次
+  // 【唯一修改】：子弹命中后直接销毁该子弹（确保每颗子弹只生效一次），不会对 Ralph 的 Spritesheet 或 Hitbox 产生影响
   handleBulletHitRalph(bullet, ralph) {
+    // 若该子弹已被处理，则返回
     if (bullet.hitRalph) return;
     bullet.hitRalph = true;
+    bullet.destroy();
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
     if (this.ralphHP < 0) this.ralphHP = 0;
@@ -548,7 +555,9 @@ class BossBattle extends Phaser.Scene {
   }
 
   handleFelixRalphContact(felix, ralph) {
-    if (this.angryRalphState === "crashDown") {
+    // 当 Ralph 处于 crashDown 状态时，每次仅造成一次伤害
+    if (this.angryRalphState === "crashDown" && !this.felixDamageApplied) {
+      this.felixDamageApplied = true;
       if (this.felixHP <= 0) return;
       this.felixHP -= 10;
       if (this.felixHP < 0) this.felixHP = 0;
@@ -582,6 +591,8 @@ class BossBattle extends Phaser.Scene {
   startRandomMovement() {
     if (!this.angryRalph || this.angryRalphState !== "idle") return;
     this.angryRalphState = "move";
+    // 重置 Felix 捶地伤害标记，每次新移动时允许伤害
+    this.felixDamageApplied = false;
     const moveChoices = ["left", "right", "idle"];
     const choice = Phaser.Utils.Array.GetRandom(moveChoices);
     if (choice === "left") {
