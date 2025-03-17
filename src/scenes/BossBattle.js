@@ -45,7 +45,7 @@ class BossBattle extends Phaser.Scene {
   create() {
     const map = this.make.tilemap({ key: "bossBattleMap" });
     const morningTileset = map.addTilesetImage("morning_adventures_tileset_16x16", "morningAdventuresImage");
-    const layoutTileset = map.addTilesetImage("layout_help", "layoutHelpImage");
+    const layoutTileset = map.addTilesetImage("layout_help", "layout_help.png");
 
     // =============== 保留你的三层：Background、Floor、Real Floor ===============
     const backgroundLayer = map.createLayer("Background", [morningTileset, layoutTileset], 0, 0).setDepth(0);
@@ -548,14 +548,22 @@ class BossBattle extends Phaser.Scene {
       this.angryRalph.play("angryralph_idle", true);
     }
 
-    // 移动1~3秒后，开始跳跃攻击
+    // 移动1~3秒后，改为 50% 概率释放攻击连招
     const delay = Phaser.Math.Between(1000, 3000);
     this.time.delayedCall(delay, () => {
       if (!this.angryRalph) return;
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
-      this.startAttackSequence();
+
+      // =============【核心改动】=============
+      // 50% 概率触发攻击连招
+      if (Phaser.Math.Between(1, 100) <= 50) {
+        this.startAttackSequence();
+      } else {
+        // 不发动攻击则继续随机移动
+        this.startRandomMovement();
+      }
     });
   }
 
@@ -576,7 +584,6 @@ class BossBattle extends Phaser.Scene {
       this.angryRalphState = "crashDown";
       this.angryRalph.body.allowGravity = true;
       this.angryRalph.setVelocityY(700);
-      // 真正的捶地动画在 collider 回调中播放
     });
   }
 
@@ -587,10 +594,12 @@ class BossBattle extends Phaser.Scene {
 
     // 1 = 脸发射激光, 2 = 手持激光炮
     const laserType = Phaser.Math.Between(1, 2);
-    // 判断朝向
-    let direction = (this.felix.x >= this.angryRalph.x) ? "right" : "left";
 
-    // (A) 准备坐标 & hitbox 的差异
+    // =============【核心改动】============
+    // 随机选择向左 or 向右，不再根据 Felix 位置决定
+    const dirRand = Phaser.Math.Between(1, 2);
+    let direction = dirRand === 1 ? "right" : "left";
+
     let laserX, laserY;
     let bodyW, bodyH, offsetX, offsetY;
 
@@ -624,7 +633,6 @@ class BossBattle extends Phaser.Scene {
       offsetY = 300; 
     }
 
-    // (B) 实际创建激光
     const laser = this.physics.add.sprite(laserX, laserY, "Laser");
     laser.setScale(0.3);
     laser.body.allowGravity = false;
@@ -633,7 +641,6 @@ class BossBattle extends Phaser.Scene {
     // ★【Laser 深度 = 7】(介于 Ralph(5) 与 Felix(10) 之间)
     laser.setDepth(7);
 
-    // 播放动画
     if (direction === "right") {
       laser.play("laser_fire_right");
     } else {
@@ -653,14 +660,12 @@ class BossBattle extends Phaser.Scene {
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
 
-    // 边界
     if (this.angryRalph.x < this.angryRalphEdges.left) {
       this.angryRalph.x = this.angryRalphEdges.left;
     } else if (this.angryRalph.x > this.angryRalphEdges.right) {
       this.angryRalph.x = this.angryRalphEdges.right;
     }
 
-    // 如果捶地动画播完进入 postCrash，则进行激光攻击
     if (this.angryRalphState === "postCrash") {
       this.performLaserAttack();
     }
