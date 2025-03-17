@@ -225,24 +225,21 @@ class BossBattle extends Phaser.Scene {
     this.createAngryRalph(map);
 
     // ★【让 AngryRalph 与 floorLayer 碰撞】
-    // 这里面主要监听 crashDown 状态碰到地面后，播放捶地动画并回到 idle
+    // 当 crashDown 落地时，播放捶地动画（7,8,9,10）
     this.physics.add.collider(this.angryRalph, floorLayer, () => {
       if (this.angryRalphState === "crashDown") {
-        // 落地：先停止
         this.angryRalph.setVelocity(0, 0);
         this.angryRalph.body.allowGravity = false;
-        // 播放捶地动画 (7,8,9,10) 并造成伤害
+        // 捶地动画
         this.angryRalph.play("angryralph_crash_down");
-        // 如果需要对 Felix 造成伤害，你可以在这里判断距离/碰撞
-        // this.dealDamageToFelix(); // 伪代码
+        // 若需要，对 Felix 造成伤害
+        // this.dealDamageToFelix();
 
-        // 等捶地动画播完后，再回归 idle 并继续后续流程
+        // 捶地动画播完后 => postCrash 状态
         this.time.delayedCall(800, () => {
-          // d(7~10)动画大约有 4 帧 * frameRate 10 = 400ms 左右，给它 800ms 播放完
           if (!this.angryRalph) return;
           this.angryRalph.play("angryralph_idle");
-          this.angryRalphState = "postCrash"; 
-          // 在 postCrash 状态下，会接着发激光
+          this.angryRalphState = "postCrash";
         });
       }
     });
@@ -317,7 +314,7 @@ class BossBattle extends Phaser.Scene {
       this.resetRalph();
     }
 
-    // ★【更新】Ralph 的 AI 逻辑
+    // ★【更新】Ralph 的 AI
     this.updateAngryRalph(time, delta);
   }
 
@@ -414,14 +411,14 @@ class BossBattle extends Phaser.Scene {
       frameRate: 5,
       repeat: -1
     });
-    // 3：向右脸发射激光
+    // 3：向右“脸”发射激光
     this.anims.create({
       key: "angryralph_fire_right",
       frames: [{ key: "AngryRalph", frame: 3 }],
       frameRate: 5,
       repeat: 0
     });
-    // 4：向左脸发射激光
+    // 4：向左“脸”发射激光
     this.anims.create({
       key: "angryralph_fire_left",
       frames: [{ key: "AngryRalph", frame: 4 }],
@@ -449,7 +446,6 @@ class BossBattle extends Phaser.Scene {
       frameRate: 5,
       repeat: -1
     });
-    // （13,14,15：被打败 —— 不添加）
     // 16：手持激光炮向右发射
     this.anims.create({
       key: "angryralph_fire_weapon_right",
@@ -506,15 +502,14 @@ class BossBattle extends Phaser.Scene {
     // 保存 Ralph 出生点，便于重置
     this.angryRalphSpawn = { x: ralphSpawnX, y: ralphSpawnY };
 
-    // 初始化一些状态
     this.angryRalphSpeed = 100;
-    this.angryRalphState = "idle"; // idle, move, jumpUp, crashDown, postCrash, laser, etc.
+    this.angryRalphState = "idle";
 
-    // 【核心改动】一开始先启动一次随机移动
+    // 一开始，先随机移动
     this.startRandomMovement();
   }
 
-  // ★【重置】若 Ralph 掉出地图，则将其重置到出生点并设 idle
+  // ★【重置】
   resetRalph() {
     this.angryRalph.setVelocity(0, 0);
     this.angryRalph.body.allowGravity = false;
@@ -522,22 +517,18 @@ class BossBattle extends Phaser.Scene {
     this.angryRalph.y = this.angryRalphSpawn.y;
     this.angryRalph.play("angryralph_idle");
     this.angryRalphState = "idle";
-    // 再次开始随机移动
     this.startRandomMovement();
   }
 
   // =========================
-  // 【核心改动】Ralph 攻击流程
+  // Ralph 攻击流程
   // =========================
 
   // 开始随机移动
   startRandomMovement() {
-    // 如果 Ralph 不存在或已经在攻击，就不执行
     if (!this.angryRalph || this.angryRalphState !== "idle") return;
 
     this.angryRalphState = "move";
-
-    // 随机选择左/右移动 或 干脆 idle
     const moveChoices = ["left", "right", "idle"];
     const choice = Phaser.Utils.Array.GetRandom(moveChoices);
 
@@ -548,127 +539,133 @@ class BossBattle extends Phaser.Scene {
       this.angryRalph.setVelocityX(this.angryRalphSpeed);
       this.angryRalph.play("angryralph_move_right", true);
     } else {
-      // idle
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle", true);
     }
 
-    // 随机移动 1~3 秒后，开始攻击流程
+    // 移动1~3秒后，开始跳跃攻击
     const delay = Phaser.Math.Between(1000, 3000);
     this.time.delayedCall(delay, () => {
       if (!this.angryRalph) return;
-      // 停止移动
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
-      // 开始攻击流程
       this.startAttackSequence();
     });
   }
 
-  // 攻击流程：跳到 Felix 头顶 → 等待2~3秒 → 下落砸地 → 捶地动画 → 选一个激光方式 → 发射 → 回到随机移动
+  // 攻击流程：跳到 Felix 头顶 -> 等2~3秒 -> 下落砸地 -> 捶地 -> 发激光 -> 回到随机移动
   startAttackSequence() {
     if (!this.angryRalph) return;
-    // 先设置 jumpUp 状态
     this.angryRalphState = "jumpUp";
-    // 播放 jumpUp 动画
     this.angryRalph.play("angryralph_jump_up", true);
 
     // 直接把 Ralph 移到 Felix 上方
     this.angryRalph.x = this.felix.x;
     this.angryRalph.y = this.felix.y - 200;
 
-    // 等待 2~3 秒
+    // 等 2~3 秒后再坠落
     const waitTime = Phaser.Math.Between(2000, 3000);
     this.time.delayedCall(waitTime, () => {
-      // 切换到 crashDown，让 Ralph 下落砸地
       if (!this.angryRalph) return;
       this.angryRalphState = "crashDown";
       this.angryRalph.body.allowGravity = true;
       this.angryRalph.setVelocityY(700);
-      // 真正的捶地动画播放在地面碰撞回调里
+      // 真正的捶地动画在 collider 回调中播放
     });
   }
 
-  // 当捶地动画播放完 -> 进入 postCrash 状态，然后发射激光
+  // 捶地完 -> postCrash -> 发激光
   performLaserAttack() {
     if (!this.angryRalph) return;
     this.angryRalphState = "laser";
 
-    // 随机选择“脸发射激光”(frame 3,4) 或 “手持激光炮激光”(frame 16,17)
-    const laserType = Phaser.Math.Between(1, 2); 
-    // 1 = face-laser, 2 = weapon-laser
-
-    // 判断朝向：若 Felix 在右边就朝右，否则朝左
+    // 1 = 脸发射激光, 2 = 手持激光炮
+    const laserType = Phaser.Math.Between(1, 2);
+    // 判断朝向
     let direction = (this.felix.x >= this.angryRalph.x) ? "right" : "left";
 
-    // 先播放动画，再创建 Laser sprite
+    // -------------------------------
+    // (A) 准备坐标 & hitbox 的差异
+    // -------------------------------
+    let laserX, laserY;
+    let bodyW, bodyH, offsetX, offsetY;
+
     if (laserType === 1) {
-      // 脸发射激光
+      // ===========【脸部激光】===========
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_right", true);
+        // 示例：脸部激光生成点稍微小一点
+        laserX = this.angryRalph.x + 200;
       } else {
         this.angryRalph.play("angryralph_fire_left", true);
+        laserX = this.angryRalph.x - 200;
       }
+      // 让它高度跟 Ralph 一样
+      laserY = this.angryRalph.y + 0;
+      // 例如脸部激光比较短，hitbox 也更小
+      bodyW = 2560; // 比武器激光短
+      bodyH = 200;
+      offsetX = 0; 
+      offsetY = 300; 
     } else {
-      // 手持激光炮
+      // ===========【手持激光炮】===========
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_weapon_right", true);
+        laserX = this.angryRalph.x + 550;
       } else {
         this.angryRalph.play("angryralph_fire_weapon_left", true);
+        laserX = this.angryRalph.x - 550;
       }
+      // 让它比脸部激光更低一点
+      laserY = this.angryRalph.y + 50;
+      // 这里保持你原先的参数
+      bodyW = 2560; 
+      bodyH = 200;
+      offsetX = 150; 
+      offsetY = -300; 
     }
 
-    // 创建激光对象
-    let laserX = (direction === "right") ? this.angryRalph.x + 550 : this.angryRalph.x - 550;
-    let laserY = this.angryRalph.y + 50;
+    // -------------------------------
+    // (B) 实际创建激光
+    // -------------------------------
     const laser = this.physics.add.sprite(laserX, laserY, "Laser");
     laser.setScale(0.3);
     laser.body.allowGravity = false;
-    // 保持你的 hitbox & offset
-    laser.body.setSize(2560, 200).setOffset(0, 300);
+    // 应用差异化的 hitbox 设置
+    laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
 
-    // 播放激光动画
+    // 播放动画
     if (direction === "right") {
       laser.play("laser_fire_right");
     } else {
       laser.play("laser_fire_left");
     }
-    
-    // 如果需要伤害 Felix，可做 overlap 检测
-    // this.physics.add.overlap(laser, this.felix, this.damageFelix, null, this);
 
-    // 1 秒后激光消失，回到 idle
+    // 1秒后消失，并回到 idle
     this.time.delayedCall(1000, () => {
       laser.destroy();
       if (!this.angryRalph) return;
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
-
-      // 攻击完了，再进入下一轮移动
       this.startRandomMovement();
     });
   }
 
-  // ★【更新】Ralph 的 AI 逻辑（仅做状态判断和边界检查）
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
 
-    // 边界检查
+    // 边界
     if (this.angryRalph.x < this.angryRalphEdges.left) {
       this.angryRalph.x = this.angryRalphEdges.left;
     } else if (this.angryRalph.x > this.angryRalphEdges.right) {
       this.angryRalph.x = this.angryRalphEdges.right;
     }
 
-    // 如果已经处在 crashDown 状态，在地面碰撞事件里会继续
-    // 如果刚刚捶地动画结束，会进入 postCrash 状态
+    // 如果捶地动画播完进入 postCrash，则进行激光攻击
     if (this.angryRalphState === "postCrash") {
-      // 捶地完了，就发射激光
       this.performLaserAttack();
     }
-    // 其余状态逻辑（idle, move, jumpUp, laser） 已经在定时器里处理了
-    // 所以这里不再做任何随机 AI
   }
 }
 
