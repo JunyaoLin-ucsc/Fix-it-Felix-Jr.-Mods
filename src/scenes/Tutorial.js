@@ -62,7 +62,7 @@ class Tutorial extends Phaser.Scene {
       "Additionally, there are buff items available, such as watermelon, strawberry, and coins.\n\n " +
       "Watermelon increases your window repair speed, strawberry grants temporary invincibility, and coins add an extra life for the current loop.\n\n " +
       "Every repaired window awards 100 points. If you want to achieve a high score, play for as long as you can! Have fun!\n\n",
-      { fontSize: "24px", color: "#fff", align: "center" }
+      { fontSize: "13px", color: "#FF0000", align: "center" }
     ).setOrigin(0.5);
     
     // 使用 Unnamed 位图字体创建 "Start Playing" 按钮，向上移动一些
