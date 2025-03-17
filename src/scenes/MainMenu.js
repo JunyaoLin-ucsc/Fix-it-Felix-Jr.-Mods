@@ -25,6 +25,11 @@ class MainMenu extends Phaser.Scene {
     const map = this.make.tilemap({ key: "mainMenuMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
+    map.createLayer("Grass", tileset, 0, 0);
+    map.createLayer("Trees", tileset, 0, 0);
+    map.createLayer("Street Lamp", tileset, 0, 0);
+    map.createLayer("Moon", tileset, 0, 0);
+    map.createLayer("Stars", tileset, 0, 0);
     // ...
 
     // 播放主菜单BGM
