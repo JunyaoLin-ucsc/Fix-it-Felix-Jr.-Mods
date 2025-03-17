@@ -349,6 +349,8 @@ class BossBattle extends Phaser.Scene {
     const muzzleX = this.felix.x + offset.x;
     const muzzleY = this.felix.y + offset.y;
     const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
+    // 重置子弹的 hitRalph 标记
+    bullet.hitRalph = false;
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     bullet.setScale(0.5);
     if (this.anims.exists("bullet_fly")) {
@@ -531,7 +533,7 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
-  // 【唯一修改】：当子弹命中 Ralph 时，仅扣血并给该子弹设置标记，不销毁或禁用 Ralph 的 spritesheet 与 Hitbox
+  // 【唯一修改】：当子弹命中 Ralph 时，只扣血，并为该子弹设置 hitRalph 标记，保证每个子弹只生效一次
   handleBulletHitRalph(bullet, ralph) {
     if (bullet.hitRalph) return;
     bullet.hitRalph = true;
