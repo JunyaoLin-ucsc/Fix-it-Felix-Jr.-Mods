@@ -224,7 +224,7 @@ class BossBattle extends Phaser.Scene {
     // ★【创建 Angry Ralph（他的出生点来源于 "RalphSpawns"）】
     this.createAngryRalph(map);
 
-    // ★【让 AngryRalph 与 floorLayer 碰撞】
+    // ★【让 Angry Ralph 与 floorLayer 碰撞】
     this.physics.add.collider(this.angryRalph, floorLayer, () => {
       if (this.angryRalphState === "crashDown") {
         this.angryRalph.setVelocity(0, 0);
@@ -232,6 +232,10 @@ class BossBattle extends Phaser.Scene {
         this.angryRalph.body.allowGravity = false;
         this.angryRalph.play("angryralph_idle");
         this.angryRalphState = "idle";
+        // 如果连招中，进入下一步骤
+        if (this.angryRalphComboStep > 0) {
+          this.angryRalphComboStep = 3;
+        }
       }
     });
   }
@@ -285,8 +289,9 @@ class BossBattle extends Phaser.Scene {
         bullet.destroy();
       }
     });
-    // 清理超出视口范围的鸟
+    // 清理超出视口范围的鸟 —— 删除鸟的 hitbox，避免干扰
     this.birdGroup.children.each((bird) => {
+      bird.body.setSize(0, 0);
       const cam = this.cameras.main;
       if (bird.x > cam.scrollX + cam.width + 100 || bird.x < cam.scrollX - 100) {
         bird.destroy();
@@ -306,10 +311,203 @@ class BossBattle extends Phaser.Scene {
     }
 
     // ★【更新】Ralph 的 AI 逻辑
-    this.updateAngryRalph(time, delta);
+    // 如果正在连招，则进入连招更新逻辑
+    if (this.angryRalphComboStep > 0) {
+      this.updateRalphCombo();
+    } else {
+      this.updateAngryRalphNormal(time);
+    }
   }
 
-  // 子弹发射逻辑
+  // 正常状态下的 AI 逻辑（不包含连招）
+  updateAngryRalphNormal(time) {
+    // 检查水平边界
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+      this.angryRalphState = "moveRight";
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+      this.angryRalphState = "moveLeft";
+    }
+
+    // 如果处于 jumpUp、crashDown、fireLaser 状态，则不打断
+    if (this.angryRalphState === "jumpUp" || this.angryRalphState === "crashDown" || this.angryRalphState === "fireLaser") {
+      if (this.angryRalphState === "crashDown") {
+        this.angryRalph.body.allowGravity = true;
+        this.angryRalph.setVelocityY(700);
+        this.angryRalph.play("angryralph_crash_down", true);
+      }
+      return;
+    }
+
+    // 达到决策时间后重新随机状态（只保留 idle/moveLeft/moveRight）
+    if (time > this.angryRalphNextDecisionTime) {
+      const states = ["idle", "moveLeft", "moveRight"];
+      const chosen = Phaser.Utils.Array.GetRandom(states);
+      switch (chosen) {
+        case "idle":
+          this.angryRalph.setVelocityX(0);
+          this.angryRalph.play("angryralph_idle", true);
+          this.angryRalphState = "idle";
+          break;
+        case "moveLeft":
+          this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_left", true);
+          this.angryRalphState = "moveLeft";
+          break;
+        case "moveRight":
+          this.angryRalph.setVelocityX(this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_right", true);
+          this.angryRalphState = "moveRight";
+          break;
+      }
+      // 下次决策延时 1~3 秒
+      const delay = Phaser.Math.Between(1000, 3000);
+      this.angryRalphNextDecisionTime = time + delay;
+
+      // ★【新增】每次决策后有 10% 概率启动连招
+      if (Phaser.Math.Between(1, 100) <= 10) {
+        this.startRalphCombo();
+      }
+    }
+  }
+
+  // ★【启动】连招：不影响正常移动，连招流程在后续 updateRalphCombo 中执行
+  startRalphCombo() {
+    // 连招从正常状态开始，不影响出生位置
+    this.angryRalphComboStep = 1;
+    // 随机决定本轮激光发射次数（1~3次）
+    this.angryRalphLasersLeft = Phaser.Math.Between(1, 3);
+  }
+
+  // ★【更新】连招流程逻辑
+  updateRalphCombo() {
+    switch (this.angryRalphComboStep) {
+      case 1:
+        // Step 1：锁定 Felix，跳到他上方
+        this.angryRalph.setVelocity(0, 0);
+        this.angryRalph.play("angryralph_jump_up", true);
+        this.angryRalph.x = this.felix.x;
+        this.angryRalph.y = this.felix.y - 200;
+        // 进入 Step 2
+        this.angryRalphComboStep = 2;
+        break;
+      case 2:
+        // Step 2：等待落地砸地
+        this.angryRalph.setVelocity(0, 0);
+        // 进入 crashDown 状态（floor 碰撞回调会把状态设为 idle）
+        this.angryRalphState = "crashDown";
+        // 当砸地完成后，floor 碰撞回调会将状态转为 idle
+        // 此时连招流程继续进入 Step 3
+        this.angryRalphComboStep = 3;
+        break;
+      case 3:
+        // Step 3：如果落地后状态已恢复为 idle，则开始连续激光连招
+        if (this.angryRalphState === "idle") {
+          if (this.angryRalphLasersLeft > 0) {
+            // 随机选择：用嘴部或激光炮发射
+            let useWeapon = Phaser.Math.Between(0, 1) === 1;
+            let faceRight = (this.felix.x >= this.angryRalph.x);
+            this.fireRalphLaser(useWeapon, faceRight);
+            this.angryRalphLasersLeft--;
+          } else {
+            // 连招结束，恢复正常
+            this.angryRalphComboStep = 0;
+          }
+        }
+        break;
+    }
+  }
+
+  // ★【连招】Ralph 发射激光函数（嘴部或激光炮，左右随机）
+  fireRalphLaser(useWeapon, faceRight) {
+    // 发射前先停下
+    this.angryRalph.setVelocityX(0);
+    this.angryRalphState = "fireLaser";
+    // 根据选择播放对应动画：帧16/17（武器）或帧3/4（嘴部）
+    let animKey = "";
+    if (useWeapon) {
+      animKey = faceRight ? "angryralph_fire_weapon_right" : "angryralph_fire_weapon_left";
+    } else {
+      animKey = faceRight ? "angryralph_fire_right" : "angryralph_fire_left";
+    }
+    this.angryRalph.play(animKey, true);
+
+    // 创建 Laser 精灵（位置和大小不改你的设置）
+    let laserX = faceRight ? (this.angryRalph.x + 80) : (this.angryRalph.x - 80);
+    let laser = this.physics.add.sprite(laserX, this.angryRalph.y, "Laser");
+    laser.setScale(0.2);
+    laser.body.allowGravity = false;
+    let laserAnim = faceRight ? "laser_fire_right" : "laser_fire_left";
+    laser.play(laserAnim);
+    // 1秒后销毁激光，并把状态设为 idle，为下一次激光连招做准备
+    this.time.delayedCall(1000, () => {
+      laser.destroy();
+      this.angryRalphState = "idle";
+    }, null, this);
+  }
+
+  resetRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalph.body.allowGravity = false;
+    this.angryRalph.x = this.angryRalphSpawn.x;
+    this.angryRalph.y = this.angryRalphSpawn.y;
+    this.angryRalph.play("angryralph_idle");
+    this.angryRalphState = "idle";
+    this.angryRalphComboStep = 0;
+    this.angryRalphLasersLeft = 0;
+  }
+
+  updateAngryRalphNormal(time) {
+    // 检查水平边界
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+      this.angryRalphState = "moveRight";
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+      this.angryRalphState = "moveLeft";
+    }
+
+    // 如果处于 jumpUp、crashDown、fireLaser 状态，则不打断
+    if (this.angryRalphState === "jumpUp" || this.angryRalphState === "crashDown" || this.angryRalphState === "fireLaser") {
+      if (this.angryRalphState === "crashDown") {
+        this.angryRalph.body.allowGravity = true;
+        this.angryRalph.setVelocityY(700);
+        this.angryRalph.play("angryralph_crash_down", true);
+      }
+      return;
+    }
+
+    if (time > this.angryRalphNextDecisionTime) {
+      // 正常状态下只随机 idle/moveLeft/moveRight
+      const states = ["idle", "moveLeft", "moveRight"];
+      const chosen = Phaser.Utils.Array.GetRandom(states);
+      switch (chosen) {
+        case "idle":
+          this.angryRalph.setVelocityX(0);
+          this.angryRalph.play("angryralph_idle", true);
+          this.angryRalphState = "idle";
+          break;
+        case "moveLeft":
+          this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_left", true);
+          this.angryRalphState = "moveLeft";
+          break;
+        case "moveRight":
+          this.angryRalph.setVelocityX(this.angryRalphSpeed);
+          this.angryRalph.play("angryralph_move_right", true);
+          this.angryRalphState = "moveRight";
+          break;
+      }
+      const delay = Phaser.Math.Between(1000, 3000);
+      this.angryRalphNextDecisionTime = time + delay;
+      // 每次正常决策后有10%概率启动连招
+      if (Phaser.Math.Between(1, 100) <= 10) {
+        this.startRalphCombo();
+      }
+    }
+  }
+
   fireBullet() {
     if (!this.shooting) return;
     const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
@@ -385,7 +583,6 @@ class BossBattle extends Phaser.Scene {
     cloud.setDepth(1000);
   }
 
-  // ★【创建】Ralph 的初始化：使用 "RalphSpawns" 作为出生点
   createAngryRalph(map) {
     // ========== 按你所说的帧定义 ==========
     // 0：出生idle
@@ -437,7 +634,6 @@ class BossBattle extends Phaser.Scene {
       frameRate: 5,
       repeat: -1
     });
-    // （13,14,15：被打败 —— 不添加）
     // 16：手持激光炮向右发射
     this.anims.create({
       key: "angryralph_fire_weapon_right",
@@ -453,7 +649,7 @@ class BossBattle extends Phaser.Scene {
       repeat: 0
     });
 
-    // 读取 "RalphSpawns" 对象层
+    // 读取 "RalphSpawns" 对象层作为出生点
     let ralphSpawnX, ralphSpawnY;
     const ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
     if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
@@ -473,10 +669,9 @@ class BossBattle extends Phaser.Scene {
 
     // 默认不受重力影响；在 crashDown 状态下启用重力
     this.angryRalph.body.allowGravity = false;
-    // 保持原先的碰撞体积
+    // 不修改你设置的 hitbox 参数
     this.angryRalph.setBodySize(100, 120);
 
-    // 初始播放 idle 动画
     this.angryRalph.play("angryralph_idle");
 
     // 读取 "RalphEdges" 对象层，限定移动区域
@@ -497,9 +692,12 @@ class BossBattle extends Phaser.Scene {
     this.angryRalphSpeed = 100;
     this.angryRalphNextDecisionTime = 0;
     this.angryRalphState = "idle";
+
+    // ★【新增】连招相关变量（不改动 hitbox、offset）
+    this.angryRalphComboStep = 0;   // 0=无连招, 1=开始连招, 2=落地砸下, 3=激光连招中
+    this.angryRalphLasersLeft = 0;  // 本轮激光次数
   }
 
-  // ★【重置】若 Ralph 掉出地图，则将其重置到出生点并设 idle
   resetRalph() {
     this.angryRalph.setVelocity(0, 0);
     this.angryRalph.body.allowGravity = false;
@@ -507,11 +705,18 @@ class BossBattle extends Phaser.Scene {
     this.angryRalph.y = this.angryRalphSpawn.y;
     this.angryRalph.play("angryralph_idle");
     this.angryRalphState = "idle";
+    this.angryRalphComboStep = 0;
+    this.angryRalphLasersLeft = 0;
   }
 
-  // ★【更新】Ralph 的 AI 逻辑
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
+
+    // 如果正在执行连招，则调用连招更新逻辑
+    if (this.angryRalphComboStep > 0) {
+      this.updateRalphCombo();
+      return;
+    }
 
     // 检查水平边界
     if (this.angryRalph.x < this.angryRalphEdges.left) {
@@ -522,8 +727,8 @@ class BossBattle extends Phaser.Scene {
       this.angryRalphState = "moveLeft";
     }
 
-    // 如果当前处于 jumpUp 或 crashDown，则保持不打断
-    if (this.angryRalphState === "jumpUp" || this.angryRalphState === "crashDown") {
+    // 如果处于 jumpUp、crashDown、fireLaser 状态，则不打断
+    if (this.angryRalphState === "jumpUp" || this.angryRalphState === "crashDown" || this.angryRalphState === "fireLaser") {
       if (this.angryRalphState === "crashDown") {
         this.angryRalph.body.allowGravity = true;
         this.angryRalph.setVelocityY(700);
@@ -532,14 +737,9 @@ class BossBattle extends Phaser.Scene {
       return;
     }
 
-    // 如果当前处于 fireLaser 状态，等发射完后再回到 idle
-    if (this.angryRalphState === "fireLaser") {
-      return;
-    }
-
-    // 达到决策时间后重新随机状态
+    // 正常状态下只随机 idle/moveLeft/moveRight
     if (time > this.angryRalphNextDecisionTime) {
-      const states = ["idle", "moveLeft", "moveRight", "jumpUp", "fireLaser"];
+      const states = ["idle", "moveLeft", "moveRight"];
       const chosen = Phaser.Utils.Array.GetRandom(states);
       switch (chosen) {
         case "idle":
@@ -557,54 +757,172 @@ class BossBattle extends Phaser.Scene {
           this.angryRalph.play("angryralph_move_right", true);
           this.angryRalphState = "moveRight";
           break;
-        case "jumpUp":
-          // 瞬间移动到 Felix 上方，然后落下
-          this.angryRalph.setVelocity(0, 0);
-          this.angryRalph.play("angryralph_jump_up", true);
-          this.angryRalph.x = this.felix.x;
-          this.angryRalph.y = this.felix.y - 200;
-          this.angryRalphState = "crashDown";
-          break;
-        case "fireLaser":
-          // 发射激光后 1 秒再回到 idle，保证他能再次移动
-          this.angryRalph.setVelocityX(0);
-          // 判断 Felix 位置决定向左/向右发射
-          if (this.felix.x >= this.angryRalph.x) {
-            // ★【改动1】用帧16
-            this.angryRalph.play("angryralph_fire_weapon_right", true);
-            // ★【改动2】调整发射位置并扩大激光
-            const laser = this.physics.add.sprite(this.angryRalph.x + 550, this.angryRalph.y + 50, "Laser");
-            laser.setScale(0.3);
-            laser.body.allowGravity = false;
-            // ★【改动3】修正 hitbox，使它更贴合视觉长度
-            laser.body.setSize(2560, 200).setOffset(0, 300);
-            laser.play("laser_fire_right");
-            this.time.delayedCall(1000, () => {
-              laser.destroy();
-              this.angryRalphState = "idle";
-            }, null, this);
-          } else {
-            // ★【改动1】用帧17
-            this.angryRalph.play("angryralph_fire_weapon_left", true);
-            // ★【改动2】调整发射位置并扩大激光
-            const laser = this.physics.add.sprite(this.angryRalph.x - 550, this.angryRalph.y + 50, "Laser");
-            laser.setScale(0.3);
-            laser.body.allowGravity = false;
-            // ★【改动3】修正 hitbox
-            laser.body.setSize(2560, 200).setOffset(0, 300);
-            laser.play("laser_fire_left");
-            this.time.delayedCall(1000, () => {
-              laser.destroy();
-              this.angryRalphState = "idle";
-            }, null, this);
-          }
-          this.angryRalphState = "fireLaser";
-          break;
       }
-      // 下次决策延时 1~3 秒
       const delay = Phaser.Math.Between(1000, 3000);
       this.angryRalphNextDecisionTime = time + delay;
+
+      // 每次正常决策后有10%概率启动连招（而不是一开始就连招）
+      if (Phaser.Math.Between(1, 100) <= 10) {
+        this.startRalphCombo();
+      }
     }
+  }
+
+  // ★【连招】启动连招流程，不影响初始移动
+  startRalphCombo() {
+    // 连招启动：从正常状态出发，不改变出生位置
+    this.angryRalphComboStep = 1;
+    // 随机决定本轮激光发射次数（1~3 次）
+    this.angryRalphLasersLeft = Phaser.Math.Between(1, 3);
+  }
+
+  // ★【连招】更新连招流程
+  updateRalphCombo() {
+    switch (this.angryRalphComboStep) {
+      case 1:
+        // Step 1：锁定 Felix，跳到他上方
+        this.angryRalph.setVelocity(0, 0);
+        this.angryRalph.play("angryralph_jump_up", true);
+        this.angryRalph.x = this.felix.x;
+        this.angryRalph.y = this.felix.y - 200;
+        // 进入 Step 2：等待落地
+        this.angryRalphComboStep = 2;
+        break;
+      case 2:
+        // Step 2：此时应进入 crashDown，由 floor 碰撞回调处理落地
+        this.angryRalph.setVelocity(0, 0);
+        this.angryRalphState = "crashDown";
+        // 连招进入下一阶段后，由 floor 碰撞将状态重置为 idle，
+        // 我们在连招更新中检测到 idle后进入 Step 3
+        if (this.angryRalphState === "idle") {
+          this.angryRalphComboStep = 3;
+        }
+        break;
+      case 3:
+        // Step 3：连招激光阶段
+        if (this.angryRalph.state === "idle" || this.angryRalphState === "idle") {
+          if (this.angryRalphLasersLeft > 0) {
+            // 随机选择是否使用武器发射（嘴部或激光炮）
+            let useWeapon = Phaser.Math.Between(0, 1) === 1;
+            let faceRight = (this.felix.x >= this.angryRalph.x);
+            this.fireRalphLaser(useWeapon, faceRight);
+            this.angryRalphLasersLeft--;
+          } else {
+            // 连招完毕，恢复正常随机决策
+            this.angryRalphComboStep = 0;
+          }
+        }
+        break;
+    }
+  }
+
+  // ★【连招】Ralph 发射激光（根据 useWeapon 与方向）
+  fireRalphLaser(useWeapon, faceRight) {
+    this.angryRalph.setVelocityX(0);
+    this.angryRalphState = "fireLaser";
+    let animKey = "";
+    if (useWeapon) {
+      animKey = faceRight ? "angryralph_fire_weapon_right" : "angryralph_fire_weapon_left";
+    } else {
+      animKey = faceRight ? "angryralph_fire_right" : "angryralph_fire_left";
+    }
+    this.angryRalph.play(animKey, true);
+
+    let laserX = faceRight ? (this.angryRalph.x + 80) : (this.angryRalph.x - 80);
+    let laser = this.physics.add.sprite(laserX, this.angryRalph.y, "Laser");
+    laser.setScale(0.2);
+    laser.body.allowGravity = false;
+    let laserAnim = faceRight ? "laser_fire_right" : "laser_fire_left";
+    laser.play(laserAnim);
+    this.time.delayedCall(1000, () => {
+      laser.destroy();
+      this.angryRalphState = "idle";
+    }, null, this);
+  }
+
+  resetRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalph.body.allowGravity = false;
+    this.angryRalph.x = this.angryRalphSpawn.x;
+    this.angryRalph.y = this.angryRalphSpawn.y;
+    this.angryRalph.play("angryralph_idle");
+    this.angryRalphState = "idle";
+    this.angryRalphComboStep = 0;
+    this.angryRalphLasersLeft = 0;
+  }
+
+  fireBullet() {
+    if (!this.shooting) return;
+    const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
+    const muzzleX = this.felix.x + offset.x;
+    const muzzleY = this.felix.y + offset.y;
+    const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
+    bullet.setFrame((this.facing === "right") ? 0 : 1);
+    bullet.setScale(0.5);
+    if (this.anims.exists("bullet_fly")) {
+      bullet.anims.play("bullet_fly");
+    }
+    bullet.body.allowGravity = false;
+    bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
+  }
+
+  spawnBird() {
+    const cam = this.cameras.main;
+    const birdY = Phaser.Math.Between(cam.scrollY + 80, cam.scrollY + 300);
+    const chance = Phaser.Math.Between(1, 100);
+    if (chance <= 50) {
+      const type = Phaser.Math.RND.pick(["bird1", "bird1-flip"]);
+      if (type === "bird1") {
+        let bird = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
+        bird.body.allowGravity = false;
+        bird.body.velocity.x = 150;
+        bird.anims.play("bird1_fly");
+      } else {
+        let bird = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
+        bird.body.allowGravity = false;
+        bird.body.velocity.x = -150;
+        bird.anims.play("bird1flip_fly");
+      }
+    } else {
+      let birdLeft = this.birdGroup.create(cam.scrollX - 64, birdY, "bird1", 0);
+      birdLeft.body.allowGravity = false;
+      birdLeft.body.velocity.x = 150;
+      birdLeft.anims.play("bird1_fly");
+      let birdRight = this.birdGroup.create(cam.scrollX + cam.width + 64, birdY, "bird1-flip", 0);
+      birdRight.body.allowGravity = false;
+      birdRight.body.velocity.x = -150;
+      birdRight.anims.play("bird1flip_fly");
+    }
+  }
+
+  spawnCloud() {
+    const cam = this.cameras.main;
+    const cloudType = Phaser.Math.RND.pick(["cloud", "cloud2"]);
+    const cloudY = Phaser.Math.Between(cam.scrollY + 20, cam.scrollY + 150);
+    const startSide = Phaser.Math.Between(0, 1);
+    let cloud;
+    if (startSide === 0) {
+      cloud = this.cloudGroup.create(cam.scrollX - 100, cloudY, cloudType);
+      cloud.setScale(3);
+      this.tweens.add({
+        targets: cloud,
+        x: cam.scrollX + cam.width + 100,
+        duration: 30000,
+        ease: "Linear",
+        onComplete: () => { cloud.destroy(); }
+      });
+    } else {
+      cloud = this.cloudGroup.create(cam.scrollX + cam.width + 100, cloudY, cloudType);
+      cloud.setScale(3);
+      this.tweens.add({
+        targets: cloud,
+        x: cam.scrollX - 100,
+        duration: 30000,
+        ease: "Linear",
+        onComplete: () => { cloud.destroy(); }
+      });
+    }
+    cloud.setDepth(1000);
   }
 }
 
