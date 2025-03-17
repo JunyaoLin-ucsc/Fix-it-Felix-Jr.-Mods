@@ -25,8 +25,14 @@ class Gameover extends Phaser.Scene {
     this.gameplayBGM.play();
 
     const map = this.make.tilemap({ key: "gameoverMap" });
-    const tileset = map.addTilesetImage("tileset", "tilesetImage");
+    const tileset = map.addTilesetImage("tileset", "tileset.png");
+    // 加载与 MainMenu 相同的背景图层（确保图层名称与 Tiled 文件中一致）
     map.createLayer("Background", tileset, 0, 0);
+    map.createLayer("Grass", tileset, 0, 0);
+    map.createLayer("Trees", tileset, 0, 0);
+    map.createLayer("Street Lamp", tileset, 0, 0);
+    map.createLayer("Moon", tileset, 0, 0);
+    map.createLayer("Stars", tileset, 0, 0);
 
     // 标题 "Game Over"
     this.add.text(
@@ -65,8 +71,6 @@ class Gameover extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
-    // 注意：不再重复创建 confirmSnd 与 selectionSnd
-
     // Restart 按钮（重置游戏：回到 Loop 1，分数归零）
     const restartBtn = this.add.text(
       map.widthInPixels / 2,
@@ -99,6 +103,37 @@ class Gameover extends Phaser.Scene {
           score: 0,
           canNextLoop: false
         });
+      });
+    });
+
+    // 添加 Main Menu 按钮，放在 Restart 按钮下方
+    const mainMenuBtn = this.add.text(
+      map.widthInPixels / 2,
+      map.heightInPixels / 2 + 100,
+      "Main Menu",
+      {
+        fontSize: "36px",
+        backgroundColor: "#000",
+        color: "#fff",
+        padding: { x: 10, y: 5 }
+      }
+    ).setOrigin(0.5).setInteractive();
+
+    mainMenuBtn.on("pointerover", () => {
+      if (this.selectionSnd.isPlaying) {
+        this.selectionSnd.stop();
+      }
+      this.selectionSnd.play();
+    });
+
+    mainMenuBtn.on("pointerdown", () => {
+      if (this.confirmSnd.isPlaying) {
+        this.confirmSnd.stop();
+      }
+      this.confirmSnd.play();
+      this.time.delayedCall(200, () => {
+        // 返回主菜单
+        this.scene.start("MainMenu");
       });
     });
   }
