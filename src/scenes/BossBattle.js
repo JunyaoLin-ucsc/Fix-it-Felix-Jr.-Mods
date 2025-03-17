@@ -103,7 +103,7 @@ class BossBattle extends Phaser.Scene {
       this.scene.start("MainMenu");
     });
 
-    // ======= Felix 动画（含 jump-right, jump-left repeat=-1） =======
+    // ======= Felix 动画 =======
     this.anims.create({
       key: "idle-right",
       frames: [{ key: "FelixGun", frame: 0 }],
@@ -324,6 +324,8 @@ class BossBattle extends Phaser.Scene {
         this.felix.setVelocityY(this.shortJumpVelocity);
       }
     }
+
+    // 清理离开视窗的子弹/鸟/云
     this.bullets.children.each((bullet) => {
       const cam = this.cameras.main;
       if (bullet.x > cam.scrollX + cam.width + 50 || bullet.x < cam.scrollX - 50) {
@@ -342,9 +344,11 @@ class BossBattle extends Phaser.Scene {
         cloud.destroy();
       }
     });
+
     if (this.angryRalph.y > this.physics.world.bounds.height + 100) {
       this.resetRalph();
     }
+
     this.updateAngryRalph(time, delta);
   }
 
@@ -538,13 +542,14 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
-  // 【唯一修改】：当子弹命中 Ralph 后，仅扣血，并设置 hitRalph 标记，确保同一颗子弹仅产生一次伤害，
-  // 并将该子弹的碰撞检测关闭，避免重复碰撞，但不销毁或隐藏 Ralph 的 Spritesheet 与 Hitbox
+  // 【在此处做唯一改动】子弹命中后就销毁子弹，保证每一发子弹能各自造成伤害
   handleBulletHitRalph(bullet, ralph) {
     if (bullet.hitRalph) return;
     bullet.hitRalph = true;
-    // 关闭该子弹的碰撞检测，确保同一颗子弹不会重复产生伤害
-    bullet.body.checkCollision.none = true;
+
+    // ★ 关键改动：子弹造成一次伤害后，立即销毁子弹
+    bullet.destroy();
+
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
     if (this.ralphHP < 0) this.ralphHP = 0;
