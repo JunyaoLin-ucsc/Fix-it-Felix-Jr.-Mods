@@ -606,8 +606,8 @@ class BossBattle extends Phaser.Scene {
       // 例如脸部激光比较短，hitbox 也更小
       bodyW = 2560; // 比武器激光短
       bodyH = 200;
-      offsetX = 0; 
-      offsetY = 300; 
+      offsetX = -150; 
+      offsetY = -300; 
     } else {
       // ===========【手持激光炮】===========
       if (direction === "right") {
@@ -622,8 +622,8 @@ class BossBattle extends Phaser.Scene {
       // 这里保持你原先的参数
       bodyW = 2560; 
       bodyH = 200;
-      offsetX = 150; 
-      offsetY = -300; 
+      offsetX = 0; 
+      offsetY = 300; 
     }
 
     // -------------------------------
