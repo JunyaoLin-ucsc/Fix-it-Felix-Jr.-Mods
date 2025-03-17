@@ -29,7 +29,7 @@ class Continue extends Phaser.Scene {
       
       // 创建背景地图与图层
       const map = this.make.tilemap({ key: "gameoverMap" });
-      const tileset = map.addTilesetImage("tileset", "tileset.png");
+      const tileset = map.addTilesetImage("tileset", "tilesetImage");
       // 创建多个背景图层，与 MainMenu 保持一致
       map.createLayer("Background", tileset, 0, 0);
       map.createLayer("Grass", tileset, 0, 0);

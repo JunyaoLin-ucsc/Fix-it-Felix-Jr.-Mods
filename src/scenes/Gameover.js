@@ -26,7 +26,7 @@ class Gameover extends Phaser.Scene {
     this.gameplayBGM.play();
 
     const map = this.make.tilemap({ key: "gameoverMap" });
-    const tileset = map.addTilesetImage("tileset", "tileset.png");
+    const tileset = map.addTilesetImage("tileset", "tilesetImage");
     // 加载与 MainMenu 相同的背景图层
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
