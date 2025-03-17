@@ -5,7 +5,7 @@ class Continue extends Phaser.Scene {
     
     preload() {
       this.load.path = "./assets/";
-      // 使用 MainMenu.json 来加载背景（与 MainMenu 保持一致）
+      // 使用 MainMenu.json 来加载背景，与 MainMenu 保持一致
       this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
       this.load.image("tilesetImage", "tileset.png");
     
@@ -17,14 +17,17 @@ class Continue extends Phaser.Scene {
     
     create(data) {
       // data 包含 { loop, score }
+      // 先停止前一场景所有声音，避免 bgm 重叠
+      this.sound.stopAll();
+  
       // 创建音效对象（音量70%）
       this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
       this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
-      // 创建并播放 Gameplay 背景音乐，音量50%，循环播放
+      // 创建并播放 Gameplay 背景音乐（50%音量、循环播放）
       this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
       this.gameplayBGM.play();
       
-      // 创建背景地图与图层，确保不会黑屏
+      // 创建背景地图与图层
       const map = this.make.tilemap({ key: "gameoverMap" });
       const tileset = map.addTilesetImage("tileset", "tileset.png");
       // 创建多个背景图层，与 MainMenu 保持一致
@@ -74,7 +77,6 @@ class Continue extends Phaser.Scene {
         if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 停止所有声音后进入下一 Loop 的 Gameplay
           this.sound.stopAll();
           this.scene.start("Gameplay", { loop: data.loop + 1, score: data.score });
         });
@@ -97,7 +99,6 @@ class Continue extends Phaser.Scene {
         if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 停止所有声音后返回主菜单
           this.sound.stopAll();
           this.scene.start("MainMenu");
         });
