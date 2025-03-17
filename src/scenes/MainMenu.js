@@ -15,6 +15,9 @@ class MainMenu extends Phaser.Scene {
   }
 
   create() {
+    // 停止所有声音，确保Gameplay等BGM已停止
+    this.sound.stopAll();
+
     const map = this.make.tilemap({ key: "mainMenuMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
@@ -31,15 +34,13 @@ class MainMenu extends Phaser.Scene {
       { fontSize: "48px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5, 0);
 
-    // 创建并播放主菜单背景音乐，音量设置为50%，循环播放
+    // 播放主菜单背景音乐，音量50%，循环播放
     this.bgm = this.sound.add("mainMenuBGM", { volume: 0.5, loop: true });
     this.bgm.play();
-
-    // 创建确认和选择音效对象，音量设置为70%
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
 
-    // =============== 原有的 "Play" 按钮 ===============
+    // 原有的 "Play" 按钮
     let playButton = this.add.text(
       map.widthInPixels / 2, 
       map.heightInPixels - 80,
@@ -60,7 +61,7 @@ class MainMenu extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 延时一点播放完音效后进入 Tutorial
+      // 延时后进入 Tutorial
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });

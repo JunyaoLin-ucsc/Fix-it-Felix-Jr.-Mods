@@ -10,12 +10,17 @@ class Gameover extends Phaser.Scene {
     // 加载音效
     this.load.audio("confirm", "confirm.wav");
     this.load.audio("selection", "selection.wav");
+    this.load.audio("gameplayBGM", "Gameplay.wav");
   }
 
   create(data) {
     // data 对象包含：{ loop, score }
     // 此场景专用于游戏真正结束，标题直接“Game Over”
     // 即：玩家生命值为0或时间耗尽
+    this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
+    this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
+    this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
+    this.gameplayBGM.play();
 
     const map = this.make.tilemap({ key: "gameoverMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");

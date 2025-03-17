@@ -77,6 +77,10 @@ class Gameplay extends Phaser.Scene {
 
     this.load.audio("movement", "movement.wav");
     this.load.audio("failure", "failure.wav");
+    this.load.audio("gameplayBGM", "Gameplay.wav");
+
+    this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
+    this.gameplayBGM.play();
 
     this.load.image("life", "Life.png");
 
@@ -88,6 +92,12 @@ class Gameplay extends Phaser.Scene {
 
   create() {
     // 确保石头组存在
+    this.movementSnd = this.sound.add("movement", { volume: 0.7 });
+    this.failureSnd = this.sound.add("failure", { volume: 0.7 });
+    // 进入 Gameplay 前，Tutorial 已停止了 MainMenuBGM
+    this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
+    this.gameplayBGM.play();
+
     this.stones = this.physics.add.group();
 
     const map = this.make.tilemap({ key: "gameplayMap" });

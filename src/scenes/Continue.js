@@ -2,7 +2,7 @@ class Continue extends Phaser.Scene {
     constructor() {
       super("Continue");
     }
-  
+    
     preload() {
       this.load.path = "./assets/";
       this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
@@ -10,17 +10,20 @@ class Continue extends Phaser.Scene {
       // 加载音效
       this.load.audio("confirm", "confirm.wav");
       this.load.audio("selection", "selection.wav");
+      this.load.audio("gameplayBGM", "Gameplay.wav");
     }
-  
+    
     create(data) {
-      // data 对象包含：{ loop, score }
-      // 当玩家修完Stage 5之后，进入此场景
+        this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
+        this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
+        this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
+        this.gameplayBGM.play();
   
+      // data 包含 { loop, score }
       const map = this.make.tilemap({ key: "gameoverMap" });
-      const tileset = map.addTilesetImage("tileset", "tilesetImage");
+      const tileset = map.addTilesetImage("tileset", "tileset.png");
       map.createLayer("Background", tileset, 0, 0);
-  
-      // 标题：提示玩家已经通关Stage 5
+    
       this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 - 120,
@@ -32,8 +35,7 @@ class Continue extends Phaser.Scene {
           align: "center"
         }
       ).setOrigin(0.5);
-  
-      // 显示最终得分
+    
       this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 - 60,
@@ -44,8 +46,7 @@ class Continue extends Phaser.Scene {
           fontFamily: "Arial"
         }
       ).setOrigin(0.5);
-  
-      // 显示当前 Loop 数
+    
       this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 - 20,
@@ -56,12 +57,10 @@ class Continue extends Phaser.Scene {
           fontFamily: "Arial"
         }
       ).setOrigin(0.5);
-  
-      // 创建音效对象
-      this.confirmSnd = this.sound.add("confirm");
-      this.selectionSnd = this.sound.add("selection");
-  
-      // 按钮1: Next Loop
+    
+      this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
+      this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
+    
       const nextLoopBtn = this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 20,
@@ -73,29 +72,29 @@ class Continue extends Phaser.Scene {
           padding: { x: 10, y: 5 }
         }
       ).setOrigin(0.5).setInteractive();
-  
+    
       nextLoopBtn.on("pointerover", () => {
         if (this.selectionSnd.isPlaying) {
           this.selectionSnd.stop();
         }
         this.selectionSnd.play();
       });
-  
+    
       nextLoopBtn.on("pointerdown", () => {
         if (this.confirmSnd.isPlaying) {
           this.confirmSnd.stop();
         }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 进入下一Loop的Gameplay
+          // 停止Gameplay BGM后进入下一Loop的Gameplay
+          this.sound.stopAll();
           this.scene.start("Gameplay", {
             loop: data.loop + 1,
             score: data.score
           });
         });
       });
-  
-      // 按钮2: Main Menu
+    
       const mainMenuBtn = this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 80,
@@ -107,21 +106,22 @@ class Continue extends Phaser.Scene {
           padding: { x: 10, y: 5 }
         }
       ).setOrigin(0.5).setInteractive();
-  
+    
       mainMenuBtn.on("pointerover", () => {
         if (this.selectionSnd.isPlaying) {
           this.selectionSnd.stop();
         }
         this.selectionSnd.play();
       });
-  
+    
       mainMenuBtn.on("pointerdown", () => {
         if (this.confirmSnd.isPlaying) {
           this.confirmSnd.stop();
         }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 回到主菜单
+          // 停止Gameplay BGM后回到主菜单
+          this.sound.stopAll();
           this.scene.start("MainMenu");
         });
       });
