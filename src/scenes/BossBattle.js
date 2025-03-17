@@ -596,10 +596,10 @@ class BossBattle extends Phaser.Scene {
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_right", true);
         // 示例：脸部激光生成点稍微小一点
-        laserX = this.angryRalph.x + 1000;
+        laserX = this.angryRalph.x + 300;
       } else {
         this.angryRalph.play("angryralph_fire_left", true);
-        laserX = this.angryRalph.x - 1000;
+        laserX = this.angryRalph.x - 300;
       }
       // 让它高度跟 Ralph 一样
       laserY = this.angryRalph.y - 60;
