@@ -607,7 +607,7 @@ class BossBattle extends Phaser.Scene {
       bodyW = 2560; 
       bodyH = 200;
       offsetX = 30; 
-      offsetY = -100; 
+      offsetY = 100; 
     } else {
       // ===========【手持激光炮】===========
       if (direction === "right") {
