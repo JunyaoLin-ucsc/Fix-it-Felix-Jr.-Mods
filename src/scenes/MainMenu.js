@@ -60,34 +60,6 @@ class MainMenu extends Phaser.Scene {
         this.scene.start("Tutorial");
       });
     });
-
-    // =============== 新增的 "Jump!" 按钮 ===============
-    // 放在屏幕正中间
-    let jumpButton = this.add.text(
-      map.widthInPixels / 2,
-      map.heightInPixels / 2,
-      "Jump!",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
-    ).setOrigin(0.5)
-     .setInteractive();
-
-    jumpButton.on("pointerover", () => {
-      if (this.selectionSnd.isPlaying) {
-        this.selectionSnd.stop();
-      }
-      this.selectionSnd.play();
-    });
-
-    jumpButton.on("pointerdown", () => {
-      if (this.confirmSnd.isPlaying) {
-        this.confirmSnd.stop();
-      }
-      this.confirmSnd.play();
-      // 延时播放完音效后，直接跳到 BossBattle 场景
-      this.time.delayedCall(200, () => {
-        this.scene.start("BossBattle");
-      });
-    });
   }
 }
 
