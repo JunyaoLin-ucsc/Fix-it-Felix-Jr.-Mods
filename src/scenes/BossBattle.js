@@ -487,6 +487,7 @@ class BossBattle extends Phaser.Scene {
       frameRate: 5,
       repeat: 0
     });
+
     let ralphSpawnX, ralphSpawnY;
     const ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
     if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
@@ -498,12 +499,14 @@ class BossBattle extends Phaser.Scene {
       ralphSpawnX = 400;
       ralphSpawnY = 100;
     }
+
     this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
       .setScale(2);
     this.angryRalph.setDepth(5);
     this.angryRalph.body.allowGravity = false;
     this.angryRalph.setBodySize(100, 120);
     this.angryRalph.play("angryralph_idle");
+
     this.angryRalphEdges = { left: 100, right: 600 };
     const edgesLayer = map.getObjectLayer("RalphEdges");
     if (edgesLayer && edgesLayer.objects.length >= 2) {
@@ -514,6 +517,7 @@ class BossBattle extends Phaser.Scene {
       this.angryRalphEdges.left = Math.min(xA, xB);
       this.angryRalphEdges.right = Math.max(xA, xB);
     }
+
     this.angryRalphSpawn = { x: ralphSpawnX, y: ralphSpawnY };
     this.angryRalphSpeed = 100;
     this.angryRalphState = "idle";
@@ -531,10 +535,13 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
+  // 【唯一修改】子弹命中后只禁用子弹，不销毁或隐藏 Ralph
   handleBulletHitRalph(bullet, ralph) {
-    // 仅处理子弹，不销毁 Ralph
     if (!bullet.active) return;
-    bullet.disableBody(true, true);
+    // bullet 失效：不再碰撞、不影响 Ralph
+    bullet.body.enable = false;
+    bullet.setActive(false).setVisible(false);
+
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
     if (this.ralphHP < 0) this.ralphHP = 0;
