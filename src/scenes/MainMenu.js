@@ -15,7 +15,7 @@ class MainMenu extends Phaser.Scene {
     this.load.audio("mainMenuBGM", "MainMenu.wav");
 
     // ====== 加载位图字体 ======
-    this.load.bitmapFont("pixelFont", "Unnamed.png", "Unnamed.xml");
+    this.load.bitmapFont("pixelFont", "assets/Unnamed.png", "assets/Unnamed.xml");
   }
 
   create() {
