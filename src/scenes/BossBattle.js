@@ -577,7 +577,7 @@ class BossBattle extends Phaser.Scene {
             laser.setScale(0.3);
             laser.body.allowGravity = false;
             // ★【改动3】修正 hitbox，使它更贴合视觉长度
-            laser.body.setSize(700, 80).setOffset(0, 350);
+            laser.body.setSize(2560, 200).setOffset(0, 300);
             laser.play("laser_fire_right");
             this.time.delayedCall(1000, () => {
               laser.destroy();
@@ -591,7 +591,7 @@ class BossBattle extends Phaser.Scene {
             laser.setScale(0.3);
             laser.body.allowGravity = false;
             // ★【改动3】修正 hitbox
-            laser.body.setSize(700, 80).setOffset(0, 350);
+            laser.body.setSize(2560, 200).setOffset(0, 300);
             laser.play("laser_fire_left");
             this.time.delayedCall(1000, () => {
               laser.destroy();
