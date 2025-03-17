@@ -55,7 +55,13 @@ class Tutorial extends Phaser.Scene {
     this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2,
-      "Use arrow keys to move Felix.\nAvoid falling objects!\n(Example instructions...)",
+      "You will play as Felix the repairman tasked with fixing the windows of a building. " +
+      "However, a mischievous gorilla named Ralph will come and cause trouble by secretly throwing stones while you are repairing the windows. " +
+      "Your job is to use the arrow keys (up, down, left, right) to dodge the stones and complete each task within the countdown timer while maintaining more than 1 life. " +
+      "Each loop consists of 5 stages, with the windows in each stage being randomized. " +
+      "Additionally, there are buff items available, such as watermelon, strawberry, and coins. " +
+      "Watermelon increases your window repair speed, strawberry grants temporary invincibility, and coins add an extra life for the current loop. " +
+      "Every repaired window awards 100 points. If you want to achieve a high score, play for as long as you can! Have fun!",
       { fontSize: "24px", color: "#fff", align: "center" }
     ).setOrigin(0.5);
     
