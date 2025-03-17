@@ -29,7 +29,7 @@ class Continue extends Phaser.Scene {
       
       // 创建背景地图与图层
       const map = this.make.tilemap({ key: "gameoverMap" });
-      const tileset = map.addTilesetImage("tileset", "tilesetImage");
+      const tileset = map.addTilesetImage("tileset", "tileset.png");
       // 创建多个背景图层，与 MainMenu 保持一致
       map.createLayer("Background", tileset, 0, 0);
       map.createLayer("Grass", tileset, 0, 0);
@@ -60,12 +60,13 @@ class Continue extends Phaser.Scene {
         { fontSize: "28px", color: "#ffffff", fontFamily: "Arial" }
       ).setOrigin(0.5);
       
-      // 按钮1：Next Loop
-      const nextLoopBtn = this.add.text(
+      // 使用 Unnamed 位图字体创建 Next Loop 按钮
+      const nextLoopBtn = this.add.bitmapText(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 20,
+        "Unnamed",
         "Next Loop",
-        { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
+        36
       ).setOrigin(0.5).setInteractive();
       
       nextLoopBtn.on("pointerover", () => {
@@ -77,17 +78,19 @@ class Continue extends Phaser.Scene {
         if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
+          // 停止所有声音后进入下一 Loop 的 Gameplay
           this.sound.stopAll();
           this.scene.start("Gameplay", { loop: data.loop + 1, score: data.score });
         });
       });
       
-      // 按钮2：Main Menu
-      const mainMenuBtn = this.add.text(
+      // 使用 Unnamed 位图字体创建 Main Menu 按钮
+      const mainMenuBtn = this.add.bitmapText(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 80,
+        "Unnamed",
         "Main Menu",
-        { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
+        36
       ).setOrigin(0.5).setInteractive();
       
       mainMenuBtn.on("pointerover", () => {
@@ -99,6 +102,7 @@ class Continue extends Phaser.Scene {
         if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
+          // 停止所有声音后返回主菜单
           this.sound.stopAll();
           this.scene.start("MainMenu");
         });

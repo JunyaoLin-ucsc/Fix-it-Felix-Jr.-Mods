@@ -26,8 +26,8 @@ class Gameover extends Phaser.Scene {
     this.gameplayBGM.play();
 
     const map = this.make.tilemap({ key: "gameoverMap" });
-    const tileset = map.addTilesetImage("tileset", "tilesetImage");
-    // 加载与 MainMenu 相同的背景图层，确保画面不黑屏
+    const tileset = map.addTilesetImage("tileset", "tileset.png");
+    // 加载与 MainMenu 相同的背景图层
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
@@ -59,12 +59,13 @@ class Gameover extends Phaser.Scene {
       { fontSize: "28px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5);
 
-    // Restart 按钮
-    const restartBtn = this.add.text(
+    // 使用 Unnamed 位图字体创建 Restart 按钮（位置不变）
+    const restartBtn = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels / 2 + 40,
+      "Unnamed",
       "Restart",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
+      36
     ).setOrigin(0.5).setInteractive();
 
     restartBtn.on("pointerover", () => {
@@ -76,17 +77,22 @@ class Gameover extends Phaser.Scene {
       if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
-        this.sound.stopAll();
-        this.scene.start("Gameplay", { loop: 1, score: 0, canNextLoop: false });
+        // 重置游戏：回到 Loop 1，分数归零
+        this.scene.start("Gameplay", {
+          loop: 1,
+          score: 0,
+          canNextLoop: false
+        });
       });
     });
 
-    // Main Menu 按钮（放在 Restart 下方）
-    const mainMenuBtn = this.add.text(
+    // 使用 Unnamed 位图字体创建 Main Menu 按钮（放在 Restart 下方）
+    const mainMenuBtn = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels / 2 + 100,
+      "Unnamed",
       "Main Menu",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
+      36
     ).setOrigin(0.5).setInteractive();
 
     mainMenuBtn.on("pointerover", () => {
@@ -98,7 +104,7 @@ class Gameover extends Phaser.Scene {
       if (this.confirmSnd.isPlaying) { this.confirmSnd.stop(); }
       this.confirmSnd.play();
       this.time.delayedCall(200, () => {
-        this.sound.stopAll();
+        // 返回主菜单
         this.scene.start("MainMenu");
       });
     });
