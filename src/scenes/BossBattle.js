@@ -603,7 +603,7 @@ class BossBattle extends Phaser.Scene {
         this.angryRalph.play("angryralph_fire_left", true);
         laserX = this.angryRalph.x - 380;
       }
-      laserY = this.angryRalph.y - 50;
+      laserY = this.angryRalph.y - 70;
       bodyW = 2560; 
       bodyH = 200;
       offsetX = -150; 
