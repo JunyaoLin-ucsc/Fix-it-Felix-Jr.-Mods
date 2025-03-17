@@ -46,6 +46,7 @@ class BossBattle extends Phaser.Scene {
   }
 
   create() {
+    // Felix 被捶地时是否已经造成伤害的标记
     this.felixDamageApplied = false;
 
     // 创建 Tilemap
@@ -201,7 +202,7 @@ class BossBattle extends Phaser.Scene {
       strokeThickness: 2
     }).setScrollFactor(0);
 
-    // 只保留 Ralph 的血量文字
+    // Ralph 的血量文字
     let camWidth = this.cameras.main.width;
     this.ralphLifeText = this.add.text(camWidth / 2, 22, "100%", {
       fontSize: "24px",
@@ -354,15 +355,19 @@ class BossBattle extends Phaser.Scene {
     const muzzleY = this.felix.y + offset.y;
     const bullet = this.bullets.create(muzzleX, muzzleY, "bullet");
 
-    // 让子弹记录自己是否已经命中过 Ralph
-    bullet.hitRalph = false;
+    // ===【去掉 bullet.hitRalph 标记，改为简单销毁】===
+    // bullet.setData("hitRalph", false); // 不再需要
+
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     bullet.setScale(0.5);
 
+    // 如果你想让子弹有动画，可在 create 中自行创建 bullet 的动画
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
     bullet.body.allowGravity = false;
+    // 调整子弹的碰撞大小，防止过大过小（可视情况注释）
+    // bullet.body.setSize(16, 16).setOffset(8, 8);
 
     // 朝着 Felix 面向的方向前进
     bullet.body.velocity.x = (this.facing === "right") ? 500 : -500;
@@ -554,12 +559,8 @@ class BossBattle extends Phaser.Scene {
 
   // ===========【伤害 & AI 逻辑】===========
   handleBulletHitRalph(bullet, ralph) {
-    // 防止同一颗子弹重复触发伤害
-    if (bullet.hitRalph) return;
-    bullet.hitRalph = true;
-
-    // ★ 关键改动：只禁用子弹而不destroy，可防止对Ralph对象的额外影响
-    bullet.disableBody(true, true);
+    // ===【改动1：直接销毁子弹，防止它留下各种问题】===
+    bullet.destroy();
 
     // 如果 Ralph 已经没有血就不再扣血
     if (this.ralphHP <= 0) return;
