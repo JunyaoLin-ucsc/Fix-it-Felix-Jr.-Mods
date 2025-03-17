@@ -473,7 +473,7 @@ class BossBattle extends Phaser.Scene {
 
     // 默认不受重力影响；在 crashDown 状态下启用重力
     this.angryRalph.body.allowGravity = false;
-    // 你已处理好hitbox，这里保持不动
+    // 保持原先的碰撞体积
     this.angryRalph.setBodySize(100, 120);
 
     // 初始播放 idle 动画
@@ -570,21 +570,28 @@ class BossBattle extends Phaser.Scene {
           this.angryRalph.setVelocityX(0);
           // 判断 Felix 位置决定向左/向右发射
           if (this.felix.x >= this.angryRalph.x) {
-            this.angryRalph.play("angryralph_fire_right", true);
-            const laser = this.physics.add.sprite(this.angryRalph.x + 80, this.angryRalph.y, "Laser");
-            laser.setScale(0.2);
+            // ★【改动1】用帧16
+            this.angryRalph.play("angryralph_fire_weapon_right", true);
+            // ★【改动2】调整发射位置并扩大激光
+            const laser = this.physics.add.sprite(this.angryRalph.x + 110, this.angryRalph.y - 20, "Laser");
+            laser.setScale(0.3);
             laser.body.allowGravity = false;
+            // ★【改动3】修正 hitbox，使它更贴合视觉长度
+            laser.body.setSize(700, 80).setOffset(0, 350);
             laser.play("laser_fire_right");
-            // 1秒后销毁激光 & 回到idle
             this.time.delayedCall(1000, () => {
               laser.destroy();
               this.angryRalphState = "idle";
             }, null, this);
           } else {
-            this.angryRalph.play("angryralph_fire_left", true);
-            const laser = this.physics.add.sprite(this.angryRalph.x - 80, this.angryRalph.y, "Laser");
-            laser.setScale(0.2);
+            // ★【改动1】用帧17
+            this.angryRalph.play("angryralph_fire_weapon_left", true);
+            // ★【改动2】调整发射位置并扩大激光
+            const laser = this.physics.add.sprite(this.angryRalph.x - 110, this.angryRalph.y - 20, "Laser");
+            laser.setScale(0.3);
             laser.body.allowGravity = false;
+            // ★【改动3】修正 hitbox
+            laser.body.setSize(700, 80).setOffset(0, 350);
             laser.play("laser_fire_left");
             this.time.delayedCall(1000, () => {
               laser.destroy();
