@@ -58,6 +58,7 @@ class BossBattle extends Phaser.Scene {
     // 创建 Tilemap，并关联 tileset
     const map = this.make.tilemap({ key: "bossBattleMap" });
     const morningTileset = map.addTilesetImage("morning_adventures_tileset_16x16", "morningAdventuresImage");
+    // ★【关键：保证 "layout_help" -> "layoutHelpImage"】
     const layoutTileset = map.addTilesetImage("layout_help", "layoutHelpImage");
 
     // ========== 三层：Background、Floor、Real Floor ==========
@@ -265,7 +266,7 @@ class BossBattle extends Phaser.Scene {
     // ======= lasers 分组 =======
     this.lasers = this.physics.add.group();
 
-    // ======= Ralph 与 floorLayer 碰撞 =======
+    // ======= Ralph 与 floorLayer 碰撞（处理捶地落地） =======
     this.physics.add.collider(this.angryRalph, floorLayer, () => {
       if (this.angryRalphState === "crashDown") {
         this.angryRalph.setVelocity(0, 0);
@@ -445,7 +446,6 @@ class BossBattle extends Phaser.Scene {
   }
 
   createAngryRalph(map) {
-    // 动画帧定义
     this.anims.create({
       key: "angryralph_idle",
       frames: [{ key: "AngryRalph", frame: 0 }],
@@ -512,7 +512,6 @@ class BossBattle extends Phaser.Scene {
       repeat: 0
     });
 
-    // Ralph 生成点
     const ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
     let ralphSpawnX, ralphSpawnY;
     if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
@@ -532,7 +531,6 @@ class BossBattle extends Phaser.Scene {
     this.angryRalph.setBodySize(100, 120);
     this.angryRalph.play("angryralph_idle");
 
-    // Edges 限定移动
     this.angryRalphEdges = { left: 100, right: 600 };
     const edgesLayer = map.getObjectLayer("RalphEdges");
     if (edgesLayer && edgesLayer.objects.length >= 2) {
@@ -563,6 +561,7 @@ class BossBattle extends Phaser.Scene {
 
   // ========== 伤害 & AI 逻辑 ==========
   handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return; // ★【修复】已被打败则不处理
     bullet.destroy();
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5; // 每发子弹 -0.5%
@@ -606,11 +605,9 @@ class BossBattle extends Phaser.Scene {
   startRandomMovement() {
     if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
     if (this.angryRalphState !== "idle") return;
-
     this.angryRalphState = "move";
     const moveChoices = ["left", "right", "idle"];
     const choice = Phaser.Utils.Array.GetRandom(moveChoices);
-
     if (choice === "left") {
       this.angryRalph.setVelocityX(-this.angryRalphSpeed);
       this.angryRalph.play("angryralph_move_left", true);
@@ -621,14 +618,12 @@ class BossBattle extends Phaser.Scene {
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle", true);
     }
-
     const delay = Phaser.Math.Between(1000, 3000);
     this.time.delayedCall(delay, () => {
       if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
-
       if (Phaser.Math.Between(1, 100) <= 50) {
         this.startAttackSequence();
       } else {
@@ -691,7 +686,6 @@ class BossBattle extends Phaser.Scene {
     laser.body.allowGravity = false;
     laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
     laser.setDepth(7);
-    // 播放激光动画（这里改为不循环，等待动画完成后再销毁）
     laser.anims.play({ key: (direction === "right" ? "laser_fire_right" : "laser_fire_left"), repeat: 0 });
     laser.on("animationcomplete", () => {
       laser.destroy();
@@ -716,6 +710,603 @@ class BossBattle extends Phaser.Scene {
 
   // ========== 处理伤害交互 ==========
   handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return;
+    bullet.destroy();
+    if (this.ralphHP <= 0) return;
+    this.ralphHP -= 0.5;
+    if (this.ralphHP < 0) this.ralphHP = 0;
+    this.ralphLifeText.setText(this.ralphHP.toFixed(1) + "%");
+    if (this.ralphHP <= 0) {
+      this.killRalph();
+    }
+  }
+
+  handleFelixRalphContact(felix, ralph) {
+    if (this.angryRalphState === "crashDown") {
+      if (this.felixHP <= 0) return;
+      this.felixHP -= 10;
+      if (this.felixHP < 0) this.felixHP = 0;
+      this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+    }
+  }
+
+  handleFelixLaserHit(felix, laser) {
+    laser.destroy();
+    if (this.felixHP <= 0) return;
+    this.felixHP -= 5;
+    if (this.felixHP < 0) this.felixHP = 0;
+    this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+  }
+
+  killRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalphState = "defeated";
+    this.angryRalph.play("angryralph_defeated");
+    this.time.delayedCall(5000, () => {
+      let curScore = this.registry.get("score") || 0;
+      curScore += 1000000;
+      this.registry.set("score", curScore);
+      this.scene.start("Gameover");
+    });
+  }
+
+  // ========== Ralph 的随机移动 / 攻击 ==========
+  startRandomMovement() {
+    if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+    if (this.angryRalphState !== "idle") return;
+    this.angryRalphState = "move";
+    const moveChoices = ["left", "right", "idle"];
+    const choice = Phaser.Utils.Array.GetRandom(moveChoices);
+    if (choice === "left") {
+      this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_left", true);
+    } else if (choice === "right") {
+      this.angryRalph.setVelocityX(this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_right", true);
+    } else {
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+    }
+    const delay = Phaser.Math.Between(1000, 3000);
+    this.time.delayedCall(delay, () => {
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      if (Phaser.Math.Between(1, 100) <= 50) {
+        this.startAttackSequence();
+      } else {
+        this.startRandomMovement();
+      }
+    });
+  }
+
+  startAttackSequence() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "jumpUp";
+    this.angryRalph.play("angryralph_jump_up", true);
+    this.angryRalph.x = this.felix.x;
+    this.angryRalph.y = this.felix.y - 200;
+    const waitTime = Phaser.Math.Between(2000, 3000);
+    this.time.delayedCall(waitTime, () => {
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalphState = "crashDown";
+      this.angryRalph.body.allowGravity = true;
+      this.angryRalph.setVelocityY(700);
+    });
+  }
+
+  performLaserAttack() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "laser";
+    const laserType = Phaser.Math.Between(1, 2);
+    const dirRand = Phaser.Math.Between(1, 2);
+    let direction = (dirRand === 1) ? "right" : "left";
+    let laserX, laserY, bodyW, bodyH, offsetX, offsetY;
+    if (laserType === 1) {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_right", true);
+        laserX = this.angryRalph.x + 380;
+      } else {
+        this.angryRalph.play("angryralph_fire_left", true);
+        laserX = this.angryRalph.x - 380;
+      }
+      laserY = this.angryRalph.y - 70;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 30;
+      offsetY = 280;
+    } else {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_weapon_right", true);
+        laserX = this.angryRalph.x + 550;
+      } else {
+        this.angryRalph.play("angryralph_fire_weapon_left", true);
+        laserX = this.angryRalph.x - 550;
+      }
+      laserY = this.angryRalph.y + 50;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 0;
+      offsetY = 300;
+    }
+    const laser = this.lasers.create(laserX, laserY, "Laser");
+    laser.setScale(0.3);
+    laser.body.allowGravity = false;
+    laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
+    laser.setDepth(7);
+    laser.anims.play({ key: (direction === "right" ? "laser_fire_right" : "laser_fire_left"), repeat: 0 });
+    laser.on("animationcomplete", () => {
+      laser.destroy();
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      this.startRandomMovement();
+    });
+  }
+
+  updateAngryRalph(time, delta) {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+    }
+    if (this.angryRalphState === "postCrash") {
+      this.performLaserAttack();
+    }
+  }
+
+  // ========== 处理伤害交互 ==========
+  handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return;
+    bullet.destroy();
+    if (this.ralphHP <= 0) return;
+    this.ralphHP -= 0.5;
+    if (this.ralphHP < 0) this.ralphHP = 0;
+    this.ralphLifeText.setText(this.ralphHP.toFixed(1) + "%");
+    if (this.ralphHP <= 0) {
+      this.killRalph();
+    }
+  }
+
+  handleFelixRalphContact(felix, ralph) {
+    if (this.angryRalphState === "crashDown") {
+      if (this.felixHP <= 0) return;
+      this.felixHP -= 10;
+      if (this.felixHP < 0) this.felixHP = 0;
+      this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+    }
+  }
+
+  handleFelixLaserHit(felix, laser) {
+    laser.destroy();
+    if (this.felixHP <= 0) return;
+    this.felixHP -= 5;
+    if (this.felixHP < 0) this.felixHP = 0;
+    this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+  }
+
+  killRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalphState = "defeated";
+    this.angryRalph.play("angryralph_defeated");
+    this.time.delayedCall(5000, () => {
+      let curScore = this.registry.get("score") || 0;
+      curScore += 1000000;
+      this.registry.set("score", curScore);
+      this.scene.start("Gameover");
+    });
+  }
+
+  // ========== Ralph 的随机移动 / 攻击 ==========
+  startRandomMovement() {
+    if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+    if (this.angryRalphState !== "idle") return;
+    this.angryRalphState = "move";
+    const moveChoices = ["left", "right", "idle"];
+    const choice = Phaser.Utils.Array.GetRandom(moveChoices);
+    if (choice === "left") {
+      this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_left", true);
+    } else if (choice === "right") {
+      this.angryRalph.setVelocityX(this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_right", true);
+    } else {
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+    }
+    const delay = Phaser.Math.Between(1000, 3000);
+    this.time.delayedCall(delay, () => {
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      if (Phaser.Math.Between(1, 100) <= 50) {
+        this.startAttackSequence();
+      } else {
+        this.startRandomMovement();
+      }
+    });
+  }
+
+  startAttackSequence() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "jumpUp";
+    this.angryRalph.play("angryralph_jump_up", true);
+    this.angryRalph.x = this.felix.x;
+    this.angryRalph.y = this.felix.y - 200;
+    const waitTime = Phaser.Math.Between(2000, 3000);
+    this.time.delayedCall(waitTime, () => {
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalphState = "crashDown";
+      this.angryRalph.body.allowGravity = true;
+      this.angryRalph.setVelocityY(700);
+    });
+  }
+
+  performLaserAttack() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "laser";
+    const laserType = Phaser.Math.Between(1, 2);
+    const dirRand = Phaser.Math.Between(1, 2);
+    let direction = (dirRand === 1) ? "right" : "left";
+    let laserX, laserY, bodyW, bodyH, offsetX, offsetY;
+    if (laserType === 1) {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_right", true);
+        laserX = this.angryRalph.x + 380;
+      } else {
+        this.angryRalph.play("angryralph_fire_left", true);
+        laserX = this.angryRalph.x - 380;
+      }
+      laserY = this.angryRalph.y - 70;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 30;
+      offsetY = 280;
+    } else {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_weapon_right", true);
+        laserX = this.angryRalph.x + 550;
+      } else {
+        this.angryRalph.play("angryralph_fire_weapon_left", true);
+        laserX = this.angryRalph.x - 550;
+      }
+      laserY = this.angryRalph.y + 50;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 0;
+      offsetY = 300;
+    }
+    const laser = this.lasers.create(laserX, laserY, "Laser");
+    laser.setScale(0.3);
+    laser.body.allowGravity = false;
+    laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
+    laser.setDepth(7);
+    laser.anims.play({ key: (direction === "right" ? "laser_fire_right" : "laser_fire_left"), repeat: 0 });
+    laser.on("animationcomplete", () => {
+      laser.destroy();
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      this.startRandomMovement();
+    });
+  }
+
+  updateAngryRalph(time, delta) {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+    }
+    if (this.angryRalphState === "postCrash") {
+      this.performLaserAttack();
+    }
+  }
+
+  // ========== 处理伤害交互 ==========
+  handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return;
+    bullet.destroy();
+    if (this.ralphHP <= 0) return;
+    this.ralphHP -= 0.5;
+    if (this.ralphHP < 0) this.ralphHP = 0;
+    this.ralphLifeText.setText(this.ralphHP.toFixed(1) + "%");
+    if (this.ralphHP <= 0) {
+      this.killRalph();
+    }
+  }
+
+  handleFelixRalphContact(felix, ralph) {
+    if (this.angryRalphState === "crashDown") {
+      if (this.felixHP <= 0) return;
+      this.felixHP -= 10;
+      if (this.felixHP < 0) this.felixHP = 0;
+      this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+    }
+  }
+
+  handleFelixLaserHit(felix, laser) {
+    laser.destroy();
+    if (this.felixHP <= 0) return;
+    this.felixHP -= 5;
+    if (this.felixHP < 0) this.felixHP = 0;
+    this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+  }
+
+  killRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalphState = "defeated";
+    this.angryRalph.play("angryralph_defeated");
+    this.time.delayedCall(5000, () => {
+      let curScore = this.registry.get("score") || 0;
+      curScore += 1000000;
+      this.registry.set("score", curScore);
+      this.scene.start("Gameover");
+    });
+  }
+
+  // ========== Ralph 的随机移动 / 攻击 ==========
+  startRandomMovement() {
+    if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+    if (this.angryRalphState !== "idle") return;
+    this.angryRalphState = "move";
+    const moveChoices = ["left", "right", "idle"];
+    const choice = Phaser.Utils.Array.GetRandom(moveChoices);
+    if (choice === "left") {
+      this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_left", true);
+    } else if (choice === "right") {
+      this.angryRalph.setVelocityX(this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_right", true);
+    } else {
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+    }
+    const delay = Phaser.Math.Between(1000, 3000);
+    this.time.delayedCall(delay, () => {
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      if (Phaser.Math.Between(1, 100) <= 50) {
+        this.startAttackSequence();
+      } else {
+        this.startRandomMovement();
+      }
+    });
+  }
+
+  startAttackSequence() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "jumpUp";
+    this.angryRalph.play("angryralph_jump_up", true);
+    this.angryRalph.x = this.felix.x;
+    this.angryRalph.y = this.felix.y - 200;
+    const waitTime = Phaser.Math.Between(2000, 3000);
+    this.time.delayedCall(waitTime, () => {
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalphState = "crashDown";
+      this.angryRalph.body.allowGravity = true;
+      this.angryRalph.setVelocityY(700);
+    });
+  }
+
+  performLaserAttack() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "laser";
+    const laserType = Phaser.Math.Between(1, 2);
+    const dirRand = Phaser.Math.Between(1, 2);
+    let direction = (dirRand === 1) ? "right" : "left";
+    let laserX, laserY, bodyW, bodyH, offsetX, offsetY;
+    if (laserType === 1) {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_right", true);
+        laserX = this.angryRalph.x + 380;
+      } else {
+        this.angryRalph.play("angryralph_fire_left", true);
+        laserX = this.angryRalph.x - 380;
+      }
+      laserY = this.angryRalph.y - 70;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 30;
+      offsetY = 280;
+    } else {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_weapon_right", true);
+        laserX = this.angryRalph.x + 550;
+      } else {
+        this.angryRalph.play("angryralph_fire_weapon_left", true);
+        laserX = this.angryRalph.x - 550;
+      }
+      laserY = this.angryRalph.y + 50;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 0;
+      offsetY = 300;
+    }
+    const laser = this.lasers.create(laserX, laserY, "Laser");
+    laser.setScale(0.3);
+    laser.body.allowGravity = false;
+    laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
+    laser.setDepth(7);
+    laser.anims.play({ key: (direction === "right" ? "laser_fire_right" : "laser_fire_left"), repeat: 0 });
+    laser.on("animationcomplete", () => {
+      laser.destroy();
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      this.startRandomMovement();
+    });
+  }
+
+  updateAngryRalph(time, delta) {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+    }
+    if (this.angryRalphState === "postCrash") {
+      this.performLaserAttack();
+    }
+  }
+
+  // ========== 处理伤害交互 ==========
+  handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return;
+    bullet.destroy();
+    if (this.ralphHP <= 0) return;
+    this.ralphHP -= 0.5;
+    if (this.ralphHP < 0) this.ralphHP = 0;
+    this.ralphLifeText.setText(this.ralphHP.toFixed(1) + "%");
+    if (this.ralphHP <= 0) {
+      this.killRalph();
+    }
+  }
+
+  handleFelixRalphContact(felix, ralph) {
+    if (this.angryRalphState === "crashDown") {
+      if (this.felixHP <= 0) return;
+      this.felixHP -= 10;
+      if (this.felixHP < 0) this.felixHP = 0;
+      this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+    }
+  }
+
+  handleFelixLaserHit(felix, laser) {
+    laser.destroy();
+    if (this.felixHP <= 0) return;
+    this.felixHP -= 5;
+    if (this.felixHP < 0) this.felixHP = 0;
+    this.felixLifeText.setText(this.felixHP.toFixed(0) + "%");
+  }
+
+  killRalph() {
+    this.angryRalph.setVelocity(0, 0);
+    this.angryRalphState = "defeated";
+    this.angryRalph.play("angryralph_defeated");
+    this.time.delayedCall(5000, () => {
+      let curScore = this.registry.get("score") || 0;
+      curScore += 1000000;
+      this.registry.set("score", curScore);
+      this.scene.start("Gameover");
+    });
+  }
+
+  // ========== Ralph 的随机移动 / 攻击 ==========
+  startRandomMovement() {
+    if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+    if (this.angryRalphState !== "idle") return;
+    this.angryRalphState = "move";
+    const moveChoices = ["left", "right", "idle"];
+    const choice = Phaser.Utils.Array.GetRandom(moveChoices);
+    if (choice === "left") {
+      this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_left", true);
+    } else if (choice === "right") {
+      this.angryRalph.setVelocityX(this.angryRalphSpeed);
+      this.angryRalph.play("angryralph_move_right", true);
+    } else {
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle", true);
+    }
+    const delay = Phaser.Math.Between(1000, 3000);
+    this.time.delayedCall(delay, () => {
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+      this.angryRalph.setVelocityX(0);
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      if (Phaser.Math.Between(1, 100) <= 50) {
+        this.startAttackSequence();
+      } else {
+        this.startRandomMovement();
+      }
+    });
+  }
+
+  startAttackSequence() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "jumpUp";
+    this.angryRalph.play("angryralph_jump_up", true);
+    this.angryRalph.x = this.felix.x;
+    this.angryRalph.y = this.felix.y - 200;
+    const waitTime = Phaser.Math.Between(2000, 3000);
+    this.time.delayedCall(waitTime, () => {
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalphState = "crashDown";
+      this.angryRalph.body.allowGravity = true;
+      this.angryRalph.setVelocityY(700);
+    });
+  }
+
+  performLaserAttack() {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    this.angryRalphState = "laser";
+    const laserType = Phaser.Math.Between(1, 2);
+    const dirRand = Phaser.Math.Between(1, 2);
+    let direction = (dirRand === 1) ? "right" : "left";
+    let laserX, laserY, bodyW, bodyH, offsetX, offsetY;
+    if (laserType === 1) {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_right", true);
+        laserX = this.angryRalph.x + 380;
+      } else {
+        this.angryRalph.play("angryralph_fire_left", true);
+        laserX = this.angryRalph.x - 380;
+      }
+      laserY = this.angryRalph.y - 70;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 30;
+      offsetY = 280;
+    } else {
+      if (direction === "right") {
+        this.angryRalph.play("angryralph_fire_weapon_right", true);
+        laserX = this.angryRalph.x + 550;
+      } else {
+        this.angryRalph.play("angryralph_fire_weapon_left", true);
+        laserX = this.angryRalph.x - 550;
+      }
+      laserY = this.angryRalph.y + 50;
+      bodyW = 2560;
+      bodyH = 200;
+      offsetX = 0;
+      offsetY = 300;
+    }
+    const laser = this.lasers.create(laserX, laserY, "Laser");
+    laser.setScale(0.3);
+    laser.body.allowGravity = false;
+    laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
+    laser.setDepth(7);
+    laser.anims.play({ key: (direction === "right" ? "laser_fire_right" : "laser_fire_left"), repeat: 0 });
+    laser.on("animationcomplete", () => {
+      laser.destroy();
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
+      this.angryRalph.play("angryralph_idle");
+      this.angryRalphState = "idle";
+      this.startRandomMovement();
+    });
+  }
+
+  updateAngryRalph(time, delta) {
+    if (!this.angryRalph || this.angryRalphState === "defeated") return;
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
+      this.angryRalph.x = this.angryRalphEdges.left;
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
+      this.angryRalph.x = this.angryRalphEdges.right;
+    }
+    if (this.angryRalphState === "postCrash") {
+      this.performLaserAttack();
+    }
+  }
+
+  // ========== 处理伤害交互 ==========
+  handleBulletHitRalph(bullet, ralph) {
+    if (this.angryRalphState === "defeated") return;
     bullet.destroy();
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
