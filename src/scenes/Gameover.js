@@ -14,19 +14,21 @@ class Gameover extends Phaser.Scene {
   }
 
   create(data) {
-    // data 对象包含：{ loop, score }
-    // 此场景专用于游戏真正结束（生命值为0或时间耗尽），显示 "Game Over"
+    // 停止前一场景所有声音，避免 bgm 重叠
+    this.sound.stopAll();
 
+    // data 对象包含：{ loop, score }
+    // 此场景用于显示 "Game Over"（玩家生命值为0或时间耗尽）
     // 创建音效对象（音量70%）
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
-    // 创建并播放 Gameplay 背景音乐，音量50%，循环播放
+    // 创建并播放 Gameplay 背景音乐（50%音量、循环播放）
     this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
     this.gameplayBGM.play();
 
     const map = this.make.tilemap({ key: "gameoverMap" });
     const tileset = map.addTilesetImage("tileset", "tileset.png");
-    // 加载与 MainMenu 相同的背景图层（确保图层名称与 Tiled 文件中一致）
+    // 加载与 MainMenu 相同的背景图层
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);

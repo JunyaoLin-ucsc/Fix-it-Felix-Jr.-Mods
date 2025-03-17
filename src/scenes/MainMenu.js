@@ -15,7 +15,7 @@ class MainMenu extends Phaser.Scene {
   }
 
   create() {
-    // 注意：不在这里停止所有声音，确保 mainMenuBGM 在 MainMenu 和 Tutorial 中持续播放
+    // 注意：不在此停止任何声音，确保 mainMenuBGM 在 MainMenu 和 Tutorial 中持续播放
     const map = this.make.tilemap({ key: "mainMenuMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
@@ -60,7 +60,7 @@ class MainMenu extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 延时后进入 Tutorial（在 Tutorial 中将延后停止 mainMenuBGM）
+      // 延时200ms后进入 Tutorial，保持主菜单 BGM 播放
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });

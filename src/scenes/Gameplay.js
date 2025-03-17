@@ -45,7 +45,7 @@ class Gameplay extends Phaser.Scene {
     this.currentStoneBatch = 0;
   }
 
-  // 按需求：Loop 1 => 3 条命；Loop 2 => 4 条命；Loop≥3 => 4 + floor((loop-2)/3)
+  // 按需求：Loop 1 => 3 条命；Loop 2 => 4 条命；Loop ≥ 3 => 4 + floor((loop-2)/3)
   getLivesByLoop(loop) {
     if (loop === 1) return 3;
     if (loop === 2) return 4;
@@ -63,7 +63,7 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 608
     });
 
-    // 注意：根据实际资源调整帧尺寸
+    // 根据实际资源调整帧尺寸
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
@@ -89,14 +89,14 @@ class Gameplay extends Phaser.Scene {
   }
 
   create() {
-    // 进入 Gameplay 时，停止前面 MainMenu/Tutorial 的 BGM
+    // 当进入 Gameplay 时，先停止前一场景（MainMenu/Tutorial）的所有声音
     this.sound.stopAll();
 
-    // 创建并播放 Gameplay 背景音乐，音量50%，循环播放
+    // 创建并播放 Gameplay 背景音乐（50%音量，循环播放）
     this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
     this.gameplayBGM.play();
 
-    // 创建 movement 与 failure 音效对象，音量70%
+    // 创建 movement 与 failure 音效（音量70%）
     this.movementSnd = this.sound.add("movement", { volume: 0.7 });
     this.failureSnd = this.sound.add("failure", { volume: 0.7 });
 
@@ -126,7 +126,7 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
-    // 获取各 Stage 的顶端位置
+    // 记录各 Stage 顶端位置（topY）
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -155,14 +155,14 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, this.windowLayerRef);
 
-    // 创建 Ralph
+    // 创建 Ralph 并定义动画
     this.createRalph();
 
-    // 整张地图的边界
+    // 设置物理与摄像机边界为整张地图大小
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // 将相机滚到 Stage 1 顶端
+    // 将相机滚动到 Stage 1 顶端
     if (this.stageAreas[1]) {
       this.cameras.main.scrollY = this.stageAreas[1].topY;
     }
@@ -172,7 +172,7 @@ class Gameplay extends Phaser.Scene {
 
     this.loadStageObjectLayers(1);
 
-    // --- UI 设置 ---
+    // --- UI ---
     this.scoreText = this.add.text(10, 10, `Score: ${this.score}`, {
       fontSize: "32px",
       fill: "#ffffff",
@@ -281,12 +281,10 @@ class Gameplay extends Phaser.Scene {
     this.levelTransitioning = false;
   }
 
-  // 放大 Ralph
   enlargeRalph(newScale) {
     this.ralph.setScale(newScale);
   }
 
-  // 创建 Ralph 并定义动画
   createRalph() {
     let rLayer = this.map.getObjectLayer("RalphSpawns");
     let rx = 400, ry = 100;
@@ -332,7 +330,6 @@ class Gameplay extends Phaser.Scene {
     this.ralph.play("ralph_idle");
   }
 
-  // 绘制/刷新生命 UI
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
@@ -352,7 +349,6 @@ class Gameplay extends Phaser.Scene {
     this.stageText.setText(`Stage: ${this.currentStage}`);
   }
 
-  // Ralph 扔石头
   throwStones(velocity = 150) {
     if (this.inFinalStage) return;
     this.ralph.play("ralph_throw");
@@ -406,7 +402,6 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // 从 Tiled object layer 读取 Felix 位置、石头落点等
   loadStageObjectLayers(stage) {
     this.windowPlatforms = [];
     let felixPosLayer = this.map.getObjectLayer(`Felix Positions ${stage}`);
@@ -428,7 +423,6 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 载入本 Stage 的玻璃碎片
   loadGlassForStage(stage) {
     let range = this.stageRanges[stage];
     if (!range) return;
@@ -481,7 +475,6 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 判断本 Stage 是否全部修好
   allWindowsRepairedForStage() {
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
@@ -494,7 +487,6 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-  // Felix 修窗逻辑
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
     const REPAIR_INTERVAL = this.watermelonBuffActive ? 100 : 500;

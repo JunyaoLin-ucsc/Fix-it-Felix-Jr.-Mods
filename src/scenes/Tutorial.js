@@ -25,9 +25,9 @@ class Tutorial extends Phaser.Scene {
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
     
-    // 以下为 Tutorial 场景其他代码（例如地图、文字等）...
+    // 以下为 Tutorial 场景的其他代码（地图、文字等）
     const map = this.make.tilemap({ key: "tutorialMap" });
-    const tileset = map.addTilesetImage("tileset", "tilesetImage");
+    const tileset = map.addTilesetImage("tileset", "tileset.png");
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
@@ -53,7 +53,7 @@ class Tutorial extends Phaser.Scene {
       map.widthInPixels / 2, 
       map.heightInPixels - 80,
       "Start Game",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
+      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x: 10, y: 5 } }
     ).setOrigin(0.5).setInteractive();
     
     playButton.on("pointerover", () => {
