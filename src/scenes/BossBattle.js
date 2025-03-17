@@ -602,7 +602,7 @@ class BossBattle extends Phaser.Scene {
         laserX = this.angryRalph.x - 550;
       }
       // 让它高度跟 Ralph 一样
-      laserY = this.angryRalph.y + 0;
+      laserY = this.angryRalph.y - 50;
       // 例如脸部激光比较短，hitbox 也更小
       bodyW = 2560; // 比武器激光短
       bodyH = 200;
