@@ -573,7 +573,7 @@ class BossBattle extends Phaser.Scene {
             // ★【改动1】用帧16
             this.angryRalph.play("angryralph_fire_weapon_right", true);
             // ★【改动2】调整发射位置并扩大激光
-            const laser = this.physics.add.sprite(this.angryRalph.x + 200, this.angryRalph.y - 20, "Laser");
+            const laser = this.physics.add.sprite(this.angryRalph.x + 550, this.angryRalph.y + 50, "Laser");
             laser.setScale(0.3);
             laser.body.allowGravity = false;
             // ★【改动3】修正 hitbox，使它更贴合视觉长度
@@ -587,7 +587,7 @@ class BossBattle extends Phaser.Scene {
             // ★【改动1】用帧17
             this.angryRalph.play("angryralph_fire_weapon_left", true);
             // ★【改动2】调整发射位置并扩大激光
-            const laser = this.physics.add.sprite(this.angryRalph.x - 110, this.angryRalph.y - 20, "Laser");
+            const laser = this.physics.add.sprite(this.angryRalph.x - 550, this.angryRalph.y + 50, "Laser");
             laser.setScale(0.3);
             laser.body.allowGravity = false;
             // ★【改动3】修正 hitbox
