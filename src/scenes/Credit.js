@@ -39,21 +39,24 @@ class Credit extends Phaser.Scene {
         50,
         "pixelFont",
         "Credits",
-        48
+        60
       ).setOrigin(0.5, 0);
   
       // Credit 内容，感谢以下网站
-      let creditsContent = "Special thanks to:\n" +
-        "Pixilart: https://www.pixilart.com/art/fix-it-felix-jr-sr2cdafb5b7dfdc\n" +
-        "Spriters Resource: https://www.spriters-resource.com/pc_computer/fixitfelixjr/sheet/60053/\n" +
-        "Pixel Digivolve Font: https://www.dafont.com/pixel-digivolve.font";
-      this.add.bitmapText(
-        map.widthInPixels / 2,
-        150,
-        "pixelFont",
-        creditsContent,
-        24
-      ).setOrigin(0.5);
+      let creditsContent =
+      "Special thanks to:\n\n" +
+      "Pixilart:\nhttps://www.pixilart.com/art/fix-it-felix-jr-sr2cdafb5b7dfdc\n\n" +
+      "Spriters Resource:\nhttps://www.spriters-resource.com/pc_computer/fixitfelixjr/sheet/60053/\n\n" +
+      "Pixel Digivolve Font:\nhttps://www.dafont.com/pixel-digivolve.font";
+
+    // 在屏幕中部显示，字体大小 24，可根据需要调小/调大
+    this.add.bitmapText(
+      map.widthInPixels / 2,
+      150,
+      "pixelFont",
+      creditsContent,
+      24
+    ).setOrigin(0.5, 0.01);
   
       // 添加 Back 按钮返回 MainMenu
       let backButton = this.add.bitmapText(
