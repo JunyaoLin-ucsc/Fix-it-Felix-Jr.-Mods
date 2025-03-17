@@ -81,6 +81,8 @@ class Gameplay extends Phaser.Scene {
     this.load.audio("gameplayBGM", "Gameplay.wav");
 
     this.load.image("life", "Life.png");
+    /* 新增：加载星空图片 */
+    this.load.image("starfield", "starfield.png");
 
     // 物品资源
     this.load.image("coin", "coin.png");
@@ -108,6 +110,12 @@ class Gameplay extends Phaser.Scene {
     const tilesetB = map.addTilesetImage("tileset2", "tileset2Image");
 
     map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
+    /* 新增：添加星空背景，深度设置为 0.5，介于 MainBackground 与其他 tile layer 之间 */
+    this.starfield = this.add.tileSprite(0, 0, this.cameras.main.width, this.cameras.main.height, "starfield");
+    this.starfield.setOrigin(0, 0);
+    this.starfield.setScrollFactor(0);
+    this.starfield.setDepth(0.5);
+
     map.createLayer("Grass", [tilesetA, tilesetB], 0, -32).setDepth(1);
     map.createLayer("House", [tilesetA, tilesetB], 0, -32).setDepth(2);
     map.createLayer("Street Lamp", [tilesetA, tilesetB], 0, -32).setDepth(3);
@@ -545,6 +553,10 @@ class Gameplay extends Phaser.Scene {
   }
 
   update(time, delta) {
+    /* 新增：星空滚动，每秒 50 像素（从上往下） */
+    if (this.starfield) {
+      this.starfield.tilePositionY += 50 * delta / 1000;
+    }
     if (this.inFinalStage) return;
     if (!this.cursors) return;
 
