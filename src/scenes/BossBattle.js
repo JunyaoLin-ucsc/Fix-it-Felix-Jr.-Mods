@@ -596,10 +596,10 @@ class BossBattle extends Phaser.Scene {
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_right", true);
         // 示例：脸部激光生成点稍微小一点
-        laserX = this.angryRalph.x + 200;
+        laserX = this.angryRalph.x + 550;
       } else {
         this.angryRalph.play("angryralph_fire_left", true);
-        laserX = this.angryRalph.x - 200;
+        laserX = this.angryRalph.x - 550;
       }
       // 让它高度跟 Ralph 一样
       laserY = this.angryRalph.y + 0;
@@ -607,7 +607,7 @@ class BossBattle extends Phaser.Scene {
       bodyW = 2560; // 比武器激光短
       bodyH = 200;
       offsetX = -150; 
-      offsetY = -300; 
+      offsetY = 0; 
     } else {
       // ===========【手持激光炮】===========
       if (direction === "right") {
