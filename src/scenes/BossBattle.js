@@ -538,10 +538,13 @@ class BossBattle extends Phaser.Scene {
   }
 
   // ===========【伤害 & AI 逻辑】===========
-  // 【唯一修改】：子弹命中 Ralph 后，只扣血，并设置 hitRalph 标记，确保同一颗子弹仅产生一次伤害，且不销毁或隐藏 Ralph 的 Spritesheet 与 Hitbox
+  // 【唯一修改】：当子弹命中 Ralph 后，仅扣血，并设置 hitRalph 标记，确保同一颗子弹仅产生一次伤害，
+  // 并将该子弹的碰撞检测关闭，避免重复碰撞，但不销毁或隐藏 Ralph 的 Spritesheet 与 Hitbox
   handleBulletHitRalph(bullet, ralph) {
     if (bullet.hitRalph) return;
     bullet.hitRalph = true;
+    // 关闭该子弹的碰撞检测，确保同一颗子弹不会重复产生伤害
+    bullet.body.checkCollision.none = true;
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5;
     if (this.ralphHP < 0) this.ralphHP = 0;
