@@ -45,12 +45,13 @@ class BossBattle extends Phaser.Scene {
   create() {
     const map = this.make.tilemap({ key: "bossBattleMap" });
     const morningTileset = map.addTilesetImage("morning_adventures_tileset_16x16", "morningAdventuresImage");
-    const layoutTileset = map.addTilesetImage("layout_help", "layout_helpImage");
+    const layoutTileset = map.addTilesetImage("layout_help", "layoutHelpImage");
 
-    // 创建图层：Background、Floor、Real Floor
+    // =============== 保留你的三层：Background、Floor、Real Floor ===============
     const backgroundLayer = map.createLayer("Background", [morningTileset, layoutTileset], 0, 0).setDepth(0);
     const floorLayer = map.createLayer("Floor", [morningTileset, layoutTileset], 0, 0).setDepth(1);
     const realFloorLayer = map.createLayer("Real Floor", [morningTileset, layoutTileset], 0, 0).setDepth(2);
+    // =========================================================================
 
     // 启用带有 collides 属性的砖块的物理碰撞
     floorLayer.setCollisionByProperty({ collides: true });
@@ -130,7 +131,6 @@ class BossBattle extends Phaser.Scene {
     });
 
     // ★【新增】Laser 动画定义
-    // Laser（右向）: 帧0→1→2→3→回到0
     this.anims.create({
       key: "laser_fire_right",
       frames: [
@@ -143,7 +143,6 @@ class BossBattle extends Phaser.Scene {
       frameRate: 10,
       repeat: -1
     });
-    // Laser（左向）: 帧4→5→6→7→回到4
     this.anims.create({
       key: "laser_fire_left",
       frames: [
@@ -388,65 +387,65 @@ class BossBattle extends Phaser.Scene {
 
   // ★【创建】Ralph 的初始化：使用 "RalphSpawns" 作为出生点
   createAngryRalph(map) {
-    // 定义 Ralph 的动画
-    // 0: idle
+    // ========== 按你所说的帧定义 ==========
+    // 0：出生idle
     this.anims.create({
       key: "angryralph_idle",
       frames: [{ key: "AngryRalph", frame: 0 }],
       frameRate: 1,
       repeat: -1
     });
-    // 1,2: 向右走
+    // 1,2：向右走
     this.anims.create({
       key: "angryralph_move_right",
       frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
       frameRate: 5,
       repeat: -1
     });
-    // 3: 向右发射激光
+    // 3：向右发射激光
     this.anims.create({
       key: "angryralph_fire_right",
       frames: [{ key: "AngryRalph", frame: 3 }],
       frameRate: 5,
       repeat: 0
     });
-    // 4: 向左发射激光
+    // 4：向左发射激光
     this.anims.create({
       key: "angryralph_fire_left",
       frames: [{ key: "AngryRalph", frame: 4 }],
       frameRate: 5,
       repeat: 0
     });
-    // 5,6: 跳到 Felix 上方
+    // 5,6：跳到 Felix 上方
     this.anims.create({
       key: "angryralph_jump_up",
       frames: this.anims.generateFrameNumbers("AngryRalph", { start: 5, end: 6 }),
       frameRate: 5,
       repeat: 0
     });
-    // 7,8,9,10: 捶地攻击
+    // 7,8,9,10：捶地攻击
     this.anims.create({
       key: "angryralph_crash_down",
       frames: this.anims.generateFrameNumbers("AngryRalph", { start: 7, end: 10 }),
       frameRate: 10,
       repeat: 0
     });
-    // 11,12: 向左走
+    // 11,12：向左走
     this.anims.create({
       key: "angryralph_move_left",
       frames: this.anims.generateFrameNumbers("AngryRalph", { start: 11, end: 12 }),
       frameRate: 5,
       repeat: -1
     });
-    // 【不添加】帧13,14,15（被打败）——你说先别添加
-    // 16: 向右手持激光炮
+    // （13,14,15：被打败 —— 不添加）
+    // 16：手持激光炮向右发射
     this.anims.create({
       key: "angryralph_fire_weapon_right",
       frames: [{ key: "AngryRalph", frame: 16 }],
       frameRate: 5,
       repeat: 0
     });
-    // 17: 向左手持激光炮
+    // 17：手持激光炮向左发射
     this.anims.create({
       key: "angryralph_fire_weapon_left",
       frames: [{ key: "AngryRalph", frame: 17 }],
@@ -474,10 +473,10 @@ class BossBattle extends Phaser.Scene {
 
     // 默认不受重力影响；在 crashDown 状态下启用重力
     this.angryRalph.body.allowGravity = false;
-    // 你说 hitbox 已处理好，这里保持不动
+    // 你已处理好hitbox，这里保持不动
     this.angryRalph.setBodySize(100, 120);
 
-    // 初始播放 idle 动画（帧0）
+    // 初始播放 idle 动画
     this.angryRalph.play("angryralph_idle");
 
     // 读取 "RalphEdges" 对象层，限定移动区域
@@ -516,11 +515,9 @@ class BossBattle extends Phaser.Scene {
 
     // 检查水平边界
     if (this.angryRalph.x < this.angryRalphEdges.left) {
-      // 超出左边界时：反转向右
       this.angryRalph.x = this.angryRalphEdges.left;
       this.angryRalphState = "moveRight";
     } else if (this.angryRalph.x > this.angryRalphEdges.right) {
-      // 超出右边界时：反转向左
       this.angryRalph.x = this.angryRalphEdges.right;
       this.angryRalphState = "moveLeft";
     }
@@ -535,7 +532,7 @@ class BossBattle extends Phaser.Scene {
       return;
     }
 
-    // 如果当前处于 fireLaser 状态，等发射完激光后回到 idle
+    // 如果当前处于 fireLaser 状态，等发射完后再回到 idle
     if (this.angryRalphState === "fireLaser") {
       return;
     }
@@ -569,17 +566,19 @@ class BossBattle extends Phaser.Scene {
           this.angryRalphState = "crashDown";
           break;
         case "fireLaser":
-          // 发射激光后 1 秒再回到 idle，保证他能继续移动
+          // 发射激光后 1 秒再回到 idle，保证他能再次移动
           this.angryRalph.setVelocityX(0);
+          // 判断 Felix 位置决定向左/向右发射
           if (this.felix.x >= this.angryRalph.x) {
             this.angryRalph.play("angryralph_fire_right", true);
             const laser = this.physics.add.sprite(this.angryRalph.x + 80, this.angryRalph.y, "Laser");
             laser.setScale(0.2);
             laser.body.allowGravity = false;
             laser.play("laser_fire_right");
+            // 1秒后销毁激光 & 回到idle
             this.time.delayedCall(1000, () => {
               laser.destroy();
-              this.angryRalphState = "idle"; // ★【关键】激光结束后回到 idle
+              this.angryRalphState = "idle";
             }, null, this);
           } else {
             this.angryRalph.play("angryralph_fire_left", true);
@@ -589,7 +588,7 @@ class BossBattle extends Phaser.Scene {
             laser.play("laser_fire_left");
             this.time.delayedCall(1000, () => {
               laser.destroy();
-              this.angryRalphState = "idle"; // ★【关键】激光结束后回到 idle
+              this.angryRalphState = "idle";
             }, null, this);
           }
           this.angryRalphState = "fireLaser";
