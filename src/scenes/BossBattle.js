@@ -232,7 +232,6 @@ class BossBattle extends Phaser.Scene {
 
     // ★【新增】让 AngryRalph 与 floorLayer 碰撞，并在下砸落地时恢复到 idle
     this.physics.add.collider(this.angryRalph, floorLayer, () => {
-      // 当 Ralph 处于下砸状态撞到地面，回到 idle
       if (this.angryRalphState === "crashDown") {
         this.angryRalph.setVelocityY(0);
         this.angryRalph.play("angryralph_idle");
@@ -391,7 +390,7 @@ class BossBattle extends Phaser.Scene {
     cloud.setDepth(1000);
   }
 
-  // ★【新增】创建 Angry Ralph（并调整碰撞体积）
+  // ★【新增】创建 Angry Ralph（放大 & 调整碰撞体积）
   createAngryRalph(map) {
     // 原有动画定义
     this.anims.create({
@@ -473,22 +472,22 @@ class BossBattle extends Phaser.Scene {
       ralphSpawnY = obj.y + (obj.height || 0) / 2;
     }
 
-    // 在该位置创建 AngryRalph
+    // 在该位置创建 AngryRalph，并放大2倍
     this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
       .setDepth(5)
-      .setScale(1);
+      .setScale(2);
 
     // 禁用重力，防止掉出地图
     this.angryRalph.body.allowGravity = false;
-    // 缩小碰撞体积（根据需要自行调节）
-    this.angryRalph.setBodySize(120, 140);
-    this.angryRalph.setOffset(36, 36);
+    // 调整碰撞体积：原先 (120,140) 放大2倍改为 (240,280)，偏移改为 (72,72)
+    this.angryRalph.setBodySize(240, 280);
+    this.angryRalph.setOffset(72, 72);
 
     // 初始播放 idle 动画
     this.angryRalph.play("angryralph_idle");
 
     // 读取 "RalphEdges" 对象层（假设有2个对象分别表示左右边界）
-    this.angryRalphEdges = { left: 100, right: 600 }; // 默认值
+    this.angryRalphEdges = { left: 100, right: 600 };
     let edgesLayer = map.getObjectLayer("RalphEdges");
     if (edgesLayer && edgesLayer.objects.length >= 2) {
       let edgeA = edgesLayer.objects[0];
@@ -499,38 +498,42 @@ class BossBattle extends Phaser.Scene {
       this.angryRalphEdges.right = Math.max(xA, xB);
     }
 
-    // 设置速度和 AI 状态
-    this.angryRalphSpeed = 100; // 移动速度
+    // 设置初始速度和状态
+    this.angryRalphSpeed = 100;
     this.angryRalphNextDecisionTime = 0;
     this.angryRalphState = "idle";
   }
 
-  // ★【新增】让 AngryRalph 有更多 AI 行为：左右移动、跳起砸地、发射激光等
+  // ★【新增】更新 Angry Ralph 的 AI 逻辑
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
 
-    // 如果到达左右边界，强制停下并播放 idle 动作
-    if (this.angryRalph.x <= this.angryRalphEdges.left) {
+    // 如果超出边界，则将位置限制在边界内，并反转运动方向
+    if (this.angryRalph.x < this.angryRalphEdges.left) {
       this.angryRalph.x = this.angryRalphEdges.left;
-      this.angryRalph.setVelocityX(0);
-      this.angryRalph.play("angryralph_idle", true);
-      this.angryRalphState = "idle";
-    } else if (this.angryRalph.x >= this.angryRalphEdges.right) {
+      this.angryRalphState = "moveRight";
+    } else if (this.angryRalph.x > this.angryRalphEdges.right) {
       this.angryRalph.x = this.angryRalphEdges.right;
-      this.angryRalph.setVelocityX(0);
-      this.angryRalph.play("angryralph_idle", true);
-      this.angryRalphState = "idle";
+      this.angryRalphState = "moveLeft";
     }
 
-    // 当 Ralph 正在执行 jumpUp/crashDown/fireLaser 时，避免被随机状态打断
-    // 只有在 idle/moveLeft/moveRight 时才进行随机决策
+    // 如果当前处于 fireLaser、jumpUp 或 crashDown 状态，则不打断
     if (
-      time > this.angryRalphNextDecisionTime &&
-      (this.angryRalphState === "idle" ||
-       this.angryRalphState === "moveLeft" ||
-       this.angryRalphState === "moveRight")
+      this.angryRalphState === "fireLaser" ||
+      this.angryRalphState === "jumpUp" ||
+      this.angryRalphState === "crashDown"
     ) {
-      // 在此增加新状态：jumpUp, fireLaser
+      // 对于 crashDown 状态，持续向下
+      if (this.angryRalphState === "crashDown") {
+        this.angryRalph.setVelocityY(700);
+        this.angryRalph.play("angryralph_crash_down", true);
+      }
+      return;
+    }
+
+    // 在规定时间内重新决策
+    if (time > this.angryRalphNextDecisionTime) {
+      // 随机状态只在边界内切换左右移动或 idle，另外还可以触发 jumpUp 或 fireLaser
       let states = ["idle", "moveLeft", "moveRight", "jumpUp", "fireLaser"];
       let chosen = Phaser.Utils.Array.GetRandom(states);
 
@@ -538,57 +541,50 @@ class BossBattle extends Phaser.Scene {
         case "idle":
           this.angryRalph.setVelocityX(0);
           this.angryRalph.play("angryralph_idle", true);
+          this.angryRalphState = "idle";
           break;
         case "moveLeft":
           this.angryRalph.setVelocityX(-this.angryRalphSpeed);
           this.angryRalph.play("angryralph_move_left", true);
+          this.angryRalphState = "moveLeft";
           break;
         case "moveRight":
           this.angryRalph.setVelocityX(this.angryRalphSpeed);
           this.angryRalph.play("angryralph_move_right", true);
+          this.angryRalphState = "moveRight";
           break;
         case "jumpUp":
-          // 瞬间移动到 Felix 头顶，并准备下砸
+          // 进入 jumpUp 状态：瞬间移动到 Felix 上方，停住后准备砸下
+          this.angryRalph.setVelocityX(0);
           this.angryRalph.play("angryralph_jump_up", true);
           this.angryRalph.x = this.felix.x;
-          this.angryRalph.y = this.felix.y - 200; // 跳到比 Felix 高 200 像素的位置
+          this.angryRalph.y = this.felix.y - 200;
           this.angryRalphState = "crashDown";
           break;
         case "fireLaser":
-          // 面向 Felix 方向发射激光
+          // 进入 fireLaser 状态：站定不动，并发射激光
+          this.angryRalph.setVelocityX(0);
           if (this.felix.x >= this.angryRalph.x) {
-            this.angryRalph.play("angryralph_fire_right");
+            this.angryRalph.play("angryralph_fire_right", true);
             const laser = this.physics.add.sprite(this.angryRalph.x + 80, this.angryRalph.y, "Laser");
             laser.setScale(0.2);
             laser.body.allowGravity = false;
             laser.play("laser_fire_right");
-            // 一定时间后销毁激光
             this.time.delayedCall(1000, () => { laser.destroy(); }, null, this);
           } else {
-            this.angryRalph.play("angryralph_fire_left");
+            this.angryRalph.play("angryralph_fire_left", true);
             const laser = this.physics.add.sprite(this.angryRalph.x - 80, this.angryRalph.y, "Laser");
             laser.setScale(0.2);
             laser.body.allowGravity = false;
             laser.play("laser_fire_left");
             this.time.delayedCall(1000, () => { laser.destroy(); }, null, this);
           }
-          // 发射完激光后回到 idle
-          this.angryRalphState = "idle";
+          this.angryRalphState = "fireLaser";
           break;
       }
-      // 下次随机 1~3 秒之后再重新决策
+      // 下次决策延时 1~3 秒
       let delay = Phaser.Math.Between(1000, 3000);
       this.angryRalphNextDecisionTime = time + delay;
-      // 若本次状态是 idle/moveLeft/moveRight 就记下来
-      if (chosen === "idle" || chosen === "moveLeft" || chosen === "moveRight") {
-        this.angryRalphState = chosen;
-      }
-    }
-
-    // 如果当前状态是 "crashDown"，就播放下砸动画并让 Ralph 往下落
-    if (this.angryRalphState === "crashDown") {
-      this.angryRalph.play("angryralph_crash_down", true);
-      this.angryRalph.setVelocityY(700); // 给一个较大的向下速度
     }
   }
 }
