@@ -71,6 +71,9 @@ class BossBattle extends Phaser.Scene {
     this.felix.setScale(0.15);
     this.felix.setCollideWorldBounds(true);
 
+    // ★【新增】让 Felix 深度 = 10
+    this.felix.setDepth(10);
+
     // 让 Felix 与地面碰撞
     this.physics.add.collider(this.felix, floorLayer);
     this.physics.add.collider(this.felix, realFloorLayer);
@@ -476,8 +479,10 @@ class BossBattle extends Phaser.Scene {
 
     // 在该位置创建 Ralph，并放大2倍
     this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
-      .setDepth(5)
       .setScale(2);
+
+    // ★【Ralph 深度 = 5】
+    this.angryRalph.setDepth(5);
 
     // 默认不受重力影响；在 crashDown 状态下启用重力
     this.angryRalph.body.allowGravity = false;
@@ -585,9 +590,7 @@ class BossBattle extends Phaser.Scene {
     // 判断朝向
     let direction = (this.felix.x >= this.angryRalph.x) ? "right" : "left";
 
-    // -------------------------------
     // (A) 准备坐标 & hitbox 的差异
-    // -------------------------------
     let laserX, laserY;
     let bodyW, bodyH, offsetX, offsetY;
 
@@ -595,16 +598,13 @@ class BossBattle extends Phaser.Scene {
       // ===========【脸部激光】===========
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_right", true);
-        // 示例：脸部激光生成点稍微小一点
         laserX = this.angryRalph.x + 300;
       } else {
         this.angryRalph.play("angryralph_fire_left", true);
         laserX = this.angryRalph.x - 300;
       }
-      // 让它高度跟 Ralph 一样
       laserY = this.angryRalph.y - 60;
-      // 例如脸部激光比较短，hitbox 也更小
-      bodyW = 2560; // 比武器激光短
+      bodyW = 2560; 
       bodyH = 200;
       offsetX = -150; 
       offsetY = 0; 
@@ -617,23 +617,21 @@ class BossBattle extends Phaser.Scene {
         this.angryRalph.play("angryralph_fire_weapon_left", true);
         laserX = this.angryRalph.x - 550;
       }
-      // 让它比脸部激光更低一点
       laserY = this.angryRalph.y + 50;
-      // 这里保持你原先的参数
       bodyW = 2560; 
       bodyH = 200;
       offsetX = 0; 
       offsetY = 300; 
     }
 
-    // -------------------------------
     // (B) 实际创建激光
-    // -------------------------------
     const laser = this.physics.add.sprite(laserX, laserY, "Laser");
     laser.setScale(0.3);
     laser.body.allowGravity = false;
-    // 应用差异化的 hitbox 设置
     laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
+
+    // ★【Laser 深度 = 7】(介于 Ralph(5) 与 Felix(10) 之间)
+    laser.setDepth(7);
 
     // 播放动画
     if (direction === "right") {
