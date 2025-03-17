@@ -14,17 +14,17 @@ class Continue extends Phaser.Scene {
   
     create(data) {
       // data 对象包含：{ loop, score }
-      // 这里不再需要 canNextLoop，因为在这个场景就是要让玩家继续挑战
+      // 当玩家修完Stage 5之后，进入此场景
   
       const map = this.make.tilemap({ key: "gameoverMap" });
       const tileset = map.addTilesetImage("tileset", "tilesetImage");
       map.createLayer("Background", tileset, 0, 0);
   
-      // 标题：Ralph has escaped and will return.
+      // 标题：提示玩家已经通关Stage 5
       this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 - 120,
-        "Ralph has escaped and will return.",
+        "Ralph has escaped and will return.\nYou finished Stage 5!",
         {
           fontSize: "48px",
           color: "#ff0000",
@@ -61,7 +61,7 @@ class Continue extends Phaser.Scene {
       this.confirmSnd = this.sound.add("confirm");
       this.selectionSnd = this.sound.add("selection");
   
-      // Next Loop 按钮
+      // 按钮1: Next Loop
       const nextLoopBtn = this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 20,
@@ -87,20 +87,19 @@ class Continue extends Phaser.Scene {
         }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 进入Gameplay，Loop + 1
+          // 进入下一Loop的Gameplay
           this.scene.start("Gameplay", {
             loop: data.loop + 1,
-            score: data.score,
-            canNextLoop: false
+            score: data.score
           });
         });
       });
   
-      // Restart 按钮（重置游戏：回到 Loop 1，分数归零）
-      const restartBtn = this.add.text(
+      // 按钮2: Main Menu
+      const mainMenuBtn = this.add.text(
         map.widthInPixels / 2,
         map.heightInPixels / 2 + 80,
-        "Restart",
+        "Main Menu",
         {
           fontSize: "36px",
           backgroundColor: "#000",
@@ -109,25 +108,21 @@ class Continue extends Phaser.Scene {
         }
       ).setOrigin(0.5).setInteractive();
   
-      restartBtn.on("pointerover", () => {
+      mainMenuBtn.on("pointerover", () => {
         if (this.selectionSnd.isPlaying) {
           this.selectionSnd.stop();
         }
         this.selectionSnd.play();
       });
   
-      restartBtn.on("pointerdown", () => {
+      mainMenuBtn.on("pointerdown", () => {
         if (this.confirmSnd.isPlaying) {
           this.confirmSnd.stop();
         }
         this.confirmSnd.play();
         this.time.delayedCall(200, () => {
-          // 重置游戏：回到 Loop 1，分数归零
-          this.scene.start("Gameplay", {
-            loop: 1,
-            score: 0,
-            canNextLoop: false
-          });
+          // 回到主菜单
+          this.scene.start("MainMenu");
         });
       });
     }

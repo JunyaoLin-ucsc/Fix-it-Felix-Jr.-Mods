@@ -734,6 +734,7 @@ class Gameplay extends Phaser.Scene {
     this.cameras.main.setBounds(0, nextArea.topY, this.map.widthInPixels, stageHeight);
   }
 
+  // 【只改这里】进入最终关卡后，不再跳Gameover，而是跳到Continue
   transitionToFinalStage() {
     let finalData = this.stageAreas["final"];
     if (!finalData) {
@@ -769,11 +770,12 @@ class Gameplay extends Phaser.Scene {
       this.ralph.setPosition(rx, ry);
       this.ralph.play("ralph_final");
     }
+
+    // 改：原本这里是跳到Gameover
     this.time.delayedCall(3000, () => {
-      this.scene.start("Gameover", {
+      this.scene.start("Continue", {
         loop: this.loop,
-        score: this.score,
-        canNextLoop: true
+        score: this.score
       });
     });
   }
@@ -947,12 +949,12 @@ class Gameplay extends Phaser.Scene {
       case "strawberry":
         // 若已有剩余时间则叠加，否则直接设置3秒
         this.strawberryBuffActive = true;
-        this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 3; // 改成3秒
+        this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 3;
         this.strawberryBuffText.setVisible(true);
         break;
       case "watermelon":
         this.watermelonBuffActive = true;
-        this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 5; // 改成5秒
+        this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 5;
         this.repairInterval = 100;
         this.watermelonBuffText.setVisible(true);
         break;

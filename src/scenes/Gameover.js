@@ -15,6 +15,7 @@ class Gameover extends Phaser.Scene {
   create(data) {
     // data 对象包含：{ loop, score }
     // 此场景专用于游戏真正结束，标题直接“Game Over”
+    // 即：玩家生命值为0或时间耗尽
 
     const map = this.make.tilemap({ key: "gameoverMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
