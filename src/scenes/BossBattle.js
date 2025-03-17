@@ -21,18 +21,24 @@ class BossBattle extends Phaser.Scene {
     // ----------------- 加载 Bullet 的 spritesheet -----------------
     this.load.spritesheet("bullet", "Bullet-Sheet.png", { frameWidth: 32, frameHeight: 32 });
 
-    // ----------------- 新增：加载鸟的 spritesheet -----------------
+    // ----------------- 加载鸟的 spritesheet -----------------
     this.load.spritesheet("bird1", "bird1.png", { frameWidth: 64, frameHeight: 64 });
     this.load.spritesheet("bird1-flip", "bird1-flip.png", { frameWidth: 64, frameHeight: 64 });
 
-    // ----------------- 新增：加载云的图片 -----------------
+    // ----------------- 加载云的图片 -----------------
     this.load.image("cloud", "cloud.png");
     this.load.image("cloud2", "cloud2.png");
 
-    // ★【新增】加载 AngryRalphSpritesheet.png
+    // ★【已有】加载 AngryRalphSpritesheet.png
     this.load.spritesheet("AngryRalph", "AngryRalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
+    });
+
+    // ★【新增】加载 Laser-Sheet.png
+    this.load.spritesheet("Laser", "Laser-Sheet.png", {
+      frameWidth: 2560,
+      frameHeight: 832
     });
   }
 
@@ -123,12 +129,40 @@ class BossBattle extends Phaser.Scene {
       frameRate: 1
     });
 
-    // 记录Felix最后的面向（初始向右）
+    // ★【新增】Laser 动画定义
+    // Laser（右向）: 帧0→1→2→3→回到0（可根据需求调整 repeat）
+    this.anims.create({
+      key: "laser_fire_right",
+      frames: [
+        { key: "Laser", frame: 0 },
+        { key: "Laser", frame: 1 },
+        { key: "Laser", frame: 2 },
+        { key: "Laser", frame: 3 },
+        { key: "Laser", frame: 0 }
+      ],
+      frameRate: 10,
+      repeat: -1
+    });
+    // Laser（左向）: 帧4→5→6→7→回到4
+    this.anims.create({
+      key: "laser_fire_left",
+      frames: [
+        { key: "Laser", frame: 4 },
+        { key: "Laser", frame: 5 },
+        { key: "Laser", frame: 6 },
+        { key: "Laser", frame: 7 },
+        { key: "Laser", frame: 4 }
+      ],
+      frameRate: 10,
+      repeat: -1
+    });
+
+    // 记录 Felix 最后面向（初始向右）
     this.facing = "right";
     // 创建键盘光标键
     this.cursors = this.input.keyboard.createCursorKeys();
 
-    // ========== 可变跳跃逻辑 ========== 
+    // ========== 可变跳跃逻辑 ==========
     this.isJumping = false;
     this.jumpVelocity = -600;
     this.shortJumpVelocity = -250;
@@ -143,11 +177,10 @@ class BossBattle extends Phaser.Scene {
     // ① 是否在射击
     this.shooting = false;
 
-    // ② 监听鼠标按下：单击瞬间就先发一颗子弹，然后把 shooting 状态设为 true
+    // ② 监听鼠标按下：单击瞬间发射一颗子弹，并设定 shooting 状态
     this.input.on("pointerdown", (pointer) => {
       if (pointer.leftButtonDown()) {
         this.shooting = true;
-        // 单击时立即发射一颗子弹
         this.fireBullet();
       }
     });
@@ -157,7 +190,7 @@ class BossBattle extends Phaser.Scene {
       this.shooting = false;
     });
 
-    // ④ 每隔200毫秒检测一次 shooting，如果为true则连续发射子弹
+    // ④ 每隔200毫秒检测 shooting，如果为 true 则连续发射子弹
     this.shootTimer = this.time.addEvent({
       delay: 200,
       callback: this.fireBullet,
@@ -273,9 +306,8 @@ class BossBattle extends Phaser.Scene {
     this.updateAngryRalph(time, delta);
   }
 
-  // 子弹发射
+  // 子弹发射逻辑
   fireBullet() {
-    // 如果当前未在射击状态，不发射
     if (!this.shooting) return;
 
     const offset = (this.facing === "right") ? this.muzzleOffset.right : this.muzzleOffset.left;
@@ -286,7 +318,6 @@ class BossBattle extends Phaser.Scene {
     bullet.setFrame((this.facing === "right") ? 0 : 1);
     bullet.setScale(0.5);
 
-    // 若有bullet_fly动画，则播放
     if (this.anims.exists("bullet_fly")) {
       bullet.anims.play("bullet_fly");
     }
@@ -354,71 +385,129 @@ class BossBattle extends Phaser.Scene {
     cloud.setDepth(1000);
   }
 
-  // ★【新增】创建 Angry Ralph
-// ★【新增】创建 Angry Ralph
-createAngryRalph(map) {
-  // 1) 定义动画：idle=frame0, move-right=1,2, move-left=9,10
-  this.anims.create({
-    key: "angryralph_idle",
-    frames: [{ key: "AngryRalph", frame: 0 }],
-    frameRate: 1,
-    repeat: -1
-  });
-  this.anims.create({
-    key: "angryralph_move_right",
-    frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
-    frameRate: 5,
-    repeat: -1
-  });
-  this.anims.create({
-    key: "angryralph_move_left",
-    frames: this.anims.generateFrameNumbers("AngryRalph", { start: 9, end: 10 }),
-    frameRate: 5,
-    repeat: -1
-  });
+  // ★【新增】创建 Angry Ralph（包括新动画定义）
+  createAngryRalph(map) {
+    // 原有动画定义
+    this.anims.create({
+      key: "angryralph_idle",
+      frames: [{ key: "AngryRalph", frame: 0 }],
+      frameRate: 1,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "angryralph_move_right",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 1, end: 2 }),
+      frameRate: 5,
+      repeat: -1
+    });
+    this.anims.create({
+      key: "angryralph_move_left",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 9, end: 10 }),
+      frameRate: 5,
+      repeat: -1
+    });
 
-  // 2) 从对象层 "RalphSpawns" 中读取坐标
-  let ralphSpawnX = 400, ralphSpawnY = 100;
-  let ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
-  if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
-    let obj = ralphSpawnLayer.objects[0];
-    ralphSpawnX = obj.x + (obj.width || 0) / 2;
-    ralphSpawnY = obj.y + (obj.height || 0) / 2;
+    // ★【新增】AngryRalph 其他动画定义
+    // 帧3：面向右边发射激光
+    this.anims.create({
+      key: "angryralph_fire_right",
+      frames: [{ key: "AngryRalph", frame: 3 }],
+      frameRate: 5,
+      repeat: 0
+    });
+    // 帧4：面向左边发射激光
+    this.anims.create({
+      key: "angryralph_fire_left",
+      frames: [{ key: "AngryRalph", frame: 4 }],
+      frameRate: 5,
+      repeat: 0
+    });
+    // 帧5,6：跳起来移动到当前 Felix 位置上方
+    this.anims.create({
+      key: "angryralph_jump_up",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 5, end: 6 }),
+      frameRate: 5,
+      repeat: 0
+    });
+    // 帧7,8,9,10：空中快速向下砸去（仅触发一次，且只循环一次）
+    this.anims.create({
+      key: "angryralph_crash_down",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 7, end: 10 }),
+      frameRate: 10,
+      repeat: 0
+    });
+    // 帧11,12：向左移动的动画（循环播放）
+    this.anims.create({
+      key: "angryralph_move_left2",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 11, end: 12 }),
+      frameRate: 5,
+      repeat: -1
+    });
+    // 帧13,14,15：被打败的动画（只播放一次）
+    this.anims.create({
+      key: "angryralph_defeated",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 13, end: 15 }),
+      frameRate: 5,
+      repeat: 0
+    });
+    // 帧16,17：手持武器发射激光状态
+    this.anims.create({
+      key: "angryralph_fire_weapon",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 16, end: 17 }),
+      frameRate: 5,
+      repeat: 0
+    });
+
+    // 从对象层 "RalphSpawns" 中读取坐标
+    let ralphSpawnX = 400, ralphSpawnY = 100;
+    let ralphSpawnLayer = map.getObjectLayer("RalphSpawns");
+    if (ralphSpawnLayer && ralphSpawnLayer.objects.length > 0) {
+      let obj = ralphSpawnLayer.objects[0];
+      ralphSpawnX = obj.x + (obj.width || 0) / 2;
+      ralphSpawnY = obj.y + (obj.height || 0) / 2;
+    }
+
+    // 在该位置创建 AngryRalph
+    this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
+      .setDepth(5)
+      .setScale(1); // 可根据需求放大缩小
+
+    // 禁用重力，防止掉出地图
+    this.angryRalph.body.allowGravity = false;
+
+    // 初始播放 idle 动画
+    this.angryRalph.play("angryralph_idle");
+
+    // 读取 "RalphEdges" 对象层（假设有2个对象分别表示左右边界）
+    this.angryRalphEdges = { left: 100, right: 600 }; // 默认值
+    let edgesLayer = map.getObjectLayer("RalphEdges");
+    if (edgesLayer && edgesLayer.objects.length >= 2) {
+      let edgeA = edgesLayer.objects[0];
+      let edgeB = edgesLayer.objects[1];
+      let xA = edgeA.x + (edgeA.width || 0) / 2;
+      let xB = edgeB.x + (edgeB.width || 0) / 2;
+      this.angryRalphEdges.left = Math.min(xA, xB);
+      this.angryRalphEdges.right = Math.max(xA, xB);
+    }
+
+    // 设置速度和 AI 状态
+    this.angryRalphSpeed = 100; // 移动速度
+    this.angryRalphNextDecisionTime = 0;
+    this.angryRalphState = "idle";
+
+    // ★【可选】当 AngryRalph 碰到 Floor 时触发 crash_down 动作（注意：需确保 floorLayer 已添加到物理系统中）
+    this.physics.add.collider(this.angryRalph, map.getLayer("Floor").tilemapLayer, () => {
+      if (!this.angryRalph.body.blocked.down) {
+        this.angryRalph.play("angryralph_crash_down", true);
+      }
+    });
   }
 
-  // 3) 在该位置创建 angryRalph
-  this.angryRalph = this.physics.add.sprite(ralphSpawnX, ralphSpawnY, "AngryRalph", 0)
-    .setDepth(5)
-    .setScale(1); // 可根据需求放大缩小
-  
-  // 新增：禁用重力，防止掉出地图
-  this.angryRalph.body.allowGravity = false;
-  
-  this.angryRalph.play("angryralph_idle");
-
-  // 4) 读取 "RalphEdges" 对象层，假设这里有2个对象分别表示左右边界
-  this.angryRalphEdges = { left: 100, right: 600 }; // 默认
-  let edgesLayer = map.getObjectLayer("RalphEdges");
-  if (edgesLayer && edgesLayer.objects.length >= 2) {
-    let edgeA = edgesLayer.objects[0];
-    let edgeB = edgesLayer.objects[1];
-    let xA = edgeA.x + (edgeA.width || 0) / 2;
-    let xB = edgeB.x + (edgeB.width || 0) / 2;
-    this.angryRalphEdges.left = Math.min(xA, xB);
-    this.angryRalphEdges.right = Math.max(xA, xB);
-  }
-
-  // 5) 速度和 AI 状态
-  this.angryRalphSpeed = 100; // 移动速度
-  this.angryRalphNextDecisionTime = 0; 
-  this.angryRalphState = "idle"; // "idle" | "moveLeft" | "moveRight"
-}
-
-  // ★【新增】在 update() 中被调用：让 AngryRalph 来回移动或idle
+  // ★【新增】每帧更新 AngryRalph 的移动/状态逻辑
   updateAngryRalph(time, delta) {
     if (!this.angryRalph) return;
 
-    // 如果到达左右边界，就强制停下或切换到idle
+    // 如果达到左右边界，强制停下并播放 idle 动作
     if (this.angryRalph.x <= this.angryRalphEdges.left) {
       this.angryRalph.x = this.angryRalphEdges.left;
       this.angryRalph.setVelocityX(0);
@@ -443,6 +532,7 @@ createAngryRalph(map) {
           break;
         case "moveLeft":
           this.angryRalph.setVelocityX(-this.angryRalphSpeed);
+          // 可选择使用 "angryralph_move_left" 或 "angryralph_move_left2"
           this.angryRalph.play("angryralph_move_left", true);
           break;
         case "moveRight":
@@ -452,7 +542,7 @@ createAngryRalph(map) {
       }
       this.angryRalphState = chosen;
 
-      // 下次随机 1~3 秒之后再做决定
+      // 下次随机 1~3 秒之后再重新决策
       let delay = Phaser.Math.Between(1000, 3000);
       this.angryRalphNextDecisionTime = time + delay;
     }
