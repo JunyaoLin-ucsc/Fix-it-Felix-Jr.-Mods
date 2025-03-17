@@ -8,9 +8,10 @@ class MainMenu extends Phaser.Scene {
     // 加载主菜单地图 & tileset
     this.load.tilemapTiledJSON("mainMenuMap", "MainMenu.json");
     this.load.image("tilesetImage", "tileset.png");
-    // 加载音效
+    // 加载音效（确认和选择），以及主菜单背景音乐
     this.load.audio("confirm", "confirm.wav");
     this.load.audio("selection", "selection.wav");
+    this.load.audio("mainMenuBGM", "MainMenu.wav");
   }
 
   create() {
@@ -30,9 +31,13 @@ class MainMenu extends Phaser.Scene {
       { fontSize: "48px", color: "#ffffff", fontFamily: "Arial" }
     ).setOrigin(0.5, 0);
 
-    // 创建音效对象
-    this.confirmSnd = this.sound.add("confirm");
-    this.selectionSnd = this.sound.add("selection");
+    // 创建并播放主菜单背景音乐，音量设置为50%，循环播放
+    this.bgm = this.sound.add("mainMenuBGM", { volume: 0.5, loop: true });
+    this.bgm.play();
+
+    // 创建确认和选择音效对象，音量设置为70%
+    this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
+    this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
 
     // =============== 原有的 "Play" 按钮 ===============
     let playButton = this.add.text(
@@ -55,7 +60,7 @@ class MainMenu extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 延时一点播放完音效
+      // 延时一点播放完音效后进入 Tutorial
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });
