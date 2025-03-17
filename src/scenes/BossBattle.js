@@ -458,6 +458,13 @@ class BossBattle extends Phaser.Scene {
       frameRate: 5,
       repeat: -1
     });
+    // ★ 新增：定义向左行走动画（假设帧 11 到 12 为向左走路）
+    this.anims.create({
+      key: "angryralph_move_left",
+      frames: this.anims.generateFrameNumbers("AngryRalph", { start: 11, end: 12 }),
+      frameRate: 5,
+      repeat: -1
+    });
     this.anims.create({
       key: "angryralph_fire_right",
       frames: [{ key: "AngryRalph", frame: 3 }],
@@ -553,12 +560,11 @@ class BossBattle extends Phaser.Scene {
     this.startRandomMovement();
   }
 
-  // ★ 修复：为防止同一颗子弹在连续检测中多次处理，添加 hitProcessed 标记
+  // ★ 修改：使用 bullet.active 检查并调用 disableBody，防止同一子弹多次处理
   handleBulletHitRalph(bullet, ralph) {
     if (this.angryRalphState === "defeated") return;
-    if (bullet.hitProcessed) return;
-    bullet.hitProcessed = true;
-    bullet.destroy();
+    if (!bullet.active) return;
+    bullet.disableBody(true, true);
     if (this.ralphHP <= 0) return;
     this.ralphHP -= 0.5; // 每发子弹 -0.5%
     if (this.ralphHP < 0) this.ralphHP = 0;
