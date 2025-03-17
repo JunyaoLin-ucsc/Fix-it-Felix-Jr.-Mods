@@ -205,12 +205,15 @@ class BossBattle extends Phaser.Scene {
       loop: true
     });
 
-    // ========== 新增：Felix HP, Ralph HP ==========
+    // ========== Felix HP, Ralph HP ==========
     this.felixHP = 100;
     this.ralphHP = 100;
 
-    // ========== UI：Felix 左上角 HP 图标 + 百分比文字 ==========
+    // ========== Felix 左上角 HP 图标 + 百分比文字 ==========
     this.felixLifeIcon = this.add.image(10, 10, "life").setOrigin(0, 0).setScrollFactor(0);
+    // ★【新增】缩小图标
+    this.felixLifeIcon.setScale(0.1);
+
     this.felixLifeText = this.add.text(40, 5, "100%", {
       fontSize: "24px",
       color: "#ffffff",
@@ -219,11 +222,8 @@ class BossBattle extends Phaser.Scene {
       strokeThickness: 2
     }).setScrollFactor(0);
 
-    // ========== UI：Ralph 场景正中上方 HP 图标 + 百分比文字 ==========
+    // ========== 只保留 Ralph 血量文字，不要生命图标 ==========
     let camWidth = this.cameras.main.width;
-    this.ralphLifeIcon = this.add.image(camWidth / 2 - 40, 30, "life")
-      .setOrigin(1, 0.5)
-      .setScrollFactor(0);
     this.ralphLifeText = this.add.text(camWidth / 2, 22, "100%", {
       fontSize: "24px",
       color: "#ff0000",
@@ -267,7 +267,7 @@ class BossBattle extends Phaser.Scene {
     // 创建 Angry Ralph
     this.createAngryRalph(map);
 
-    // ★新增：lasers 分组，用于检测 Felix 被激光打中
+    // lasers 分组，用于检测 Felix 被激光打中
     this.lasers = this.physics.add.group();
     // Ralph 与 floorLayer 碰撞（处理捶地落地）
     this.physics.add.collider(this.angryRalph, floorLayer, () => {
@@ -275,23 +275,22 @@ class BossBattle extends Phaser.Scene {
         this.angryRalph.setVelocity(0, 0);
         this.angryRalph.body.allowGravity = false;
         this.angryRalph.play("angryralph_crash_down");
-
-        // 捶地动画播完后 => postCrash
         this.time.delayedCall(800, () => {
-          if (!this.angryRalph) return;
+          // ★防止计时器回调报错
+          if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
           this.angryRalph.play("angryralph_idle");
           this.angryRalphState = "postCrash";
         });
       }
     });
 
-    // ====== 新增 overlap：子弹击中 Ralph => HP -0.5%/每子弹 ======
+    // overlap：子弹击中 Ralph => HP -0.5%
     this.physics.add.overlap(this.bullets, this.angryRalph, this.handleBulletHitRalph, null, this);
 
-    // ====== 新增 overlap：Felix <-> Ralph, 检测捶地伤害 ======
+    // overlap：Felix <-> Ralph => 捶地伤害
     this.physics.add.overlap(this.felix, this.angryRalph, this.handleFelixRalphContact, null, this);
 
-    // ====== 新增 overlap：Felix <-> lasers (激光伤害) ======
+    // overlap：Felix <-> lasers => 激光伤害
     this.physics.add.overlap(this.felix, this.lasers, this.handleFelixLaserHit, null, this);
   }
 
@@ -585,13 +584,9 @@ class BossBattle extends Phaser.Scene {
   // ===========【伤害 & AI 逻辑】===========
   // Felix 子弹击中 Ralph => 每发子弹 -0.5% HP
   handleBulletHitRalph(bullet, ralph) {
-    // 延迟 0 毫秒后销毁子弹，避免在碰撞回调中直接销毁引起物理异常
-    this.time.delayedCall(0, () => {
-      bullet.destroy();
-    });
+    bullet.destroy();
     if (this.ralphHP <= 0) return;
-    // 4 发子弹 = -2% => 1 发 = -0.5%
-    this.ralphHP -= 0.5;
+    this.ralphHP -= 0.5; // 4 发子弹 => -2%
     if (this.ralphHP < 0) this.ralphHP = 0;
     // 更新 UI
     this.ralphLifeText.setText(this.ralphHP.toFixed(1) + "%");
@@ -642,6 +637,7 @@ class BossBattle extends Phaser.Scene {
     this.angryRalphState = "move";
     const moveChoices = ["left", "right", "idle"];
     const choice = Phaser.Utils.Array.GetRandom(moveChoices);
+
     if (choice === "left") {
       this.angryRalph.setVelocityX(-this.angryRalphSpeed);
       this.angryRalph.play("angryralph_move_left", true);
@@ -652,12 +648,16 @@ class BossBattle extends Phaser.Scene {
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle", true);
     }
+
     const delay = Phaser.Math.Between(1000, 3000);
     this.time.delayedCall(delay, () => {
-      if (!this.angryRalph) return;
+      // ★防止计时器回调报错
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+
       this.angryRalph.setVelocityX(0);
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
+
       if (Phaser.Math.Between(1, 100) <= 50) {
         this.startAttackSequence();
       } else {
@@ -670,11 +670,15 @@ class BossBattle extends Phaser.Scene {
     if (!this.angryRalph) return;
     this.angryRalphState = "jumpUp";
     this.angryRalph.play("angryralph_jump_up", true);
+
     this.angryRalph.x = this.felix.x;
     this.angryRalph.y = this.felix.y - 200;
+
     const waitTime = Phaser.Math.Between(2000, 3000);
     this.time.delayedCall(waitTime, () => {
-      if (!this.angryRalph) return;
+      // ★防止计时器回调报错
+      if (!this.angryRalph || !this.angryRalph.body || this.angryRalphState === "defeated") return;
+
       this.angryRalphState = "crashDown";
       this.angryRalph.body.allowGravity = true;
       this.angryRalph.setVelocityY(700);
@@ -687,6 +691,7 @@ class BossBattle extends Phaser.Scene {
     const laserType = Phaser.Math.Between(1, 2);
     const dirRand = Phaser.Math.Between(1, 2);
     let direction = (dirRand === 1) ? "right" : "left";
+
     let laserX, laserY, bodyW, bodyH, offsetX, offsetY;
     if (laserType === 1) {
       if (direction === "right") {
@@ -715,19 +720,24 @@ class BossBattle extends Phaser.Scene {
       offsetX = 0;
       offsetY = 300;
     }
+
     const laser = this.lasers.create(laserX, laserY, "Laser");
     laser.setScale(0.3);
     laser.body.allowGravity = false;
     laser.body.setSize(bodyW, bodyH).setOffset(offsetX, offsetY);
     laser.setDepth(7);
+
     if (direction === "right") {
       laser.play("laser_fire_right");
     } else {
       laser.play("laser_fire_left");
     }
+
     this.time.delayedCall(1000, () => {
+      // ★防止计时器回调报错
+      if (!this.angryRalph || this.angryRalphState === "defeated") return;
       laser.destroy();
-      if (!this.angryRalph) return;
+
       this.angryRalph.play("angryralph_idle");
       this.angryRalphState = "idle";
       this.startRandomMovement();
