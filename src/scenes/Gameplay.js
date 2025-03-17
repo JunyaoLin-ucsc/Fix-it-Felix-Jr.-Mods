@@ -63,7 +63,7 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 608
     });
 
-    // 注意：根据你的实际资源来调整此大小
+    // 注意：根据实际资源调整帧尺寸
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
@@ -75,28 +75,30 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 32
     });
 
+    // 加载音效文件
     this.load.audio("movement", "movement.wav");
     this.load.audio("failure", "failure.wav");
     this.load.audio("gameplayBGM", "Gameplay.wav");
 
-    this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
-    this.gameplayBGM.play();
-
     this.load.image("life", "Life.png");
 
-    // 物品：coin, strawberry, watermelon
+    // 物品资源
     this.load.image("coin", "coin.png");
     this.load.image("strawberry", "strawberry.png");
     this.load.image("watermelon", "watermelon.png");
   }
 
   create() {
-    // 确保石头组存在
-    this.movementSnd = this.sound.add("movement", { volume: 0.7 });
-    this.failureSnd = this.sound.add("failure", { volume: 0.7 });
-    // 进入 Gameplay 前，Tutorial 已停止了 MainMenuBGM
+    // 进入 Gameplay 时，停止前面 MainMenu/Tutorial 的 BGM
+    this.sound.stopAll();
+
+    // 创建并播放 Gameplay 背景音乐，音量50%，循环播放
     this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
     this.gameplayBGM.play();
+
+    // 创建 movement 与 failure 音效对象，音量70%
+    this.movementSnd = this.sound.add("movement", { volume: 0.7 });
+    this.failureSnd = this.sound.add("failure", { volume: 0.7 });
 
     this.stones = this.physics.add.group();
 
@@ -121,13 +123,10 @@ class Gameplay extends Phaser.Scene {
     this.windowLayerRef = map.createLayer("Window", [tilesetA, tilesetB], 0, 0).setDepth(12);
     const doorLayer = map.createLayer("Door", [tilesetA, tilesetB], 0, 0).setDepth(11);
 
-    this.movementSnd = this.sound.add("movement");
-    this.failureSnd = this.sound.add("failure");
-
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
-    // 获取每个 Stage 的顶端 (topY)
+    // 获取各 Stage 的顶端位置
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -141,7 +140,7 @@ class Gameplay extends Phaser.Scene {
       this.stageAreas["final"] = { topY: obj.y };
     }
 
-    // 创建Felix
+    // 创建 Felix
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix", 0).setScale(0.1);
     this.felix.setCollideWorldBounds(true).setDepth(9999);
@@ -163,18 +162,17 @@ class Gameplay extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // 将相机滚到 Stage 1 区域
+    // 将相机滚到 Stage 1 顶端
     if (this.stageAreas[1]) {
       this.cameras.main.scrollY = this.stageAreas[1].topY;
     }
 
-    // 放大Ralph
+    // 放大 Ralph
     this.enlargeRalph(1.75);
 
-    // 加载 Stage 1 的对象层
     this.loadStageObjectLayers(1);
 
-    // --- UI ---
+    // --- UI 设置 ---
     this.scoreText = this.add.text(10, 10, `Score: ${this.score}`, {
       fontSize: "32px",
       fill: "#ffffff",
@@ -198,11 +196,10 @@ class Gameplay extends Phaser.Scene {
       lineSpacing: 5,
     }).setScrollFactor(0).setDepth(99999);
 
-    // 绘制生命图标
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // Felix 与石头碰撞
+    // Felix 与石头碰撞检测
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       if (this.processedStoneBatches.has(stone.batchId)) return;
       if (!this.levelTransitioning && !this.invincible && !this.strawberryBuffActive) {
@@ -232,12 +229,12 @@ class Gameplay extends Phaser.Scene {
       }
     }, null, this);
 
-    // 创建 pickups 组
+    // 创建 pickups 组并检测碰撞
     this.pickups = this.physics.add.group();
     this.spawnPickupsForStage(1);
     this.physics.add.overlap(this.felix, this.pickups, this.handlePickup, null, this);
 
-    // Buff
+    // Buff 相关变量
     this.strawberryBuffActive = false;
     this.watermelonBuffActive = false;
     this.strawberryBuffTime = 0;
@@ -289,7 +286,7 @@ class Gameplay extends Phaser.Scene {
     this.ralph.setScale(newScale);
   }
 
-  // 创建 Ralph
+  // 创建 Ralph 并定义动画
   createRalph() {
     let rLayer = this.map.getObjectLayer("RalphSpawns");
     let rx = 400, ry = 100;
@@ -335,7 +332,7 @@ class Gameplay extends Phaser.Scene {
     this.ralph.play("ralph_idle");
   }
 
-  // 绘制（或刷新）生命 UI
+  // 绘制/刷新生命 UI
   updateLivesUI() {
     this.lifeIcons.forEach(icon => icon.destroy());
     this.lifeIcons = [];
@@ -409,7 +406,7 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // 从 Tiled object layer 读取 Felix位置、石头落点等
+  // 从 Tiled object layer 读取 Felix 位置、石头落点等
   loadStageObjectLayers(stage) {
     this.windowPlatforms = [];
     let felixPosLayer = this.map.getObjectLayer(`Felix Positions ${stage}`);
@@ -472,7 +469,6 @@ class Gameplay extends Phaser.Scene {
         ]
       };
     }
-    // 如果 Stage 1 全部是好窗，就随机打烂一扇
     if (stage === 1 && allZero) {
       let keys = Object.keys(this.windowsById).filter(k => k.startsWith("1_"));
       if (keys.length > 0) {
@@ -498,7 +494,7 @@ class Gameplay extends Phaser.Scene {
     return true;
   }
 
-  // Felix 修窗
+  // Felix 修窗逻辑
   checkAndRepairWindows(delta) {
     const REPAIR_DISTANCE = 50;
     const REPAIR_INTERVAL = this.watermelonBuffActive ? 100 : 500;
@@ -510,7 +506,6 @@ class Gameplay extends Phaser.Scene {
       );
       if (dist < REPAIR_DISTANCE) {
         this.currentRepairingGlass.repairTimer += delta;
-        // 根据方向选择贴图
         if (this.felixDirection === "right") {
           let animFrame = 3 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
           this.felix.setFrame(animFrame);
@@ -518,15 +513,12 @@ class Gameplay extends Phaser.Scene {
           let animFrame = 7 + (Math.floor(this.currentRepairingGlass.repairTimer / 50) % 4);
           this.felix.setFrame(animFrame);
         }
-
-        // 修完
         if (this.currentRepairingGlass.repairTimer >= REPAIR_INTERVAL) {
           this.currentRepairingGlass.sprite.setFrame(0);
           this.currentRepairingGlass.isBroken = false;
           this.currentRepairingGlass.repairTimer = 0;
           this.score += 100;
           this.scoreText.setText(`Score: ${this.score}`);
-
           if (this.felixDirection === "right") {
             this.felix.setFrame(3);
           } else {
@@ -535,14 +527,12 @@ class Gameplay extends Phaser.Scene {
           this.currentRepairingGlass = null;
         }
       } else {
-        // Felix走远了，重置
         this.currentRepairingGlass.repairTimer = 0;
         this.currentRepairingGlass = null;
       }
       return;
     }
 
-    // 查找破窗
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage !== this.currentStage) continue;
@@ -563,14 +553,11 @@ class Gameplay extends Phaser.Scene {
   }
 
   update(time, delta) {
-    // 如果已经进了 FinalStage，就不检查修窗、不会再触发levelTransition
     if (this.inFinalStage) return;
     if (!this.cursors) return;
 
-    // 倒计时
     this.stageTime -= delta / 1000;
     if (this.stageTime <= 0) {
-      // 时间耗尽 => Gameover
       this.scene.start("Gameover", {
         loop: this.loop,
         score: this.score,
@@ -580,7 +567,6 @@ class Gameplay extends Phaser.Scene {
     }
     this.timeText.setText(`Time: ${Math.floor(this.stageTime)}`);
 
-    // 草莓Buff
     if (this.strawberryBuffActive) {
       this.strawberryBuffTime -= delta / 1000;
       if (this.strawberryBuffTime <= 0) {
@@ -591,7 +577,6 @@ class Gameplay extends Phaser.Scene {
       }
     }
 
-    // 西瓜Buff
     if (this.watermelonBuffActive) {
       this.watermelonBuffTime -= delta / 1000;
       if (this.watermelonBuffTime <= 0) {
@@ -606,7 +591,6 @@ class Gameplay extends Phaser.Scene {
     if (this.levelTransitioning) return;
     if (this.isWindowJumping) return;
 
-    // 移动方向
     if (this.cursors.right.isDown) {
       this.felixDirection = "right";
       if (!this.allWindowsRepairedForStage()) {
@@ -627,17 +611,14 @@ class Gameplay extends Phaser.Scene {
       this.felix.setFrame(0);
     }
 
-    // 修窗
     this.checkAndRepairWindows(delta);
 
-    // 检查是否全部修完
     if (this.allWindowsRepairedForStage()) {
       console.log(`All windows in Stage ${this.currentStage} repaired => levelTransition().`);
       this.levelTransition();
       return;
     }
 
-    // 窗口跳跃
     let currentIndex = this.findClosestPlatformIndex(this.felix.x, this.felix.y);
     if (Phaser.Input.Keyboard.JustDown(this.cursors.up)) {
       let aboveIdx = this.findPlatformAbove(currentIndex);
@@ -654,7 +635,6 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 切换到下一 Stage
   levelTransition() {
     this.levelTransitioning = true;
     if (this.ralphDelayedCall) {
@@ -683,10 +663,8 @@ class Gameplay extends Phaser.Scene {
     }
 
     console.log(`Stage ${this.currentStage} repaired => transitioning to Stage ${nextStage}.`);
-    // 重新设置关卡时间
     this.stageTime = 60;
 
-    // 暂停石头
     if (this.stoneTimer) {
       this.stoneTimer.paused = true;
     }
@@ -710,9 +688,7 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // 加载下一个stage数据（位置、玻璃、pickup、等等）
   preLoadNextStage(nextStage) {
-    // 销毁本Stage的玻璃
     for (let key in this.windowsById) {
       let wObj = this.windowsById[key];
       if (wObj.stage === this.currentStage) {
@@ -724,7 +700,6 @@ class Gameplay extends Phaser.Scene {
     this.updateStageUI();
     this.loadGlassForStage(nextStage);
 
-    // Felix位置
     let felixLayer = this.map.getObjectLayer(`FelixStage${nextStage}`);
     let nextData = this.stageAreas[nextStage];
     let newX = this.felix.x;
@@ -739,7 +714,6 @@ class Gameplay extends Phaser.Scene {
     }
     this.felix.setPosition(newX, newY);
 
-    // Ralph位置
     this.tweens.killTweensOf(this.ralph);
     let rLayer = this.map.getObjectLayer(`RalphStage${nextStage}`);
     if (rLayer && rLayer.objects.length > 0) {
@@ -756,11 +730,9 @@ class Gameplay extends Phaser.Scene {
 
     this.loadStageObjectLayers(nextStage);
 
-    // 移除旧 pickups，并刷新
     this.pickups.clear(true, true);
     this.spawnPickupsForStage(nextStage);
 
-    // 重置buff
     this.strawberryBuffActive = false;
     this.watermelonBuffActive = false;
     this.strawberryBuffText.setVisible(false);
@@ -768,14 +740,11 @@ class Gameplay extends Phaser.Scene {
     this.repairInterval = 500;
   }
 
-  // 进入最终关卡
   transitionToFinalStage() {
-    // 避免重复
     if (this.inFinalStage) return;
 
     this.inFinalStage = true;
-    // 这样避免后面再检测 Stage 5
-    this.currentStage = 999; 
+    this.currentStage = 999;
 
     let finalData = this.stageAreas["final"];
     if (!finalData) {
@@ -790,7 +759,6 @@ class Gameplay extends Phaser.Scene {
     }
     this.tweens.killTweensOf(this.ralph);
 
-    // 瞬移Felix到最终关
     let felixFinalLayer = this.map.getObjectLayer("FelixFinal");
     if (felixFinalLayer && felixFinalLayer.objects.length > 0) {
       let obj = felixFinalLayer.objects[0];
@@ -828,7 +796,6 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // Felix窗口移动
   doWindowMoveTween(targetIndex) {
     this.isWindowJumping = true;
     this.movementSnd.play({ restart: true });
@@ -846,7 +813,6 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // Felix跳跃动画
   doWindowJumpAnimation(fromIndex, toIndex) {
     this.isWindowJumping = true;
     this.movementSnd.play({ restart: true });
@@ -877,7 +843,6 @@ class Gameplay extends Phaser.Scene {
     });
   }
 
-  // 找最近平台
   findClosestPlatformIndex(x, y) {
     if (!this.windowPlatforms || this.windowPlatforms.length === 0) return null;
     let closest = null;
@@ -960,7 +925,6 @@ class Gameplay extends Phaser.Scene {
     return candidate;
   }
 
-  // 生成 pickups (草莓、水果、金币等)
   spawnPickupsForStage(stage) {
     let positions = this.windowPlatforms.slice();
     Phaser.Utils.Array.Shuffle(positions);
@@ -992,27 +956,22 @@ class Gameplay extends Phaser.Scene {
     }
   }
 
-  // 处理Felix与物品碰撞
   handlePickup(felix, pickup) {
     if (!pickup.active) return;
     switch (pickup.pickupType) {
       case "strawberry":
-        // 叠加草莓Buff +3秒
         this.strawberryBuffActive = true;
         this.strawberryBuffTime = Math.max(this.strawberryBuffTime, 0) + 3;
         this.strawberryBuffText.setVisible(true);
         break;
-
       case "watermelon":
-        // 叠加西瓜Buff +5秒
         this.watermelonBuffActive = true;
         this.watermelonBuffTime = Math.max(this.watermelonBuffTime, 0) + 5;
         this.repairInterval = 100;
         this.watermelonBuffText.setVisible(true);
         break;
-
       case "coin":
-        // +1条命
+        // 捡金币时增加1条命
         this.lives++;
         this.updateLivesUI();
         break;

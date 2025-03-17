@@ -15,10 +15,12 @@ class Gameover extends Phaser.Scene {
 
   create(data) {
     // data 对象包含：{ loop, score }
-    // 此场景专用于游戏真正结束，标题直接“Game Over”
-    // 即：玩家生命值为0或时间耗尽
+    // 此场景专用于游戏真正结束（生命值为0或时间耗尽），显示 "Game Over"
+
+    // 创建音效对象（音量70%）
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
+    // 创建并播放 Gameplay 背景音乐，音量50%，循环播放
     this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
     this.gameplayBGM.play();
 
@@ -26,7 +28,7 @@ class Gameover extends Phaser.Scene {
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
     map.createLayer("Background", tileset, 0, 0);
 
-    // 标题：Game Over
+    // 标题 "Game Over"
     this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2 - 120,
@@ -63,9 +65,7 @@ class Gameover extends Phaser.Scene {
       }
     ).setOrigin(0.5);
 
-    // 创建音效对象
-    this.confirmSnd = this.sound.add("confirm");
-    this.selectionSnd = this.sound.add("selection");
+    // 注意：不再重复创建 confirmSnd 与 selectionSnd
 
     // Restart 按钮（重置游戏：回到 Loop 1，分数归零）
     const restartBtn = this.add.text(
