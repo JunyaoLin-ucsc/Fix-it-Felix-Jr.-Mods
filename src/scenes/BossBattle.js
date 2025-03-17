@@ -136,12 +136,14 @@ class BossBattle extends Phaser.Scene {
     this.anims.create({
       key: "jump-right",
       frames: [{ key: "FelixGun", frame: 10 }],
-      frameRate: 1
+      frameRate: 1,
+      repeat: -1  // 让它可以持续显示
     });
     this.anims.create({
       key: "jump-left",
       frames: [{ key: "FelixGun", frame: 11 }],
-      frameRate: 1
+      frameRate: 1,
+      repeat: -1
     });
 
     // Laser 动画
@@ -259,42 +261,50 @@ class BossBattle extends Phaser.Scene {
     if (!this.felix) return;
     const speed = 200;
 
-    // Felix 左右移动
-    if (this.cursors.left.isDown) {
-      this.felix.setVelocityX(-speed);
-      this.felix.anims.play("move-left", true);
-      this.facing = "left";
-    } else if (this.cursors.right.isDown) {
-      this.felix.setVelocityX(speed);
-      this.felix.anims.play("move-right", true);
-      this.facing = "right";
-    } else {
-      this.felix.setVelocityX(0);
-      if (this.facing === "right") {
-        this.felix.anims.play("idle-right", true);
-      } else {
-        this.felix.anims.play("idle-left", true);
-      }
-    }
-
-    // Felix 跳跃
+    // 1) 判断是否在地面或空中
     if (this.felix.body.blocked.down) {
       this.isJumping = false;
     }
-    if (this.cursors.up.isDown && this.felix.body.blocked.down) {
-      this.felix.setVelocityY(this.jumpVelocity);
-      this.isJumping = true;
+
+    // 2) 检测输入：若在地面，才可能走路或空闲；否则保持跳跃帧
+    if (!this.isJumping) {
+      // ==== 地面状态下 ====
+      if (this.cursors.left.isDown) {
+        this.felix.setVelocityX(-speed);
+        this.felix.anims.play("move-left", true);
+        this.facing = "left";
+      } else if (this.cursors.right.isDown) {
+        this.felix.setVelocityX(speed);
+        this.felix.anims.play("move-right", true);
+        this.facing = "right";
+      } else {
+        this.felix.setVelocityX(0);
+        if (this.facing === "right") {
+          this.felix.anims.play("idle-right", true);
+        } else {
+          this.felix.anims.play("idle-left", true);
+        }
+      }
+    } else {
+      // ==== 空中状态下 ====
+      // 不管按了左右键，都只播放跳跃帧
       if (this.facing === "right") {
         this.felix.anims.play("jump-right", true);
       } else {
         this.felix.anims.play("jump-left", true);
       }
     }
+
+    // 3) 检测是否按上键起跳
+    if (this.cursors.up.isDown && this.felix.body.blocked.down) {
+      this.felix.setVelocityY(this.jumpVelocity);
+      this.isJumping = true;
+    }
+    // 4) 实现短跳
     if (this.isJumping && !this.cursors.up.isDown && this.felix.body.velocity.y < 0) {
       if (this.felix.body.velocity.y < this.shortJumpVelocity) {
         this.felix.setVelocityY(this.shortJumpVelocity);
       }
-      this.isJumping = false;
     }
 
     // 清理超出视口范围的子弹
@@ -564,7 +574,6 @@ class BossBattle extends Phaser.Scene {
     });
   }
 
-  // 攻击流程
   startAttackSequence() {
     if (!this.angryRalph) return;
     this.angryRalphState = "jumpUp";
@@ -584,7 +593,6 @@ class BossBattle extends Phaser.Scene {
     });
   }
 
-  // 捶地完 -> postCrash -> 发激光
   performLaserAttack() {
     if (!this.angryRalph) return;
     this.angryRalphState = "laser";
