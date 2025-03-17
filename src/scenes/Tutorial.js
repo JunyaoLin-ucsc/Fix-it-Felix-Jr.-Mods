@@ -12,6 +12,8 @@ class Tutorial extends Phaser.Scene {
     this.load.audio("confirm", "confirm.wav");
     this.load.audio("selection", "selection.wav");
     this.load.audio("mainMenuBGM", "MainMenu.wav");
+    // 加载位图字体 Unnamed（由 Unnamed.png 和 Unnamed.xml 构成）
+    this.load.bitmapFont("Unnamed", "Unnamed.png", "Unnamed.xml");
   }
 
   create() {
@@ -40,13 +42,16 @@ class Tutorial extends Phaser.Scene {
     map.createLayer("Moon", tileset, 0, 0);
     map.createLayer("Stars", tileset, 0, 0);
     
-    this.add.text(
+    // 使用 Unnamed 位图字体显示标题 "Tutorial"
+    this.add.bitmapText(
       map.widthInPixels / 2,
       50,
+      "Unnamed",
       "Tutorial",
-      { fontSize: "48px", color: "#fff", fontFamily: "Arial" }
+      48
     ).setOrigin(0.5, 0);
     
+    // 说明文字保持不变（普通文本）
     this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2,
@@ -54,11 +59,13 @@ class Tutorial extends Phaser.Scene {
       { fontSize: "24px", color: "#fff", align: "center" }
     ).setOrigin(0.5);
     
-    let playButton = this.add.text(
-      map.widthInPixels / 2, 
-      map.heightInPixels - 80,
-      "Start Game",
-      { fontSize: "36px", backgroundColor: "#000", color: "#fff", padding: { x:10, y:5 } }
+    // 使用 Unnamed 位图字体创建 "Start Playing" 按钮，向上移动一些
+    let playButton = this.add.bitmapText(
+      map.widthInPixels / 2,
+      map.heightInPixels - 110,
+      "Unnamed",
+      "Start Playing",
+      36
     ).setOrigin(0.5).setInteractive();
     
     playButton.on("pointerover", () => {
@@ -77,6 +84,34 @@ class Tutorial extends Phaser.Scene {
       this.sound.stopAll();
       this.time.delayedCall(200, () => {
         this.scene.start("Gameplay");
+      });
+    });
+    
+    // 新增 "Main Menu" 按钮，使用 Unnamed 位图字体，放在 "Start Playing" 按钮下面
+    let mainMenuButton = this.add.bitmapText(
+      map.widthInPixels / 2,
+      map.heightInPixels - 50,
+      "Unnamed",
+      "Main Menu",
+      36
+    ).setOrigin(0.5).setInteractive();
+    
+    mainMenuButton.on("pointerover", () => {
+      if (this.selectionSnd.isPlaying) {
+        this.selectionSnd.stop();
+      }
+      this.selectionSnd.play();
+    });
+    
+    mainMenuButton.on("pointerdown", () => {
+      if (this.confirmSnd.isPlaying) {
+        this.confirmSnd.stop();
+      }
+      this.confirmSnd.play();
+      // 停止所有声音后返回主菜单
+      this.sound.stopAll();
+      this.time.delayedCall(200, () => {
+        this.scene.start("MainMenu");
       });
     });
   }
