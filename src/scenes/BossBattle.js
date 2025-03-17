@@ -598,10 +598,10 @@ class BossBattle extends Phaser.Scene {
       // ===========【脸部激光】===========
       if (direction === "right") {
         this.angryRalph.play("angryralph_fire_right", true);
-        laserX = this.angryRalph.x + 300;
+        laserX = this.angryRalph.x + 200;
       } else {
         this.angryRalph.play("angryralph_fire_left", true);
-        laserX = this.angryRalph.x - 300;
+        laserX = this.angryRalph.x - 200;
       }
       laserY = this.angryRalph.y - 60;
       bodyW = 2560; 
