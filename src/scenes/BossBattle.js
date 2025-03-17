@@ -606,8 +606,8 @@ class BossBattle extends Phaser.Scene {
       laserY = this.angryRalph.y - 70;
       bodyW = 2560; 
       bodyH = 200;
-      offsetX = -120; 
-      offsetY = 50; 
+      offsetX = -200; 
+      offsetY = -100; 
     } else {
       // ===========【手持激光炮】===========
       if (direction === "right") {
