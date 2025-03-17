@@ -5,8 +5,10 @@ class Continue extends Phaser.Scene {
     
     preload() {
       this.load.path = "./assets/";
+      // 使用与 Gameover / MainMenu 同一个 JSON
       this.load.tilemapTiledJSON("gameoverMap", "MainMenu.json");
       this.load.image("tilesetImage", "tileset.png");
+  
       // 加载音效：确认、选择，以及 Gameplay 背景音乐
       this.load.audio("confirm", "confirm.wav");
       this.load.audio("selection", "selection.wav");
@@ -22,10 +24,19 @@ class Continue extends Phaser.Scene {
       this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
       this.gameplayBGM.play();
       
+      // === 加载并创建所有需要的图层 ===
       const map = this.make.tilemap({ key: "gameoverMap" });
-      const tileset = map.addTilesetImage("tileset", "tileset.png");
+      const tileset = map.addTilesetImage("tileset", "tilesetImage");
+  
+      // 注意：以下 createLayer 的名字要和 Tiled 文件里的图层名称保持一致
       map.createLayer("Background", tileset, 0, 0);
-      
+      map.createLayer("Grass", tileset, 0, 0);
+      map.createLayer("Trees", tileset, 0, 0);
+      map.createLayer("Street Lamp", tileset, 0, 0);
+      map.createLayer("Moon", tileset, 0, 0);
+      map.createLayer("Stars", tileset, 0, 0);
+      // 如果你只想要一层“Background”，就保留一行即可，但要确认 Tiled 中确实存在该图层且有Tile
+  
       // 显示标题、得分、Loop 信息
       this.add.text(
         map.widthInPixels / 2,
