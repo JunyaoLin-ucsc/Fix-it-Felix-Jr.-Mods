@@ -4,11 +4,11 @@ class Gameplay extends Phaser.Scene {
   }
 
   init(data) {
-    // 如果传入的 data.loop 无效，则默认为 1
+    // If the passed data.loop is invalid, default to 1
     this.loop = (typeof data.loop === "number" && data.loop >= 1) ? data.loop : 1;
     console.log("Gameplay init -> loop =", this.loop);
 
-    // 计算初始生命值 (每次进场景都重算)
+    // Calculate initial lives (recalculate each time the scene is entered)
     this.lives = this.getLivesByLoop(this.loop);
     console.log("Initial lives for loop", this.loop, "=", this.lives);
 
@@ -19,13 +19,13 @@ class Gameplay extends Phaser.Scene {
     this.lastStoneDropIndex = null;
     this.inFinalStage = false;
 
-    // 分数
+    // Score
     this.score = data.score || 0;
 
-    // 每个 Stage 60 秒倒计时
+    // Each Stage has a 60-second countdown
     this.stageTime = 60;
 
-    // Tiled 中定义玻璃区间
+    // Glass range defined in Tiled
     this.stageRanges = {
       1: { start: 1, end: 26 },
       2: { start: 27, end: 56 },
@@ -38,14 +38,14 @@ class Gameplay extends Phaser.Scene {
     this.felixDirection = "right";
     this.currentRepairingGlass = null;
 
-    // 短暂无敌
+    // Temporary invincibility
     this.invincible = false;
-    // 处理扔石头的批次 ID
+    // Handle batch ID for thrown stones
     this.processedStoneBatches = new Set();
     this.currentStoneBatch = 0;
   }
 
-  // 按需求：Loop 1 => 3 条命；Loop 2 => 4 条命；Loop ≥ 3 => 4 + floor((loop-2)/3)
+  // As per requirement: Loop 1 => 3 lives; Loop 2 => 4 lives; Loop ≥ 3 => 4 + floor((loop-2)/3)
   getLivesByLoop(loop) {
     if (loop === 1) return 3;
     if (loop === 2) return 4;
@@ -63,7 +63,7 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 608
     });
 
-    // 根据实际资源调整帧尺寸
+    // Adjust frame size based on actual resource
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
@@ -75,30 +75,30 @@ class Gameplay extends Phaser.Scene {
       frameHeight: 32
     });
 
-    // 加载音效文件
+    // Load audio files
     this.load.audio("movement", "movement.wav");
     this.load.audio("failure", "failure.wav");
     this.load.audio("gameplayBGM", "Gameplay.wav");
 
     this.load.image("life", "Life.png");
-    /* 新增：加载星空图片 */
+    /* New: Load starfield image */
     this.load.image("starfield", "starfield.png");
 
-    // 物品资源
+    // Item resources
     this.load.image("coin", "coin.png");
     this.load.image("strawberry", "strawberry.png");
     this.load.image("watermelon", "watermelon.png");
   }
 
   create() {
-    // 当进入 Gameplay 时，先停止前一场景（MainMenu/Tutorial）的所有声音
+    // When entering Gameplay, first stop all sounds from the previous scene (MainMenu/Tutorial)
     this.sound.stopAll();
 
-    // 创建并播放 Gameplay 背景音乐（50%音量，循环播放）
+    // Create and play Gameplay background music (50% volume, looped)
     this.gameplayBGM = this.sound.add("gameplayBGM", { volume: 0.5, loop: true });
     this.gameplayBGM.play();
 
-    // 创建 movement 与 failure 音效（音量70%）
+    // Create movement and failure sounds (70% volume)
     this.movementSnd = this.sound.add("movement", { volume: 0.7 });
     this.failureSnd = this.sound.add("failure", { volume: 0.7 });
 
@@ -110,7 +110,7 @@ class Gameplay extends Phaser.Scene {
     const tilesetB = map.addTilesetImage("tileset2", "tileset2Image");
 
     map.createLayer("MainBackground", [tilesetA, tilesetB], 0, 0).setDepth(0);
-    /* 新增：添加星空背景，深度设置为 0.5，介于 MainBackground 与其他 tile layer 之间 */
+    /* New: Add starfield background, set depth to 0.5 (between MainBackground and other tile layers) */
     this.starfield = this.add.tileSprite(0, 0, this.cameras.main.width, this.cameras.main.height, "starfield");
     this.starfield.setOrigin(0, 0);
     this.starfield.setScrollFactor(0);
@@ -134,7 +134,7 @@ class Gameplay extends Phaser.Scene {
     if (floorLayer) floorLayer.setCollisionByProperty({ collides: true });
     if (this.windowLayerRef) this.windowLayerRef.setCollisionByProperty({ collides: true });
 
-    // 记录各 Stage 顶端位置（topY）
+    // Record the top position (topY) for each Stage
     for (let s = 1; s <= this.maxStage; s++) {
       let spaceLayer = map.getObjectLayer(`Stage ${s} Space`);
       if (spaceLayer && spaceLayer.objects.length > 0) {
@@ -148,7 +148,7 @@ class Gameplay extends Phaser.Scene {
       this.stageAreas["final"] = { topY: obj.y };
     }
 
-    // 创建 Felix
+    // Create Felix
     let felixSpawn = map.findObject("Spawns", obj => obj.name === "FelixSpawns");
     this.felix = this.physics.add.sprite(felixSpawn.x, felixSpawn.y, "Felix", 0).setScale(0.1);
     this.felix.setCollideWorldBounds(true).setDepth(9999);
@@ -163,19 +163,19 @@ class Gameplay extends Phaser.Scene {
     this.physics.add.collider(this.felix, floorGrassLayer);
     this.physics.add.collider(this.felix, this.windowLayerRef);
 
-    // 创建 Ralph 并定义动画
+    // Create Ralph and define animations
     this.createRalph();
 
-    // 设置物理与摄像机边界为整张地图大小
+    // Set physics and camera boundaries to the full map size
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 
-    // 将相机滚动到 Stage 1 顶端
+    // Scroll the camera to the top of Stage 1
     if (this.stageAreas[1]) {
       this.cameras.main.scrollY = this.stageAreas[1].topY;
     }
 
-    // 放大 Ralph
+    // Enlarge Ralph
     this.enlargeRalph(1.75);
 
     this.loadStageObjectLayers(1);
@@ -207,7 +207,7 @@ class Gameplay extends Phaser.Scene {
     this.lifeIcons = [];
     this.updateLivesUI();
 
-    // Felix 与石头碰撞检测
+    // Collision detection between Felix and stones
     this.physics.add.overlap(this.felix, this.stones, (felix, stone) => {
       if (this.processedStoneBatches.has(stone.batchId)) return;
       if (!this.levelTransitioning && !this.invincible && !this.strawberryBuffActive) {
@@ -237,12 +237,12 @@ class Gameplay extends Phaser.Scene {
       }
     }, null, this);
 
-    // 创建 pickups 组并检测碰撞
+    // Create pickups group and detect collisions
     this.pickups = this.physics.add.group();
     this.spawnPickupsForStage(1);
     this.physics.add.overlap(this.felix, this.pickups, this.handlePickup, null, this);
 
-    // Buff 相关变量
+    // Buff related variables
     this.strawberryBuffActive = false;
     this.watermelonBuffActive = false;
     this.strawberryBuffTime = 0;
@@ -260,7 +260,7 @@ class Gameplay extends Phaser.Scene {
     this.strawberryBuffText.setVisible(false);
     this.watermelonBuffText.setVisible(false);
 
-    // 投石计时器
+    // Stone throwing timer
     this.currentStoneBatch = 0;
     const stoneInterval = (this.loop === 1) ? 3000 : 2000;
     const stoneVelocity = (this.loop === 1) ? 100 : 150 + 10 * (this.loop - 1);
@@ -303,7 +303,7 @@ class Gameplay extends Phaser.Scene {
     }
     this.ralph = this.add.sprite(rx, ry, "Ralph", 0).setDepth(1000).setScale(0.2);
 
-    // 定义动画
+    // Define animations
     this.anims.create({
       key: "ralph_idle",
       frames: [{ key: "Ralph", frame: 0 }],
@@ -553,7 +553,7 @@ class Gameplay extends Phaser.Scene {
   }
 
   update(time, delta) {
-    /* 新增：星空滚动，每秒 50 像素（从上往下） */
+    /* New: Starfield scrolling at 50 pixels per second (from top to bottom) */
     if (this.starfield) {
       this.starfield.tilePositionY += 50 * delta / 1000;
     }
@@ -975,7 +975,7 @@ class Gameplay extends Phaser.Scene {
         this.watermelonBuffText.setVisible(true);
         break;
       case "coin":
-        // 捡金币时增加1条命
+        // Picking up a coin increases one life
         this.lives++;
         this.updateLivesUI();
         break;

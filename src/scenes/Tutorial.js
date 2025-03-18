@@ -5,20 +5,20 @@ class Tutorial extends Phaser.Scene {
 
   preload() {
     this.load.path = "./assets/";
-    // 使用与 MainMenu 相同的地图 JSON 来加载背景（保持风格一致）
+    // Use the same map JSON as MainMenu to load the background (to maintain consistent style)
     this.load.tilemapTiledJSON("tutorialMap", "MainMenu.json");
     this.load.image("tilesetImage", "tileset.png");
-    // 加载音效：确认、选择，以及主菜单背景音乐（MainMenu.wav）
+    // Load sound effects: confirm, selection, and main menu background music (MainMenu.wav)
     this.load.audio("confirm", "confirm.wav");
     this.load.audio("selection", "selection.wav");
     this.load.audio("mainMenuBGM", "MainMenu.wav");
-    // 加载位图字体 Unnamed（由 Unnamed.png 和 Unnamed.xml 构成）
+    // Load bitmap font Unnamed (composed of Unnamed.png and Unnamed.xml)
     this.load.bitmapFont("Unnamed", "Unnamed.png", "Unnamed.xml");
   }
 
   create() {
-    // 保持 MainMenuBGM 连续播放，不调用 sound.stopAll() 以免中断
-    // 如果 mainMenuBGM 尚未存在，则创建并播放；否则直接复用
+    // Keep MainMenuBGM playing continuously, do not call sound.stopAll() to avoid interruption.
+    // If mainMenuBGM does not exist yet, create and play it; otherwise, reuse it.
     let bgm = this.sound.get("mainMenuBGM");
     if (!bgm) {
       this.bgm = this.sound.add("mainMenuBGM", { volume: 0.5, loop: true });
@@ -27,14 +27,14 @@ class Tutorial extends Phaser.Scene {
       this.bgm = bgm;
     }
     
-    // 创建确认和选择音效对象，音量70%
+    // Create confirm and selection sound objects, volume 70%
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
     
-    // 创建背景
+    // Create background
     const map = this.make.tilemap({ key: "tutorialMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
-    // 创建多个图层以保证背景完整显示
+    // Create multiple layers to ensure complete background display
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
@@ -42,7 +42,7 @@ class Tutorial extends Phaser.Scene {
     map.createLayer("Moon", tileset, 0, 0);
     map.createLayer("Stars", tileset, 0, 0);
     
-    // 使用 Unnamed 位图字体显示标题 "Tutorial"
+    // Display title "Tutorial" using the Unnamed bitmap font
     this.add.bitmapText(
       map.widthInPixels / 2,
       50,
@@ -51,7 +51,7 @@ class Tutorial extends Phaser.Scene {
       48
     ).setOrigin(0.5, 0);
     
-    // 说明文字保持不变（普通文本）
+    // Instruction text remains unchanged (plain text)
     this.add.text(
       map.widthInPixels / 2,
       map.heightInPixels / 2,
@@ -65,7 +65,7 @@ class Tutorial extends Phaser.Scene {
       { fontSize: "13px", color: "#FF0000", align: "center" }
     ).setOrigin(0.5);
     
-    // 使用 Unnamed 位图字体创建 "Start Playing" 按钮，向上移动一些
+    // Create a "Start Playing" button using the Unnamed bitmap font, positioned slightly upward
     let playButton = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels - 110,
@@ -86,14 +86,14 @@ class Tutorial extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 在进入 Gameplay 前，停止所有声音（从而停止 mainMenuBGM）
+      // Stop all sounds (thus stopping mainMenuBGM) before entering Gameplay
       this.sound.stopAll();
       this.time.delayedCall(200, () => {
         this.scene.start("Gameplay");
       });
     });
     
-    // 新增 "Main Menu" 按钮，使用 Unnamed 位图字体，放在 "Start Playing" 按钮下面
+    // Add a new "Main Menu" button using the Unnamed bitmap font, placed below the "Start Playing" button
     let mainMenuButton = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels - 50,
@@ -114,7 +114,7 @@ class Tutorial extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 停止所有声音后返回主菜单
+      // Stop all sounds and return to the main menu
       this.sound.stopAll();
       this.time.delayedCall(200, () => {
         this.scene.start("MainMenu");

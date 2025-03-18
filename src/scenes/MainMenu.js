@@ -5,19 +5,19 @@ class MainMenu extends Phaser.Scene {
 
   preload() {
     this.load.path = "./assets/";
-    // 加载主菜单地图 & tileset
+    // Load main menu map & tileset
     this.load.tilemapTiledJSON("mainMenuMap", "MainMenu.json");
     this.load.image("tilesetImage", "tileset.png");
 
-    // 加载音效（确认和选择），以及主菜单背景音乐
+    // Load sound effects (confirm and selection) and main menu background music
     this.load.audio("confirm", "confirm.wav");
     this.load.audio("selection", "selection.wav");
     this.load.audio("mainMenuBGM", "MainMenu.wav");
 
-    // 加载位图字体（使用 Unnamed.png 与 Unnamed.xml）
+    // Load bitmap font (using Unnamed.png and Unnamed.xml)
     this.load.bitmapFont("pixelFont", "Unnamed.png", "Unnamed.xml");
 
-    // 新增：加载 RalphSpritesheet，每帧 192*176
+    // New: Load RalphSpritesheet, each frame is 192*176
     this.load.spritesheet("Ralph", "RalphSpritesheet.png", {
       frameWidth: 192,
       frameHeight: 176
@@ -25,12 +25,12 @@ class MainMenu extends Phaser.Scene {
   }
 
   create() {
-    // 停止之前可能残留的声音
+    // Stop any sounds that may have been left over
     this.sound.stopAll();
 
     const map = this.make.tilemap({ key: "mainMenuMap" });
     const tileset = map.addTilesetImage("tileset", "tilesetImage");
-    // 加载所有背景 tile layer（确保风格一致）
+    // Load all background tile layers (to ensure consistent style)
     map.createLayer("Background", tileset, 0, 0);
     map.createLayer("Grass", tileset, 0, 0);
     map.createLayer("Trees", tileset, 0, 0);
@@ -38,7 +38,7 @@ class MainMenu extends Phaser.Scene {
     map.createLayer("Moon", tileset, 0, 0);
     map.createLayer("Stars", tileset, 0, 0);
 
-    // 使用位图字体显示标题
+    // Display title using bitmap font
     this.add.bitmapText(
       map.widthInPixels / 2,
       50,
@@ -47,7 +47,7 @@ class MainMenu extends Phaser.Scene {
       60
     ).setOrigin(0.5, 0);
 
-    // 将“Play”按钮放置在屏幕正中
+    // Place the "Play" button at the center of the screen
     let playButton = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels / 2,
@@ -67,13 +67,13 @@ class MainMenu extends Phaser.Scene {
         this.confirmSnd.stop();
       }
       this.confirmSnd.play();
-      // 延时200ms后进入 Tutorial（保持主菜单BGM播放）
+      // Enter Tutorial after a 200ms delay (while keeping the main menu BGM playing)
       this.time.delayedCall(200, () => {
         this.scene.start("Tutorial");
       });
     });
 
-    // 在 Play 按钮下方添加 Credit 按钮（同样大小）
+    // Add Credit button below the Play button (same size)
     let creditButton = this.add.bitmapText(
       map.widthInPixels / 2,
       map.heightInPixels / 2 + 60,
@@ -98,17 +98,17 @@ class MainMenu extends Phaser.Scene {
       });
     });
 
-    // 创建确认和选择音效对象，音量设置为70%
+    // Create confirm and selection sound objects, volume set to 70%
     this.confirmSnd = this.sound.add("confirm", { volume: 0.7 });
     this.selectionSnd = this.sound.add("selection", { volume: 0.7 });
 
-    // 播放主菜单背景音乐，音量50%，循环播放
+    // Play main menu background music, volume 50%, looped
     this.bgm = this.sound.add("mainMenuBGM", { volume: 0.5, loop: true });
     this.bgm.play();
 
-    // ------- 以下为新增的 Ralph 逻辑 -------
+    // ------- Below is the new Ralph logic -------
 
-    // 1) 定义 Ralph 的动画（idle / move_left / move_right）
+    // 1) Define Ralph's animations (idle / move_left / move_right)
     this.anims.create({
       key: "ralph_idle",
       frames: [{ key: "Ralph", frame: 0 }],
@@ -128,21 +128,21 @@ class MainMenu extends Phaser.Scene {
       repeat: -1
     });
 
-    // 2) 从“RalphSpawns”对象图层获取出生点
+    // 2) Get spawn point from "RalphSpawns" object layer
     let ralphSpawn = map.findObject("RalphSpawns", obj => obj.name === "RalphSpawns");
-    // 如果找不到就随便放个位置，以免报错
+    // If not found, set to a default position to avoid errors
     let ralphX = ralphSpawn ? ralphSpawn.x : 100;
     let ralphY = ralphSpawn ? ralphSpawn.y : 100;
 
-    // 创建 Ralph 精灵并设置初始为 idle
+    // Create Ralph sprite and set initial state to idle
     this.ralph = this.add.sprite(ralphX, ralphY, "Ralph").setDepth(9999);
     this.ralph.play("ralph_idle");
 
-    // 3) 获取 “RalphEdges” 中的左右边界
-    //    假设在 Tiled 里你设置了两个对象：name="LeftEdge" 与 name="RightEdge"
+    // 3) Get left and right boundaries from "RalphEdges"
+    //    Assume you have set two objects in Tiled: name="LeftEdge" and name="RightEdge"
     let edgesLayer = map.getObjectLayer("RalphEdges");
     this.leftEdgeX = 0;
-    this.rightEdgeX = map.widthInPixels; // 先用整张地图的宽度兜底
+    this.rightEdgeX = map.widthInPixels; // Use the full map width as a default
     if (edgesLayer && edgesLayer.objects.length > 0) {
       edgesLayer.objects.forEach(obj => {
         if (obj.name === "LeftEdge") {
@@ -153,39 +153,39 @@ class MainMenu extends Phaser.Scene {
       });
     }
 
-    // 4) 随机决定初始朝向，设定移动速度
+    // 4) Randomly determine initial direction and set movement speed
     this.ralphDirection = (Phaser.Math.Between(0, 1) === 0) ? "left" : "right";
-    this.ralphSpeed = 40; // 你可以调整走路速度
+    this.ralphSpeed = 40; // You can adjust the walking speed
 
-    // 根据方向播放动画
+    // Play animation based on direction
     if (this.ralphDirection === "left") {
       this.ralph.play("ralph_move_left");
     } else {
       this.ralph.play("ralph_move_right");
     }
-    // ------- Ralph 相关逻辑到此结束 -------
+    // ------- End of Ralph related logic -------
   }
 
   update(time, delta) {
-    // ------- 以下为 Ralph 移动与边界检测，新增 -------
+    // ------- Below is new Ralph movement and boundary detection -------
     if (this.ralph) {
       if (this.ralphDirection === "left") {
         this.ralph.x -= this.ralphSpeed * (delta / 1000);
-        // 碰到左边界就立刻改为向右走
+        // When hitting the left boundary, immediately switch to moving right
         if (this.ralph.x <= this.leftEdgeX) {
           this.ralphDirection = "right";
           this.ralph.play("ralph_move_right");
         }
       } else {
         this.ralph.x += this.ralphSpeed * (delta / 1000);
-        // 碰到右边界就立刻改为向左走
+        // When hitting the right boundary, immediately switch to moving left
         if (this.ralph.x >= this.rightEdgeX) {
           this.ralphDirection = "left";
           this.ralph.play("ralph_move_left");
         }
       }
     }
-    // ------- Ralph 新增逻辑结束 -------
+    // ------- End of new Ralph logic -------
   }
 }
 

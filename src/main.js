@@ -11,7 +11,7 @@
 // so I didn't have to credit anyone else with the music. I also admire the fact that I created three different buffs: watermelon, strawberry and gold. 
 // In particular, gold restores a life, which I think makes the game even more gone.
 
-// Phaser Components I used: Arcade, Camera, Tween Manager, Tilemaps, Animation Managers and Text Objects. I have a lot of commands in Chinese so I am so sorry for that might not be readable, but I think you can understand what they mean on the code!
+// Phaser Components I used: Arcade, Camera, Tween Manager, Tilemaps, Animation Managers and Text Objects.
 
 // Finally, I just want to say it is very hard to finish the game solo because I need to handle all the work, I have to start early and spend more time on this work, very difficult and even though sometimes I really doubt myself am I really like game design, that's very awful.
 
